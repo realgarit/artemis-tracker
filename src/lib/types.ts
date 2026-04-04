@@ -63,6 +63,28 @@ export interface HistoryData {
   source: string
 }
 
+// === DSN ===
+
+export interface DSNTarget {
+  name: string
+  upSignal: number
+  downSignal: number
+}
+
+export interface DSNDish {
+  name: string
+  site: string
+  azimuth: number
+  elevation: number
+  targets: DSNTarget[]
+}
+
+export interface DSNData {
+  dishes: DSNDish[]
+  timestamp: string
+  source: string
+}
+
 // === Activity Log ===
 
 export interface ActivityLogEntry {

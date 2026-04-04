@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { useMission, useTrajectory, useSpaceWeather, useVelocityHistory, useDistanceHistory } from './lib/api'
+import { useMission, useTrajectory, useSpaceWeather, useVelocityHistory, useDistanceHistory, useDSN } from './lib/api'
 import { Header } from './components/Header'
 import { MetricsBar } from './components/MetricsBar'
 import { MissionTimeline } from './components/MissionTimeline'
@@ -8,9 +8,10 @@ import { VelocityChart } from './components/VelocityChart'
 import { DistanceChart } from './components/DistanceChart'
 import { SpaceWeather } from './components/SpaceWeather'
 import { ActivityLog } from './components/ActivityLog'
+import { DSNPanel } from './components/DSNPanel'
+import { CrewPanel } from './components/CrewPanel'
 import { Footer } from './components/Footer'
 
-// Code-split Three.js — loads asynchronously, keeps initial bundle small
 const TrajectoryMap = lazy(() =>
   import('./components/TrajectoryMap').then((m) => ({ default: m.TrajectoryMap }))
 )
@@ -32,6 +33,7 @@ export default function App() {
   const weather = useSpaceWeather()
   const velocityHistory = useVelocityHistory()
   const distanceHistory = useDistanceHistory()
+  const dsn = useDSN()
 
   return (
     <>
@@ -58,6 +60,9 @@ export default function App() {
             </div>
           </div>
 
+          {/* Crew Profiles */}
+          <CrewPanel crew={mission.data?.crew} />
+
           {/* Charts + Flight Log */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
             <VelocityChart data={velocityHistory.data} />
@@ -65,8 +70,11 @@ export default function App() {
             <ActivityLog phase={mission.data?.currentPhase} />
           </div>
 
-          {/* Space Weather */}
-          <SpaceWeather data={weather.data} />
+          {/* DSN + Space Weather — side by side on desktop */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4">
+            <DSNPanel data={dsn.data} />
+            <SpaceWeather data={weather.data} />
+          </div>
         </main>
 
         <Footer trajectory={trajectory.data} />

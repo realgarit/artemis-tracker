@@ -150,6 +150,45 @@ app.get('/api/artemis/distancehistory', async (req, res) => {
   }
 })
 
+// DSN — Deep Space Network status
+let dsnCache: { data: unknown; fetchedAt: number } | null = null
+app.get('/api/artemis/dsn', async (_req, res) => {
+  try {
+    if (dsnCache && Date.now() - dsnCache.fetchedAt < 10_000) {
+      res.json(dsnCache.data)
+      return
+    }
+    const r = await fetch('https://eyes.nasa.gov/dsn/data/dsn.xml')
+    if (!r.ok) throw new Error(`DSN ${r.status}`)
+    const xml = await r.text()
+    // Simple XML parsing for dish data
+    const dishes: any[] = []
+    const blocks = xml.split('</dish>')
+    for (const block of blocks) {
+      const dm = /<dish\s+([^>]+)>/.exec(block)
+      if (!dm) continue
+      const a = (n: string) => { const m = dm[1].match(new RegExp(`${n}="([^"]*)"`)); return m ? m[1] : '' }
+      const name = a('name')
+      const num = parseInt(name.replace('DSS', ''))
+      const site = num >= 10 && num < 30 ? 'Goldstone' : num >= 30 && num < 50 ? 'Canberra' : num >= 50 && num < 70 ? 'Madrid' : 'Unknown'
+      const targets: any[] = []
+      const tRe = /target\s+([^/]+)\//g
+      let tm
+      while ((tm = tRe.exec(block)) !== null) {
+        const ta = (n: string) => { const m = tm![1].match(new RegExp(`${n}="([^"]*)"`)); return m ? m[1] : '' }
+        targets.push({ name: ta('name'), upSignal: parseFloat(ta('uplegRange')) || 0, downSignal: parseFloat(ta('downlegRange')) || 0 })
+      }
+      if (targets.length > 0) dishes.push({ name, site, azimuth: parseFloat(a('azimuthAngle')) || 0, elevation: parseFloat(a('elevationAngle')) || 0, targets })
+    }
+    const result = { dishes, timestamp: new Date().toISOString(), source: 'NASA DSN Now' }
+    dsnCache = { data: result, fetchedAt: Date.now() }
+    res.json(result)
+  } catch (err) {
+    console.error('DSN error:', err)
+    res.status(500).json({ error: 'Failed to fetch DSN data' })
+  }
+})
+
 // List available missions
 app.get('/api/missions', (_req, res) => {
   const missions = Object.entries(MISSIONS).map(([id, config]) => ({

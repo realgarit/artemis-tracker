@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import type { TrajectoryData, MissionData, SpaceWeatherData, HistoryData } from './types'
+import type { TrajectoryData, MissionData, SpaceWeatherData, HistoryData, DSNData } from './types'
 
 const BASE = '/api/artemis'
 
@@ -51,5 +51,14 @@ export function useDistanceHistory() {
     queryFn: () => fetchJSON(`${BASE}/distancehistory`),
     refetchInterval: 60_000,
     staleTime: 30_000,
+  })
+}
+
+export function useDSN() {
+  return useQuery<DSNData>({
+    queryKey: ['dsn'],
+    queryFn: () => fetchJSON(`${BASE}/dsn`),
+    refetchInterval: 10_000,
+    staleTime: 8_000,
   })
 }
