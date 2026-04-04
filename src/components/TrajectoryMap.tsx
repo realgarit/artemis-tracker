@@ -11,27 +11,22 @@ const VB = { w: 860, h: 420 }
 const EARTH = { x: 115, y: 210, r: 36 }
 const MOON = { x: 710, y: 200, r: 14 }
 
-// One continuous elliptical loop — paths share endpoints at Earth
-const S = { x: 155, y: 205 } // departure from Earth
-const E = { x: 157, y: 212 } // arrival back at Earth (nearly same point)
+// Two smooth curves sharing endpoints → one continuous elliptical loop
+// No separate flyby segment = no kink
+const DEPART = { x: 155, y: 205 }  // leave Earth
+const ARRIVE = { x: 157, y: 212 }  // return to Earth
+const FLYBY  = { x: 745, y: 205 }  // junction right of Moon
 
-// Outbound (top arc): S → Moon approach
-const OB_C1 = { x: 280, y: 55 }
-const OB_C2 = { x: 550, y: 35 }
-const OB_END = { x: 695, y: 180 }
+// Outbound (top arc): DEPART → sweeps above → FLYBY
+const OB_C1 = { x: 290, y: 45 }
+const OB_C2 = { x: 580, y: 20 }
 
-// Flyby: Moon approach → Moon depart
-const FLY_C1 = { x: 730, y: 192 }
-const FLY_C2 = { x: 738, y: 220 }
-const FLY_END = { x: 718, y: 232 }
+// Return (bottom arc): FLYBY → sweeps below → ARRIVE
+const RT_C1 = { x: 580, y: 390 }
+const RT_C2 = { x: 290, y: 370 }
 
-// Return (bottom arc): Moon depart → E
-const RT_C1 = { x: 555, y: 370 }
-const RT_C2 = { x: 285, y: 355 }
-
-const OUTBOUND_D = `M${S.x},${S.y} C${OB_C1.x},${OB_C1.y} ${OB_C2.x},${OB_C2.y} ${OB_END.x},${OB_END.y}`
-const FLYBY_D = `M${OB_END.x},${OB_END.y} C${FLY_C1.x},${FLY_C1.y} ${FLY_C2.x},${FLY_C2.y} ${FLY_END.x},${FLY_END.y}`
-const RETURN_D = `M${FLY_END.x},${FLY_END.y} C${RT_C1.x},${RT_C1.y} ${RT_C2.x},${RT_C2.y} ${E.x},${E.y}`
+const OUTBOUND_D = `M${DEPART.x},${DEPART.y} C${OB_C1.x},${OB_C1.y} ${OB_C2.x},${OB_C2.y} ${FLYBY.x},${FLYBY.y}`
+const RETURN_D = `M${FLYBY.x},${FLYBY.y} C${RT_C1.x},${RT_C1.y} ${RT_C2.x},${RT_C2.y} ${ARRIVE.x},${ARRIVE.y}`
 
 function bez(p0: {x:number;y:number}, c1: {x:number;y:number}, c2: {x:number;y:number}, p1: {x:number;y:number}, t: number) {
   const u = 1 - t
@@ -41,18 +36,14 @@ function bez(p0: {x:number;y:number}, c1: {x:number;y:number}, c2: {x:number;y:n
   }
 }
 
-function dots(p0: {x:number;y:number}, c1: {x:number;y:number}, c2: {x:number;y:number}, p1: {x:number;y:number}, n: number) {
+function pathDots(p0: {x:number;y:number}, c1: {x:number;y:number}, c2: {x:number;y:number}, p1: {x:number;y:number}, n: number) {
   return Array.from({ length: n }, (_, i) => bez(p0, c1, c2, p1, (i + 1) / (n + 1)))
 }
 
 function getOrionPos(progress: number) {
   const p = progress / 100
-  if (p < 0.45) return bez(S, OB_C1, OB_C2, OB_END, p / 0.45)
-  if (p < 0.55) {
-    const t = (p - 0.45) / 0.1
-    return bez(OB_END, FLY_C1, FLY_C2, FLY_END, t)
-  }
-  return bez(FLY_END, RT_C1, RT_C2, E, (p - 0.55) / 0.45)
+  if (p < 0.5) return bez(DEPART, OB_C1, OB_C2, FLYBY, p / 0.5)
+  return bez(FLYBY, RT_C1, RT_C2, ARRIVE, (p - 0.5) / 0.5)
 }
 
 const STARS = Array.from({ length: 55 }, (_, i) => ({
@@ -60,9 +51,8 @@ const STARS = Array.from({ length: 55 }, (_, i) => ({
   r: i % 5 === 0 ? 1 : 0.5, o: 0.08 + (i % 4) * 0.06,
 }))
 
-const obDots = dots(S, OB_C1, OB_C2, OB_END, 16)
-const rtDots = dots(FLY_END, RT_C1, RT_C2, E, 16)
-const flyDots = dots(OB_END, FLY_C1, FLY_C2, FLY_END, 4)
+const obDots = pathDots(DEPART, OB_C1, OB_C2, FLYBY, 18)
+const rtDots = pathDots(FLYBY, RT_C1, RT_C2, ARRIVE, 18)
 
 export function TrajectoryMap({ trajectory, mission }: TrajectoryMapProps) {
   const progress = mission?.progress ?? 0
@@ -92,33 +82,23 @@ export function TrajectoryMap({ trajectory, mission }: TrajectoryMapProps) {
         <text x={VB.w - 12} y="42" textAnchor="end" fill="#22d3ee" fontSize="16" fontWeight="800" fontFamily="Orbitron,sans-serif" letterSpacing="2">{mission?.currentPhase?.toUpperCase() || ''}</text>
 
         {/* Arc labels */}
-        <text x="370" y="52" textAnchor="middle" fill="#22d3ee" fontSize="8" fontFamily="Orbitron,sans-serif" opacity=".35" letterSpacing="4">OUTBOUND COAST</text>
-        <text x="370" y={VB.h - 20} textAnchor="middle" fill="#f59e0b" fontSize="8" fontFamily="Orbitron,sans-serif" opacity=".3" letterSpacing="4">RETURN COAST</text>
+        <text x="380" y="48" textAnchor="middle" fill="#22d3ee" fontSize="8" fontFamily="Orbitron,sans-serif" opacity=".35" letterSpacing="4">OUTBOUND COAST</text>
+        <text x="380" y={VB.h - 16} textAnchor="middle" fill="#f59e0b" fontSize="8" fontFamily="Orbitron,sans-serif" opacity=".3" letterSpacing="4">RETURN COAST</text>
 
         {/* Lunar orbit ring */}
         <circle cx={MOON.x} cy={MOON.y} r="38" fill="none" stroke="rgba(148,163,184,.08)" strokeWidth=".5" strokeDasharray="2 3"/>
+        <text x={MOON.x - 50} y={MOON.y - 25} fill="#4b5563" fontSize="6.5" fontFamily="JetBrains Mono,monospace" textAnchor="middle">6,400 km</text>
 
-        {/* Flyby distance */}
-        <text x={MOON.x - 55} y={MOON.y - 22} fill="#4b5563" fontSize="6.5" fontFamily="JetBrains Mono,monospace" textAnchor="middle">6,400 km</text>
-
-        {/* --- Trajectory lines (solid, not dashed) --- */}
-
-        {/* Outbound path */}
+        {/* Outbound path (solid) + dots */}
         <path d={OUTBOUND_D} fill="none" stroke="rgba(34,211,238,.45)" strokeWidth="1.2"/>
-        {/* Outbound dots */}
-        {obDots.map((d, i) => <circle key={`o${i}`} cx={d.x} cy={d.y} r="2" fill="rgba(34,211,238,.2)" stroke="rgba(34,211,238,.15)" strokeWidth=".3"/>)}
+        {obDots.map((d, i) => <circle key={`o${i}`} cx={d.x} cy={d.y} r="2" fill="rgba(34,211,238,.2)"/>)}
 
-        {/* Flyby arc */}
-        <path d={FLYBY_D} fill="none" stroke="rgba(34,211,238,.3)" strokeWidth="1.2"/>
-        {flyDots.map((d, i) => <circle key={`f${i}`} cx={d.x} cy={d.y} r="2" fill="rgba(34,211,238,.15)"/>)}
-
-        {/* Return path */}
+        {/* Return path (solid) + dots */}
         <path d={RETURN_D} fill="none" stroke="rgba(245,158,11,.35)" strokeWidth="1.2"/>
-        {/* Return dots */}
-        {rtDots.map((d, i) => <circle key={`r${i}`} cx={d.x} cy={d.y} r="2" fill="rgba(245,158,11,.18)" stroke="rgba(245,158,11,.12)" strokeWidth=".3"/>)}
+        {rtDots.map((d, i) => <circle key={`r${i}`} cx={d.x} cy={d.y} r="2" fill="rgba(245,158,11,.18)"/>)}
 
         {/* Earth orbit ring */}
-        <circle cx={EARTH.x} cy={EARTH.y} r={EARTH.r + 8} fill="none" stroke="rgba(96,165,250,.08)" strokeWidth=".5"/>
+        <circle cx={EARTH.x} cy={EARTH.y} r={EARTH.r + 8} fill="none" stroke="rgba(96,165,250,.06)" strokeWidth=".5"/>
 
         {/* Earth */}
         <circle cx={EARTH.x} cy={EARTH.y} r={EARTH.r * 1.6} fill="url(#eGlow)"/>
@@ -129,16 +109,12 @@ export function TrajectoryMap({ trajectory, mission }: TrajectoryMapProps) {
         <circle cx={MOON.x} cy={MOON.y} r={MOON.r} fill="url(#mg)"/>
         <text x={MOON.x + MOON.r + 10} y={MOON.y + 5} fill="#94a3b8" fontSize="8.5" fontFamily="Orbitron,sans-serif" letterSpacing="2">MOON</text>
 
-        {/* Orion spacecraft — amber dot like original */}
+        {/* Orion */}
         <motion.g initial={{x:orion.x,y:orion.y}} animate={{x:orion.x,y:orion.y}} transition={{duration:1.5,ease:'easeInOut'}}>
-          {/* Glow */}
           <circle r="24" fill="url(#orionGlow)"/>
-          {/* Main dot — amber like original */}
           <circle r="6" fill="#f59e0b"/>
           <circle r="3.5" fill="#fbbf24" opacity=".9"/>
-          {/* Distance LEFT of dot */}
           <text x="-16" y="3" textAnchor="end" fill="#cbd5e1" fontSize="9" fontWeight="600" fontFamily="JetBrains Mono,monospace">{dist}</text>
-          {/* ORION label RIGHT of dot */}
           <text x="14" y="-2" textAnchor="start" fill="#22d3ee" fontSize="9.5" fontWeight="700" fontFamily="Orbitron,sans-serif" letterSpacing="1">ORION</text>
         </motion.g>
       </svg>
