@@ -9,7 +9,7 @@ interface TrajectoryMapProps {
 
 const VB = { w: 860, h: 420 }
 const EARTH = { x: 115, y: 210, r: 36 }
-const MOON = { x: 710, y: 212, r: 14 }
+const MOON = { x: 710, y: 204, r: 14 }
 
 // Two smooth curves sharing endpoints → one continuous elliptical loop
 // No separate flyby segment = no kink
