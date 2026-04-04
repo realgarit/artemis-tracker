@@ -110,19 +110,20 @@ body {
 
 /* === Glass Panels === */
 .glass-panel {
-  background: rgba(10, 15, 26, 0.6);
+  background: rgba(10, 15, 26, 0.65);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(34, 211, 238, 0.1);
-  border-radius: 12px;
+  border: 1px solid rgba(34, 211, 238, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 1px 0 rgba(34, 211, 238, 0.04);
 }
 
 .glass-panel-solid {
-  background: rgba(10, 15, 26, 0.85);
+  background: rgba(10, 15, 26, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(34, 211, 238, 0.15);
-  border-radius: 12px;
+  border: 1px solid rgba(34, 211, 238, 0.12);
+  border-radius: 8px;
 }
 
 /* === Glow Effects === */

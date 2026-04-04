@@ -16,78 +16,19 @@ const PHASE_DESC: Record<string, string> = {
   'Re-entry & Splashdown': 'Atmospheric re-entry and Pacific splashdown',
 }
 
-function CompletedIcon() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 28 28">
-      <circle cx="14" cy="14" r="13" fill="rgba(34,211,238,0.12)" stroke="#22d3ee" strokeWidth="1.5" />
-      <path d="M9 14.5L12.5 18L19 11" stroke="#22d3ee" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-    </svg>
-  )
-}
-
-function ActiveIcon() {
-  return (
-    <div className="relative">
-      <svg width="32" height="32" viewBox="0 0 32 32">
-        <circle cx="16" cy="16" r="14" fill="rgba(34,211,238,0.15)" stroke="#22d3ee" strokeWidth="2" />
-        <circle cx="16" cy="16" r="5" fill="#22d3ee" />
-      </svg>
-      <motion.div
-        className="absolute inset-0"
-        animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
-        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <svg width="32" height="32" viewBox="0 0 32 32">
-          <circle cx="16" cy="16" r="14" fill="none" stroke="#22d3ee" strokeWidth="1" />
-        </svg>
-      </motion.div>
-    </div>
-  )
-}
-
-function UpcomingIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10" fill="none" stroke="#334155" strokeWidth="1" />
-    </svg>
-  )
-}
-
-function PhaseNode({ phase }: { phase: MissionPhase }) {
-  return (
-    <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
-      <div className="flex items-center justify-center h-8">
-        {phase.status === 'completed' && <CompletedIcon />}
-        {phase.status === 'active' && <ActiveIcon />}
-        {phase.status === 'upcoming' && <UpcomingIcon />}
-      </div>
-      <span
-        className={`text-[8px] xl:text-[9px] text-center leading-tight px-0.5 ${
-          phase.status === 'completed'
-            ? 'text-cyan-glow/70'
-            : phase.status === 'active'
-              ? 'text-cyan-glow font-semibold'
-              : 'text-slate-600'
-        }`}
-      >
-        {phase.name}
-      </span>
-    </div>
-  )
-}
-
 export function MissionTimeline({ mission }: MissionTimelineProps) {
   if (!mission) return null
 
   const launchMs = new Date(mission.launchDate).getTime()
   const elapsedH = Math.max(0, Math.floor((Date.now() - launchMs) / 3_600_000))
   const totalH = mission.totalDays * 24
+  const n = mission.phases.length
 
   return (
     <div className="glass-panel border-glow px-5 py-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">
+      <div className="flex items-center justify-between mb-5">
+        <span className="text-[10px] text-slate-400 uppercase tracking-[.25em] font-semibold">
           Mission Timeline
         </span>
         <span className="font-mono text-[11px] text-slate-400">
@@ -96,39 +37,36 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
         </span>
       </div>
 
-      {/* Phase icons — evenly spaced */}
-      <div className="flex justify-between items-start mb-3">
-        {mission.phases.map((phase) => (
-          <PhaseNode key={phase.name} phase={phase} />
-        ))}
+      {/* Connected timeline track with nodes */}
+      <div className="relative px-6 mb-5">
+        {/* Background track line */}
+        <div className="absolute left-6 right-6 top-[15px] h-[2px] bg-slate-800" />
+
+        {/* Filled progress track */}
+        <motion.div
+          className="absolute left-6 top-[15px] h-[2px] bg-gradient-to-r from-cyan-glow to-cyan-dim"
+          initial={{ width: 0 }}
+          animate={{ width: `${Math.min(mission.progress, 100) * ((n - 1) / n)}%` }}
+          transition={{ duration: 1.2, ease: 'easeOut' }}
+        />
+
+        {/* Phase nodes on the track */}
+        <div className="relative flex justify-between">
+          {mission.phases.map((phase, i) => (
+            <PhaseNode key={phase.name} phase={phase} index={i} total={n} />
+          ))}
+        </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="mb-2 px-1">
-        <div className="flex justify-between text-[7px] text-slate-600 uppercase tracking-wider mb-1">
-          <span>Launch</span>
-          <span className="text-slate-500 normal-case font-mono tracking-normal">
-            Lunar Flyby
-          </span>
-          <span>Splashdown</span>
-        </div>
-        <div className="h-[5px] bg-slate-800/80 rounded-full overflow-hidden">
-          <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-cyan-glow via-cyan-glow to-cyan-dim"
-            initial={{ width: 0 }}
-            animate={{ width: `${mission.progress}%` }}
-            transition={{ duration: 1, ease: 'easeOut' }}
-          />
-        </div>
-        <div className="flex justify-between text-[7px] text-slate-700 mt-0.5 font-mono">
-          <span>T-0</span>
-          <span className="text-slate-500">T+{elapsedH}h elapsed of {totalH}h</span>
-          <span>T+{totalH}h</span>
-        </div>
+      {/* Time bar */}
+      <div className="flex justify-between items-center text-[7.5px] text-slate-600 font-mono px-1 mb-3">
+        <span className="uppercase tracking-wider">Launch · T-0</span>
+        <span className="text-slate-500">T+{elapsedH}h elapsed of {totalH}h</span>
+        <span className="uppercase tracking-wider">Splashdown · T+{totalH}h</span>
       </div>
 
       {/* Phase description */}
-      <div className="flex items-center justify-between text-xs border-t border-slate-800/50 pt-2.5 mt-1 px-1">
+      <div className="flex items-center justify-between text-xs border-t border-slate-700/30 pt-3 px-1">
         <span>
           <span className="text-slate-600 mr-1">&gt;</span>
           <span className="text-cyan-glow font-bold uppercase tracking-wide text-[11px]">
@@ -143,5 +81,64 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
         </span>
       </div>
     </div>
+  )
+}
+
+function PhaseNode({ phase, index, total }: { phase: MissionPhase; index: number; total: number }) {
+  const isCompleted = phase.status === 'completed'
+  const isActive = phase.status === 'active'
+
+  return (
+    <motion.div
+      className="flex flex-col items-center"
+      style={{ width: `${100 / total}%` }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.06, duration: 0.4 }}
+    >
+      {/* Node circle — centered on the track line */}
+      <div className="relative flex items-center justify-center mb-2">
+        {isCompleted && (
+          <div className="h-[30px] w-[30px] rounded-full bg-cyan-glow/10 border-[1.5px] border-cyan-glow flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 7.5L5.5 10L11 4" stroke="#22d3ee" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        )}
+        {isActive && (
+          <>
+            <div className="h-[32px] w-[32px] rounded-full bg-cyan-glow/15 border-2 border-cyan-glow flex items-center justify-center">
+              <div className="h-3 w-3 rounded-full bg-cyan-glow" />
+            </div>
+            <motion.div
+              className="absolute h-[32px] w-[32px] rounded-full border border-cyan-glow/50"
+              animate={{ scale: [1, 1.6], opacity: [0.5, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }}
+            />
+            <motion.div
+              className="absolute h-[32px] w-[32px] rounded-full border border-cyan-glow/30"
+              animate={{ scale: [1, 2], opacity: [0.3, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeOut', delay: 0.3 }}
+            />
+          </>
+        )}
+        {!isCompleted && !isActive && (
+          <div className="h-[24px] w-[24px] rounded-full border border-slate-700/60 bg-slate-900/50" />
+        )}
+      </div>
+
+      {/* Label */}
+      <span
+        className={`text-[8px] xl:text-[9px] text-center leading-tight max-w-[80px] ${
+          isCompleted
+            ? 'text-cyan-glow/60'
+            : isActive
+              ? 'text-cyan-glow font-semibold'
+              : 'text-slate-600'
+        }`}
+      >
+        {phase.name}
+      </span>
+    </motion.div>
   )
 }
