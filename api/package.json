@@ -1,0 +1,19 @@
+{
+  "name": "artemis-tracker-api",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/src/functions/*.js",
+  "scripts": {
+    "build": "tsc",
+    "prestart": "npm run build",
+    "start": "func start"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.6.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0",
+    "azure-functions-core-tools": "^4.0.0"
+  }
+}
