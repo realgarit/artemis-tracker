@@ -6,28 +6,26 @@ interface HeaderProps {
 
 export function Header({ missionName }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-40 glass-panel-solid border-b border-cyan-glow/10">
-      <div className="mx-auto max-w-[1600px] px-4 py-3 flex items-center justify-between">
-        {/* Left: Logo + Title */}
+    <header className="sticky top-0 z-40 glass-panel-solid border-b border-cyan-mid/8">
+      <div className="mx-auto max-w-[1600px] px-4 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Satellite className="h-6 w-6 text-cyan-glow" />
-            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-glow live-pulse" />
+            <Satellite className="h-5 w-5 text-cyan-glow" strokeWidth={1.5} />
+            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-glow live-pulse" />
           </div>
           <div>
-            <h1 className="font-display text-lg sm:text-xl font-bold tracking-wider text-cyan-glow glow-cyan">
-              {missionName || 'ARTEMIS II'}
+            <h1 className="font-display text-base sm:text-lg font-bold tracking-[.15em] text-cyan-glow glow-cyan leading-none">
+              {missionName?.toUpperCase() || 'ARTEMIS II'}
             </h1>
-            <p className="text-[10px] sm:text-xs text-slate-400 tracking-widest uppercase">
+            <p className="text-[9px] text-slate-500 tracking-[.25em] uppercase mt-0.5 font-medium">
               Mission Control — MCC-Houston
             </p>
           </div>
         </div>
 
-        {/* Right: Live Badge */}
-        <div className="flex items-center gap-2 rounded-full bg-red-glow/10 border border-red-glow/30 px-3 py-1.5">
-          <Radio className="h-3.5 w-3.5 text-red-glow live-pulse" />
-          <span className="text-xs font-semibold text-red-glow tracking-wider">LIVE</span>
+        <div className="flex items-center gap-1.5 rounded bg-red-glow/8 border border-red-glow/25 px-2.5 py-1">
+          <Radio className="h-3 w-3 text-red-glow live-pulse" strokeWidth={2} />
+          <span className="text-[10px] font-bold text-red-glow tracking-[.15em]">LIVE</span>
         </div>
       </div>
     </header>
