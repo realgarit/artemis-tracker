@@ -26,18 +26,22 @@ export default function App() {
         <Header missionName={mission.data?.name} />
         <MetricsBar mission={mission.data} trajectory={trajectory.data} />
 
-        <main className="mx-auto max-w-[1600px] px-4 py-6 space-y-6">
+        <main className="mx-auto max-w-[1600px] px-4 pt-4 pb-6 space-y-4">
           {/* Mission Timeline */}
           <MissionTimeline mission={mission.data} />
 
-          {/* Trajectory Map - full width */}
-          <TrajectoryMap trajectory={trajectory.data} mission={mission.data} />
-
-          {/* Stats Grid */}
-          <StatsGrid trajectory={trajectory.data} />
+          {/* Trajectory Map + Stats side-by-side on desktop */}
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+            <div className="xl:col-span-3">
+              <TrajectoryMap trajectory={trajectory.data} mission={mission.data} />
+            </div>
+            <div className="xl:col-span-2">
+              <StatsGrid trajectory={trajectory.data} />
+            </div>
+          </div>
 
           {/* Charts + Space Weather */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
             <VelocityChart data={velocityHistory.data} />
             <DistanceChart data={distanceHistory.data} />
             <SpaceWeather data={weather.data} />

@@ -1,69 +1,30 @@
 import { motion } from 'framer-motion'
+import { Zap, Radio } from 'lucide-react'
 import type { TrajectoryData } from '../lib/types'
 
 interface StatsGridProps {
   trajectory?: TrajectoryData
 }
 
-function LargeStatCard({
-  label,
-  value,
-  unit,
-  color = 'cyan',
-  delay = 0,
+function StatCard({
+  label, value, unit, color = 'cyan', icon, large = false,
 }: {
-  label: string
-  value: number | string
-  unit: string
-  color?: 'cyan' | 'amber'
-  delay?: number
+  label: string; value: number | string; unit: string
+  color?: 'cyan' | 'amber'; icon?: React.ReactNode; large?: boolean
 }) {
-  const textColor = color === 'cyan' ? 'text-cyan-glow' : 'text-amber-glow'
-  const borderClass = color === 'cyan' ? 'border-glow' : 'border-glow-amber'
-  const glowClass = color === 'cyan' ? 'glow-cyan' : 'glow-amber'
+  const tc = color === 'cyan' ? 'text-cyan-glow' : 'text-amber-glow'
+  const bc = color === 'cyan' ? 'border-glow' : 'border-glow-amber'
+  const gc = color === 'cyan' ? 'glow-cyan' : 'glow-amber'
 
   return (
-    <motion.div
-      className={`glass-panel ${borderClass} p-6 text-center`}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay, duration: 0.3 }}
-    >
-      <span className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-medium">
-        {label}
-      </span>
-      <div className={`font-mono text-4xl sm:text-5xl font-bold mt-2 ${textColor} ${glowClass}`}>
-        {typeof value === 'number'
-          ? value.toLocaleString(undefined, { maximumFractionDigits: 2 })
-          : value}
-        <span className="text-lg sm:text-xl text-slate-400 font-normal ml-1">{unit}</span>
+    <div className={`glass-panel ${bc} ${large ? 'p-5' : 'p-4'} text-center flex flex-col justify-center`}>
+      <div className="flex items-center justify-center gap-2 mb-1">
+        <span className="text-[9px] text-slate-400 uppercase tracking-[.15em]">{label}</span>
+        {icon}
       </div>
-    </motion.div>
-  )
-}
-
-function SmallStatCard({
-  label,
-  value,
-  unit,
-  color = 'cyan',
-}: {
-  label: string
-  value: number | string
-  unit: string
-  color?: 'cyan' | 'amber'
-}) {
-  const textColor = color === 'cyan' ? 'text-cyan-glow' : 'text-amber-glow'
-  const borderClass = color === 'cyan' ? 'border-glow' : 'border-glow-amber'
-
-  return (
-    <div className={`glass-panel ${borderClass} p-4 text-center`}>
-      <span className="text-[9px] text-slate-400 uppercase tracking-widest">{label}</span>
-      <div className={`font-mono text-2xl font-bold mt-1 ${textColor}`}>
-        {typeof value === 'number'
-          ? value.toLocaleString(undefined, { maximumFractionDigits: 2 })
-          : value}
-        <span className="text-xs text-slate-400 font-normal ml-1">{unit}</span>
+      <div className={`font-mono ${large ? 'text-3xl xl:text-4xl' : 'text-2xl'} font-bold ${tc} ${gc}`}>
+        {typeof value === 'number' ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : value}
+        <span className={`${large ? 'text-base' : 'text-sm'} text-slate-500 font-normal ml-1`}>{unit}</span>
       </div>
     </div>
   )
@@ -72,11 +33,11 @@ function SmallStatCard({
 export function StatsGrid({ trajectory }: StatsGridProps) {
   if (!trajectory) {
     return (
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3 h-full content-center">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="glass-panel p-6 animate-pulse">
-            <div className="h-3 bg-slate-700/50 rounded w-20 mx-auto mb-3" />
-            <div className="h-10 bg-slate-700/50 rounded w-40 mx-auto" />
+          <div key={i} className="glass-panel p-5 animate-pulse">
+            <div className="h-3 bg-slate-700/50 rounded w-16 mx-auto mb-2" />
+            <div className="h-8 bg-slate-700/50 rounded w-28 mx-auto" />
           </div>
         ))}
       </div>
@@ -84,37 +45,37 @@ export function StatsGrid({ trajectory }: StatsGridProps) {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Primary stats - large */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <LargeStatCard
-          label="Distance · Earth"
-          value={Math.round(trajectory.distanceFromEarth)}
-          unit="km"
-          color="cyan"
-        />
-        <LargeStatCard
-          label="Speed"
-          value={trajectory.velocity}
-          unit="km/s"
-          color="cyan"
-          delay={0.05}
-        />
-      </div>
-      {/* Secondary stats - smaller */}
-      <div className="grid grid-cols-2 gap-4">
-        <SmallStatCard
-          label="Distance · Moon"
-          value={Math.round(trajectory.distanceFromMoon)}
-          unit="km"
-        />
-        <SmallStatCard
-          label="Comms Delay"
-          value={trajectory.commsDelay}
-          unit="sec"
-          color="amber"
-        />
-      </div>
-    </div>
+    <motion.div
+      className="grid grid-cols-2 gap-3 h-full content-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
+      <StatCard
+        label="Distance · Earth"
+        value={Math.round(trajectory.distanceFromEarth)}
+        unit="km"
+        large
+      />
+      <StatCard
+        label="Speed"
+        value={trajectory.velocity}
+        unit="km/s"
+        icon={<Zap className="h-3 w-3 text-cyan-glow" />}
+        large
+      />
+      <StatCard
+        label="Distance · Moon"
+        value={Math.round(trajectory.distanceFromMoon)}
+        unit="km"
+      />
+      <StatCard
+        label="Comms Delay"
+        value={trajectory.commsDelay}
+        unit="sec"
+        color="amber"
+        icon={<Radio className="h-3 w-3 text-amber-glow" />}
+      />
+    </motion.div>
   )
 }
