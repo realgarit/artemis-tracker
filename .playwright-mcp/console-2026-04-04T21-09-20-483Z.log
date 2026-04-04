@@ -1,2 +1,0 @@
-[     249ms] [ERROR] Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "application/octet-stream". Strict MIME type checking is enforced for module scripts per HTML spec. @ https://mango-plant-0a0b9ee03.6.azurestaticapps.net/src/main.tsx:0
-[     330ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://mango-plant-0a0b9ee03.6.azurestaticapps.net/favicon.svg:0
