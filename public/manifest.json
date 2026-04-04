@@ -1,0 +1,12 @@
+{
+  "name": "Artemis II Mission Dashboard",
+  "short_name": "Artemis II",
+  "description": "Real-time Artemis II mission tracker with live trajectory, telemetry, and space weather data",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020408",
+  "theme_color": "#22d3ee",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
