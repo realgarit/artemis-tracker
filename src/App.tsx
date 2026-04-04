@@ -30,7 +30,7 @@ export default function App() {
           {/* Mission Timeline */}
           <MissionTimeline mission={mission.data} />
 
-          {/* Trajectory Map + Stats side-by-side on desktop */}
+          {/* Trajectory Map + Stats side-by-side */}
           <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
             <div className="xl:col-span-3">
               <TrajectoryMap trajectory={trajectory.data} mission={mission.data} />
@@ -40,15 +40,15 @@ export default function App() {
             </div>
           </div>
 
-          {/* Charts + Space Weather */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          {/* Charts + Flight Log — 3 columns like original */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <VelocityChart data={velocityHistory.data} />
             <DistanceChart data={distanceHistory.data} />
-            <SpaceWeather data={weather.data} />
+            <ActivityLog phase={mission.data?.currentPhase} />
           </div>
 
-          {/* Activity Log */}
-          <ActivityLog phase={mission.data?.currentPhase} />
+          {/* Space Weather — full width */}
+          <SpaceWeather data={weather.data} />
         </main>
 
         <Footer trajectory={trajectory.data} />

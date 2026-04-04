@@ -1,0 +1,48 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - img [ref=e9]
+        - generic [ref=e16]:
+          - heading "ARTEMIS II" [level=1] [ref=e17]
+          - paragraph [ref=e18]: Mission Control — MCC-Houston
+      - generic [ref=e19]:
+        - img [ref=e20]
+        - generic [ref=e26]: LIVE
+  - main [ref=e27]:
+    - img [ref=e29]:
+      - generic [ref=e113]: AWAITING DATA
+      - generic [ref=e114]: CURRENT PHASE
+      - generic [ref=e115]: OUTBOUND COAST
+      - generic [ref=e117]: 6,400 km
+      - generic [ref=e121]: RETURN COAST
+      - generic [ref=e124]: EARTH
+      - generic [ref=e126]: MOON
+      - generic [ref=e127]:
+        - generic [ref=e131]: ORION
+        - generic [ref=e132]: —
+    - generic [ref=e148]:
+      - generic [ref=e149]:
+        - generic [ref=e150]:
+          - heading "Velocity — 24h" [level=3] [ref=e151]
+          - generic [ref=e152]: km/s
+        - generic [ref=e153]: Loading velocity data...
+      - generic [ref=e154]:
+        - generic [ref=e155]:
+          - heading "Distance from Earth — 24h" [level=3] [ref=e156]
+          - generic [ref=e157]: km
+        - generic [ref=e158]: Loading distance data...
+    - generic [ref=e165]:
+      - generic [ref=e166]:
+        - heading "Mission Activity Log" [level=3] [ref=e167]
+        - generic [ref=e168]: Standby
+      - generic [ref=e170]: Awaiting telemetry feed...
+  - contentinfo [ref=e171]:
+    - generic [ref=e173]:
+      - generic [ref=e174]:
+        - generic [ref=e175]: "Position & velocity: JPL Horizons (SPKID -1024 - Orion/Integrity)"
+        - generic [ref=e176]: "Space weather: NOAA SWPC (live)"
+      - generic [ref=e177]:
+        - generic [ref=e178]: All times UTC
+        - generic [ref=e179]: Updates every 5s
+        - generic [ref=e180]: v0.1.0

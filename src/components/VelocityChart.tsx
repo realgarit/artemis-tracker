@@ -40,9 +40,12 @@ export function VelocityChart({ data }: VelocityChartProps) {
     <div className="glass-panel border-glow p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xs text-slate-400 uppercase tracking-wider font-medium">
-          Velocity — 24h
+          Velocity Profile
         </h3>
-        <span className="text-[9px] text-slate-500 font-mono">km/s</span>
+        <span className="font-mono text-sm text-cyan-glow font-semibold">
+          {chartData.length > 0 ? `${chartData[chartData.length - 1].velocity.toFixed(2)}` : '—'}
+          <span className="text-[9px] text-slate-500 ml-1">km/s</span>
+        </span>
       </div>
 
       {chartData.length === 0 ? (

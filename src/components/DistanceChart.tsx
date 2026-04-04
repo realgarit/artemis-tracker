@@ -45,9 +45,12 @@ export function DistanceChart({ data }: DistanceChartProps) {
     <div className="glass-panel border-glow-amber p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xs text-slate-400 uppercase tracking-wider font-medium">
-          Distance from Earth — 24h
+          Distance from Earth
         </h3>
-        <span className="text-[9px] text-slate-500 font-mono">km</span>
+        <span className="font-mono text-sm text-amber-glow font-semibold">
+          {chartData.length > 0 ? `${Math.round(chartData[chartData.length - 1].distance).toLocaleString()}` : '—'}
+          <span className="text-[9px] text-slate-500 ml-1">km</span>
+        </span>
       </div>
 
       {chartData.length === 0 ? (
