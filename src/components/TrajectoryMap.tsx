@@ -11,17 +11,12 @@ const VB = { w: 860, h: 420 }
 const EARTH = { x: 115, y: 210, r: 36 }
 const MOON = { x: 710, y: 204, r: 14 }
 
-// Two smooth curves sharing endpoints → one continuous elliptical loop
-// No separate flyby segment = no kink
-const DEPART = { x: 155, y: 205 }  // leave Earth
-const ARRIVE = { x: 157, y: 212 }  // return to Earth
-const FLYBY  = { x: 745, y: 205 }  // junction right of Moon
+const DEPART = { x: 155, y: 205 }
+const ARRIVE = { x: 157, y: 212 }
+const FLYBY  = { x: 745, y: 205 }
 
-// Outbound (top arc): DEPART → sweeps above → FLYBY
 const OB_C1 = { x: 290, y: 45 }
 const OB_C2 = { x: 580, y: 20 }
-
-// Return (bottom arc): FLYBY → sweeps below → ARRIVE
 const RT_C1 = { x: 580, y: 390 }
 const RT_C2 = { x: 290, y: 370 }
 
@@ -46,13 +41,18 @@ function getOrionPos(progress: number) {
   return bez(FLYBY, RT_C1, RT_C2, ARRIVE, (p - 0.5) / 0.5)
 }
 
-const STARS = Array.from({ length: 55 }, (_, i) => ({
-  x: (i * 137.508) % VB.w, y: (i * 89.3 + 11) % VB.h,
-  r: i % 5 === 0 ? 1 : 0.5, o: 0.08 + (i % 4) * 0.06,
+const STARS = Array.from({ length: 80 }, (_, i) => ({
+  x: (i * 137.508 + 23) % VB.w, y: (i * 89.3 + 11) % VB.h,
+  r: i % 7 === 0 ? 1.2 : i % 3 === 0 ? 0.8 : 0.4,
+  o: 0.06 + (i % 5) * 0.05,
+  twinkle: i % 6 === 0,
 }))
 
 const obDots = pathDots(DEPART, OB_C1, OB_C2, FLYBY, 18)
 const rtDots = pathDots(FLYBY, RT_C1, RT_C2, ARRIVE, 18)
+
+// Particle count for each path animation
+const PARTICLE_COUNT = 5
 
 export function TrajectoryMap({ trajectory, mission }: TrajectoryMapProps) {
   const progress = mission?.progress ?? 0
@@ -63,66 +63,151 @@ export function TrajectoryMap({ trajectory, mission }: TrajectoryMapProps) {
     <div className="glass-panel border-glow p-3 h-full flex flex-col">
       <svg viewBox={`0 0 ${VB.w} ${VB.h}`} className="w-full flex-1" preserveAspectRatio="xMidYMid meet">
         <defs>
-          <radialGradient id="eg" cx="40%" cy="40%"><stop offset="0%" stopColor="#60a5fa"/><stop offset="55%" stopColor="#2563eb"/><stop offset="100%" stopColor="#1e3a5f"/></radialGradient>
-          <radialGradient id="eGlow" cx="50%" cy="50%" r="70%"><stop offset="0%" stopColor="#3b82f6" stopOpacity=".2"/><stop offset="100%" stopColor="#3b82f6" stopOpacity="0"/></radialGradient>
-          <radialGradient id="mg" cx="40%" cy="35%"><stop offset="0%" stopColor="#d1d5db"/><stop offset="55%" stopColor="#9ca3af"/><stop offset="100%" stopColor="#6b7280"/></radialGradient>
-          <radialGradient id="orionGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#f59e0b" stopOpacity=".7"/><stop offset="40%" stopColor="#f59e0b" stopOpacity=".15"/><stop offset="100%" stopColor="#f59e0b" stopOpacity="0"/></radialGradient>
+          {/* Earth gradients */}
+          <radialGradient id="eg" cx="40%" cy="38%">
+            <stop offset="0%" stopColor="#93c5fd"/>
+            <stop offset="30%" stopColor="#60a5fa"/>
+            <stop offset="60%" stopColor="#2563eb"/>
+            <stop offset="100%" stopColor="#1e3a5f"/>
+          </radialGradient>
+          <radialGradient id="eGlow" cx="50%" cy="50%" r="70%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity=".22"/>
+            <stop offset="60%" stopColor="#1d4ed8" stopOpacity=".06"/>
+            <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0"/>
+          </radialGradient>
+          <radialGradient id="eAtmo" cx="50%" cy="50%" r="50%">
+            <stop offset="85%" stopColor="#60a5fa" stopOpacity="0"/>
+            <stop offset="95%" stopColor="#60a5fa" stopOpacity=".12"/>
+            <stop offset="100%" stopColor="#93c5fd" stopOpacity=".04"/>
+          </radialGradient>
+
+          {/* Moon gradient */}
+          <radialGradient id="mg" cx="38%" cy="35%">
+            <stop offset="0%" stopColor="#e5e7eb"/>
+            <stop offset="40%" stopColor="#d1d5db"/>
+            <stop offset="70%" stopColor="#9ca3af"/>
+            <stop offset="100%" stopColor="#6b7280"/>
+          </radialGradient>
+
+          {/* Orion glow */}
+          <radialGradient id="orionGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity=".7"/>
+            <stop offset="40%" stopColor="#f59e0b" stopOpacity=".12"/>
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0"/>
+          </radialGradient>
+
+          {/* Particle glow filter */}
+          <filter id="particleGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="2" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
         </defs>
 
-        {/* Stars */}
-        {STARS.map((s, i) => <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="#fff" opacity={s.o}/>)}
+        {/* Starfield with twinkling */}
+        {STARS.map((s, i) => (
+          <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="#fff" opacity={s.o}>
+            {s.twinkle && (
+              <animate attributeName="opacity" values={`${s.o};${s.o * 3};${s.o}`} dur={`${3 + (i % 4)}s`} repeatCount="indefinite" />
+            )}
+          </circle>
+        ))}
 
         {/* Source badge */}
-        <rect x="8" y="8" rx="4" width="160" height="20" fill="rgba(34,211,238,.07)" stroke="rgba(34,211,238,.2)" strokeWidth=".6"/>
-        <circle cx="18" cy="18" r="3" fill="#22c55e"/>
+        <rect x="8" y="8" rx="4" width="160" height="20" fill="rgba(34,211,238,.06)" stroke="rgba(34,211,238,.15)" strokeWidth=".5"/>
+        <circle cx="18" cy="18" r="3" fill="#22c55e">
+          <animate attributeName="opacity" values="1;.4;1" dur="3s" repeatCount="indefinite" />
+        </circle>
         <text x="26" y="22" fill="#94a3b8" fontSize="8" fontFamily="JetBrains Mono,monospace">NASA JSC OEM · OFFICIAL</text>
 
-        {/* Phase label top-right */}
+        {/* Phase label */}
         <text x={VB.w - 12} y="20" textAnchor="end" fill="#475569" fontSize="8.5" fontFamily="Inter,sans-serif" letterSpacing="1.5">CURRENT PHASE</text>
         <text x={VB.w - 12} y="42" textAnchor="end" fill="#22d3ee" fontSize="16" fontWeight="800" fontFamily="Orbitron,sans-serif" letterSpacing="2">{mission?.currentPhase?.toUpperCase() || ''}</text>
 
         {/* Arc labels */}
-        <text x="380" y="48" textAnchor="middle" fill="#22d3ee" fontSize="8" fontFamily="Orbitron,sans-serif" opacity=".35" letterSpacing="4">OUTBOUND COAST</text>
-        <text x="380" y={VB.h - 16} textAnchor="middle" fill="#f59e0b" fontSize="8" fontFamily="Orbitron,sans-serif" opacity=".3" letterSpacing="4">RETURN COAST</text>
+        <text x="380" y="48" textAnchor="middle" fill="#22d3ee" fontSize="8" fontFamily="Orbitron,sans-serif" opacity=".3" letterSpacing="4">OUTBOUND COAST</text>
+        <text x="380" y={VB.h - 16} textAnchor="middle" fill="#f59e0b" fontSize="8" fontFamily="Orbitron,sans-serif" opacity=".25" letterSpacing="4">RETURN COAST</text>
 
         {/* Lunar orbit ring */}
-        <circle cx={MOON.x} cy={MOON.y} r="38" fill="none" stroke="rgba(148,163,184,.08)" strokeWidth=".5" strokeDasharray="2 3"/>
+        <circle cx={MOON.x} cy={MOON.y} r="38" fill="none" stroke="rgba(148,163,184,.07)" strokeWidth=".5" strokeDasharray="2 3"/>
         <text x={MOON.x - 50} y={MOON.y - 25} fill="#4b5563" fontSize="6.5" fontFamily="JetBrains Mono,monospace" textAnchor="middle">6,400 km</text>
 
-        {/* Outbound path (solid) + dots */}
-        <path d={OUTBOUND_D} fill="none" stroke="rgba(34,211,238,.45)" strokeWidth="1.2"/>
-        {obDots.map((d, i) => <circle key={`o${i}`} cx={d.x} cy={d.y} r="2" fill="rgba(34,211,238,.2)"/>)}
+        {/* --- Trajectory paths --- */}
+        <path id="obPath" d={OUTBOUND_D} fill="none" stroke="rgba(34,211,238,.4)" strokeWidth="1.2"/>
+        {obDots.map((d, i) => <circle key={`o${i}`} cx={d.x} cy={d.y} r="1.8" fill="rgba(34,211,238,.18)"/>)}
 
-        {/* Return path (solid) + dots */}
-        <path d={RETURN_D} fill="none" stroke="rgba(245,158,11,.35)" strokeWidth="1.2"/>
-        {rtDots.map((d, i) => <circle key={`r${i}`} cx={d.x} cy={d.y} r="2" fill="rgba(245,158,11,.18)"/>)}
+        <path id="rtPath" d={RETURN_D} fill="none" stroke="rgba(245,158,11,.3)" strokeWidth="1.2"/>
+        {rtDots.map((d, i) => <circle key={`r${i}`} cx={d.x} cy={d.y} r="1.8" fill="rgba(245,158,11,.15)"/>)}
 
-        {/* Earth orbit ring */}
-        <circle cx={EARTH.x} cy={EARTH.y} r={EARTH.r + 8} fill="none" stroke="rgba(96,165,250,.06)" strokeWidth=".5"/>
+        {/* Animated particles flowing along outbound path */}
+        {Array.from({ length: PARTICLE_COUNT }, (_, i) => (
+          <circle key={`obp${i}`} r="2" fill="#22d3ee" filter="url(#particleGlow)" opacity="0">
+            <animateMotion dur="12s" begin={`${i * (12 / PARTICLE_COUNT)}s`} repeatCount="indefinite">
+              <mpath href="#obPath" />
+            </animateMotion>
+            <animate attributeName="opacity" values="0;.6;.6;0" dur="12s" begin={`${i * (12 / PARTICLE_COUNT)}s`} repeatCount="indefinite" />
+          </circle>
+        ))}
 
-        {/* Earth */}
-        <circle cx={EARTH.x} cy={EARTH.y} r={EARTH.r * 1.6} fill="url(#eGlow)"/>
+        {/* Animated particles flowing along return path */}
+        {Array.from({ length: PARTICLE_COUNT }, (_, i) => (
+          <circle key={`rtp${i}`} r="2" fill="#f59e0b" filter="url(#particleGlow)" opacity="0">
+            <animateMotion dur="12s" begin={`${i * (12 / PARTICLE_COUNT)}s`} repeatCount="indefinite">
+              <mpath href="#rtPath" />
+            </animateMotion>
+            <animate attributeName="opacity" values="0;.5;.5;0" dur="12s" begin={`${i * (12 / PARTICLE_COUNT)}s`} repeatCount="indefinite" />
+          </circle>
+        ))}
+
+        {/* Earth — atmosphere ring + body */}
+        <circle cx={EARTH.x} cy={EARTH.y} r={EARTH.r * 1.7} fill="url(#eGlow)"/>
+        <circle cx={EARTH.x} cy={EARTH.y} r={EARTH.r + 3} fill="url(#eAtmo)"/>
         <circle cx={EARTH.x} cy={EARTH.y} r={EARTH.r} fill="url(#eg)"/>
+        {/* Earth highlight */}
+        <ellipse cx={EARTH.x - 8} cy={EARTH.y - 10} rx="12" ry="18" fill="rgba(147,197,253,.08)" transform={`rotate(-20 ${EARTH.x - 8} ${EARTH.y - 10})`}/>
         <text x={EARTH.x} y={EARTH.y + EARTH.r + 18} textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="Orbitron,sans-serif" letterSpacing="3">EARTH</text>
 
-        {/* Moon */}
+        {/* Moon — with subtle crater detail */}
         <circle cx={MOON.x} cy={MOON.y} r={MOON.r} fill="url(#mg)"/>
+        <circle cx={MOON.x - 3} cy={MOON.y - 3} r="2.5" fill="rgba(107,114,128,.3)"/>
+        <circle cx={MOON.x + 4} cy={MOON.y + 2} r="1.8" fill="rgba(107,114,128,.2)"/>
+        <circle cx={MOON.x - 1} cy={MOON.y + 5} r="1.2" fill="rgba(107,114,128,.15)"/>
         <text x={MOON.x + MOON.r + 10} y={MOON.y + 5} fill="#94a3b8" fontSize="8.5" fontFamily="Orbitron,sans-serif" letterSpacing="2">MOON</text>
 
-        {/* Orion */}
+        {/* Orion spacecraft */}
         <motion.g initial={{x:orion.x,y:orion.y}} animate={{x:orion.x,y:orion.y}} transition={{duration:1.5,ease:'easeInOut'}}>
-          <circle r="24" fill="url(#orionGlow)"/>
+          <circle r="28" fill="url(#orionGlow)"/>
           <circle r="6" fill="#f59e0b"/>
           <circle r="3.5" fill="#fbbf24" opacity=".9"/>
+          <circle r="1.5" fill="#fef3c7" opacity=".7"/>
           <text x="-16" y="3" textAnchor="end" fill="#cbd5e1" fontSize="9" fontWeight="600" fontFamily="JetBrains Mono,monospace">{dist}</text>
           <text x="14" y="-2" textAnchor="start" fill="#22d3ee" fontSize="9.5" fontWeight="700" fontFamily="Orbitron,sans-serif" letterSpacing="1">ORION</text>
         </motion.g>
       </svg>
 
-      {/* Progress bar */}
-      <div className="mt-1">
-        <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
-          <div className="h-full rounded-full bg-gradient-to-r from-cyan-glow to-amber-glow transition-all duration-1000" style={{width:`${progress}%`}}/>
+      {/* Crew strip + progress */}
+      <div className="flex items-center justify-between mt-2 gap-4">
+        {/* Crew badges */}
+        {mission?.crew && (
+          <div className="flex items-center gap-3">
+            {mission.crew.map((member) => (
+              <div key={member.name} className="flex items-center gap-1.5">
+                <div className="h-5 w-5 rounded-full bg-slate-800 border border-cyan-glow/20 flex items-center justify-center text-[7px] font-bold text-cyan-glow/70 font-mono">
+                  {member.name.split(' ').map(n => n[0]).join('')}
+                </div>
+                <div className="hidden xl:block">
+                  <div className="text-[8px] text-slate-300 leading-none">{member.name}</div>
+                  <div className="text-[7px] text-slate-600 leading-none mt-0.5">{member.role} · {member.agency}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Progress bar */}
+        <div className="flex-1 max-w-[200px]">
+          <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full rounded-full bg-gradient-to-r from-cyan-glow to-amber-glow transition-all duration-1000" style={{width:`${progress}%`}}/>
+          </div>
         </div>
       </div>
     </div>
