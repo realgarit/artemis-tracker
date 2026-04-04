@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+/* === Theme === */
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-display: "Orbitron", system-ui, sans-serif;
+
+  --color-space-900: #04060b;
+  --color-space-800: #0a0f1a;
+  --color-space-700: #111827;
+  --color-space-600: #1a2332;
+
+  --color-cyan-glow: #22d3ee;
+  --color-cyan-dim: #0891b2;
+  --color-amber-glow: #f59e0b;
+  --color-amber-dim: #b45309;
+  --color-red-glow: #ef4444;
+  --color-green-glow: #22c55e;
+}
+
+/* === Base === */
+body {
+  margin: 0;
+  background: var(--color-space-900);
+  color: #e2e8f0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* === Space Background === */
+.space-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse at 20% 50%, rgba(14, 116, 144, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(124, 58, 237, 0.05) 0%, transparent 50%),
+    var(--color-space-900);
+}
+
+.space-bg::before,
+.space-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(1px 1px at var(--x1, 10%) var(--y1, 20%), rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at var(--x2, 30%) var(--y2, 70%), rgba(255, 255, 255, 0.3) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at var(--x3, 60%) var(--y3, 30%), rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at var(--x4, 80%) var(--y4, 60%), rgba(255, 255, 255, 0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at var(--x5, 50%) var(--y5, 90%), rgba(255, 255, 255, 0.35) 0%, transparent 100%);
+  --x1: 10%;
+  --y1: 20%;
+  --x2: 30%;
+  --y2: 70%;
+  --x3: 60%;
+  --y3: 30%;
+  --x4: 80%;
+  --y4: 60%;
+  --x5: 50%;
+  --y5: 90%;
+}
+
+.space-bg::before {
+  animation: twinkle1 4s ease-in-out infinite alternate;
+}
+
+.space-bg::after {
+  animation: twinkle2 5s ease-in-out infinite alternate-reverse;
+  opacity: 0.6;
+  --x1: 15%;
+  --y1: 45%;
+  --x2: 45%;
+  --y2: 15%;
+  --x3: 75%;
+  --y3: 55%;
+  --x4: 25%;
+  --y4: 85%;
+  --x5: 85%;
+  --y5: 35%;
+}
+
+@keyframes twinkle1 {
+  0% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes twinkle2 {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+/* === Scan Line (CRT effect) === */
+.scan-line {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.03) 50%);
+  background-size: 100% 4px;
+}
+
+/* === Glass Panels === */
+.glass-panel {
+  background: rgba(10, 15, 26, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(34, 211, 238, 0.1);
+  border-radius: 12px;
+}
+
+.glass-panel-solid {
+  background: rgba(10, 15, 26, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(34, 211, 238, 0.15);
+  border-radius: 12px;
+}
+
+/* === Glow Effects === */
+.border-glow {
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.1), inset 0 0 15px rgba(34, 211, 238, 0.05);
+}
+
+.border-glow-amber {
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.1), inset 0 0 15px rgba(245, 158, 11, 0.05);
+}
+
+.glow-cyan {
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.5), 0 0 30px rgba(34, 211, 238, 0.2);
+}
+
+.glow-amber {
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.5), 0 0 30px rgba(245, 158, 11, 0.2);
+}
+
+/* === Live Badge Pulse === */
+.live-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.4);
+}
+
+/* === Recharts custom === */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(34, 211, 238, 0.06) !important;
+}
