@@ -1,7 +1,7 @@
 import { useMission, useTrajectory, useSpaceWeather, useVelocityHistory, useDistanceHistory } from './lib/api'
 import { Header } from './components/Header'
+import { MetricsBar } from './components/MetricsBar'
 import { MissionTimeline } from './components/MissionTimeline'
-import { MissionStatus } from './components/MissionStatus'
 import { TrajectoryMap } from './components/TrajectoryMap'
 import { StatsGrid } from './components/StatsGrid'
 import { VelocityChart } from './components/VelocityChart'
@@ -24,24 +24,17 @@ export default function App() {
 
       <div className="relative z-10 min-h-screen">
         <Header missionName={mission.data?.name} />
-
-        <MissionTimeline phases={mission.data?.phases} />
+        <MetricsBar mission={mission.data} trajectory={trajectory.data} />
 
         <main className="mx-auto max-w-[1600px] px-4 py-6 space-y-6">
-          <MissionStatus mission={mission.data} />
+          {/* Mission Timeline */}
+          <MissionTimeline mission={mission.data} />
 
-          {/* Trajectory Map + Stats */}
-          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-            <div className="xl:col-span-3">
-              <TrajectoryMap
-                trajectory={trajectory.data}
-                mission={mission.data}
-              />
-            </div>
-            <div className="xl:col-span-2">
-              <StatsGrid trajectory={trajectory.data} />
-            </div>
-          </div>
+          {/* Trajectory Map - full width */}
+          <TrajectoryMap trajectory={trajectory.data} mission={mission.data} />
+
+          {/* Stats Grid */}
+          <StatsGrid trajectory={trajectory.data} />
 
           {/* Charts + Space Weather */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
