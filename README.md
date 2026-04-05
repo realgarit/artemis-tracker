@@ -4,9 +4,8 @@ Real-time 3D mission dashboard tracking NASA's Artemis lunar program. Built with
 
 **[Live Demo](https://mango-plant-0a0b9ee03.6.azurestaticapps.net/)**
 
-![Artemis II — Live Tracking](screenshot-artemis2.png)
-
-![Artemis I — Historical Replay](screenshot-artemis1.png)
+<img width="1449" height="717" alt="image" src="https://github.com/user-attachments/assets/a175e08f-a15b-42b5-848c-a05f0f08fde6" />
+<img width="2898" height="1432" alt="image" src="https://github.com/user-attachments/assets/e5b8830b-4159-40e8-aae7-8b17c688b9b8" />
 
 ## Features
 
