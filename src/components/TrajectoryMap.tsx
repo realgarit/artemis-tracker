@@ -329,10 +329,12 @@ export function TrajectoryMap({ mission }: TrajectoryMapProps) {
       <HUDOverlay />
 
       <WebGLBoundary>
-        <div className={`flex-1 ${isFullscreen?'min-h-screen':'min-h-[450px] sm:min-h-[500px]'} rounded overflow-hidden bg-black`}>
-          <Canvas camera={{position:[44,100,60],fov:45,near:0.01,far:8000}} gl={{antialias:true,alpha:false,powerPreference:'high-performance'}} dpr={[1,2]}>
-            <Scene />
-          </Canvas>
+        <div className={`flex-1 ${isFullscreen?'min-h-screen':'min-h-[450px] sm:min-h-[500px]'} rounded overflow-hidden bg-black relative`}>
+          <div className="absolute inset-0">
+            <Canvas camera={{position:[44,100,60],fov:45,near:0.01,far:8000}} gl={{antialias:true,alpha:false,powerPreference:'high-performance'}} dpr={[1,2]}>
+              <Scene />
+            </Canvas>
+          </div>
         </div>
       </WebGLBoundary>
 
