@@ -99,6 +99,14 @@ function Orion() {
       {/* NASA Orion capsule model */}
       <primitive object={orionModel} scale={0.6} rotation={[Math.PI / 2, 0, 0]} />
 
+      {/* Solar panel arrays — 4 panels in X-pattern from service module */}
+      {[0, 1, 2, 3].map((i) => (
+        <mesh key={i} position={[0, 0, -0.15]} rotation={[0, (i * Math.PI) / 2, 0]}>
+          <boxGeometry args={[0.7, 0.008, 0.1]} />
+          <meshStandardMaterial color="#1a3a7a" emissive="#1133aa" emissiveIntensity={0.15} roughness={0.3} metalness={0.7} />
+        </mesh>
+      ))}
+
       <pointLight color="#ff6b35" intensity={1.5} distance={12} />
 
       {/* ORION label — ABOVE */}
