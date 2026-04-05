@@ -3,6 +3,13 @@ import { Route, Switch } from 'wouter'
 import { useMission, useTrajectory, useSpaceWeather, useVelocityHistory, useDistanceHistory, useDSN } from './lib/api'
 import { startHistoryRecording } from './lib/history'
 import { getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity, getMissionPhase, SCALE, EARTH_RADIUS_KM, MOON_RADIUS_KM, getActiveMission, setActiveMission, buildVelocityProfile, buildDistanceProfile } from './data/trajectoryData'
+import type { SpaceWeatherData } from './lib/types'
+
+// Representative space weather during Artemis I (Nov-Dec 2022, solar cycle 25 rising phase)
+const ARTEMIS_I_WEATHER: SpaceWeatherData = {
+  kpIndex: 2, kpCategory: 'Quiet', solarWindSpeed: 410, solarWindDensity: 4.2,
+  imfBz: -1.1, imfBt: 5.3, source: 'NOAA SWPC (historical archive)', timestamp: '2022-11-21T12:00:00Z',
+}
 import { Header } from './components/Header'
 import { MetricsBar } from './components/MetricsBar'
 import { MissionTimeline } from './components/MissionTimeline'
@@ -98,8 +105,12 @@ function Dashboard() {
           {!isCompleted && <ActivityLog phase={mission.data?.currentPhase} />}
         </div>
 
-        {/* DSN + Space Weather — only for active missions */}
-        {!isCompleted && (
+        {/* DSN + Space Weather */}
+        {isCompleted ? (
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
+            <SpaceWeather data={ARTEMIS_I_WEATHER} />
+          </div>
+        ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4">
             <DSNPanel data={dsn.data} />
             <SpaceWeather data={weather.data} />

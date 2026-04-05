@@ -30,6 +30,13 @@ function CustomTooltip({ active, payload, label }: any) {
   )
 }
 
+function formatDateRange(data?: { timestamp: string }[]) {
+  if (!data || data.length < 2) return ''
+  const a = new Date(data[0].timestamp), b = new Date(data[data.length - 1].timestamp)
+  const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+  return a.toDateString() === b.toDateString() ? fmt(a) : `${fmt(a)} — ${fmt(b)}`
+}
+
 export function VelocityChart({ data }: VelocityChartProps) {
   const chartData = data?.data.map((p) => ({
     time: formatTime(p.timestamp),
@@ -39,9 +46,12 @@ export function VelocityChart({ data }: VelocityChartProps) {
   return (
     <div className="glass-panel border-glow p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs text-slate-400 uppercase tracking-wider font-medium">
-          Velocity Profile
-        </h3>
+        <div>
+          <h3 className="text-xs text-slate-400 uppercase tracking-wider font-medium">
+            Velocity Profile
+          </h3>
+          {data?.data && <div className="text-[8px] text-slate-600 mt-0.5">{formatDateRange(data.data)}</div>}
+        </div>
         <span className="font-mono text-sm text-cyan-glow font-semibold">
           {chartData.length > 0 ? `${chartData[chartData.length - 1].velocity.toFixed(2)}` : '—'}
           <span className="text-[9px] text-slate-500 ml-1">km/s</span>

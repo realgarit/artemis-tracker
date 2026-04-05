@@ -75,7 +75,10 @@ export function SpaceWeather({ data }: SpaceWeatherProps) {
             Space Weather
           </span>
         </div>
-        <span className="text-[9px] text-slate-500 font-mono">{data.source}</span>
+        <div className="text-right">
+          <span className="text-[9px] text-slate-500 font-mono">{data.source}</span>
+          {data.timestamp && <div className="text-[8px] text-slate-600">{new Date(data.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</div>}
+        </div>
       </div>
 
       {/* Horizontal layout: Kp on left, meter, then stats */}

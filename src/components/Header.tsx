@@ -24,7 +24,6 @@ export function Header({ missionName, activeMissionId, onMissionChange }: Header
         <div className="flex items-center gap-3">
           <div className="relative">
             <Satellite className="h-5 w-5 text-cyan-glow" strokeWidth={1.5} />
-            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-glow live-pulse" />
           </div>
           <div>
             {/* Mission name + selector */}
