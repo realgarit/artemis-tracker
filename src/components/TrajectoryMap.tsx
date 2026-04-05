@@ -1,6 +1,6 @@
 import { useRef, useMemo, useState, useCallback, useEffect, Component, type ReactNode } from 'react'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
-import { OrbitControls, Stars, Html, Line, Points, PointMaterial } from '@react-three/drei'
+import { OrbitControls, Stars, Html, Line, Points, PointMaterial, useGLTF } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { Globe, Moon as MoonIcon, Rocket, Maximize2, Minimize2, RotateCcw, FastForward, Play, Pause } from 'lucide-react'
@@ -74,7 +74,8 @@ function MoonBody() {
 function Orion() {
   const ref = useRef<THREE.Group>(null)
   const labelRef = useRef<HTMLSpanElement>(null)
-  const OS = 5
+  const { scene } = useGLTF('/models/orion.glb')
+  const orionModel = useMemo(() => scene.clone(), [scene])
 
   useFrame(() => {
     if (!ref.current) return
@@ -91,27 +92,12 @@ function Orion() {
 
   return (
     <group ref={ref}>
-      {/* Large beacon — visible from overview */}
+      {/* Beacon glow — visible from overview */}
       <mesh><sphereGeometry args={[1.2, 16, 16]} /><meshBasicMaterial color="#ff8844" transparent opacity={0.05} /></mesh>
-      <mesh><sphereGeometry args={[0.4, 16, 16]} /><meshBasicMaterial color="#ff8844" transparent opacity={0.1} /></mesh>
+      <mesh><sphereGeometry args={[0.4, 16, 16]} /><meshBasicMaterial color="#ff8844" transparent opacity={0.12} /></mesh>
 
-      {/* Capsule */}
-      <mesh rotation={[Math.PI, 0, 0]} scale={[OS, OS, OS]}>
-        <coneGeometry args={[0.035, 0.09, 8]} />
-        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.3} roughness={0.4} metalness={0.3} />
-      </mesh>
-      {/* Service module */}
-      <mesh position={[0, 0, -0.008 * OS]} scale={[OS, OS, OS]}>
-        <cylinderGeometry args={[0.028, 0.032, 0.05, 8]} />
-        <meshStandardMaterial color="#cccccc" roughness={0.5} metalness={0.2} />
-      </mesh>
-      {/* Solar panels */}
-      {[0, 1, 2, 3].map((i) => (
-        <mesh key={i} position={[0, 0, -0.005 * OS]} rotation={[0, (i * Math.PI) / 2, 0]} scale={[OS, OS, OS]}>
-          <planeGeometry args={[0.15, 0.02]} />
-          <meshStandardMaterial color="#1a3a7a" emissive="#1133aa" emissiveIntensity={0.1} roughness={0.3} metalness={0.7} side={THREE.DoubleSide} />
-        </mesh>
-      ))}
+      {/* NASA Orion capsule model */}
+      <primitive object={orionModel} scale={0.6} rotation={[Math.PI / 2, 0, 0]} />
 
       <pointLight color="#ff6b35" intensity={1.5} distance={12} />
 
