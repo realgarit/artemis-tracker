@@ -18,11 +18,18 @@ function formatTime(timestamp: string) {
   return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`
 }
 
-function CustomTooltip({ active, payload, label }: any) {
+function formatFullDate(timestamp: string) {
+  const d = new Date(timestamp)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+    + ' ' + `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`
+}
+
+function CustomTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null
+  const pt = payload[0].payload
   return (
     <div className="glass-panel-solid px-3 py-2 text-xs">
-      <div className="text-slate-400 font-mono">{label} UTC</div>
+      <div className="text-slate-400 font-mono">{pt.fullDate}</div>
       <div className="text-cyan-glow font-mono font-bold mt-0.5">
         {payload[0].value.toFixed(3)} km/s
       </div>
@@ -30,28 +37,19 @@ function CustomTooltip({ active, payload, label }: any) {
   )
 }
 
-function formatDateRange(data?: { timestamp: string }[]) {
-  if (!data || data.length < 2) return ''
-  const a = new Date(data[0].timestamp), b = new Date(data[data.length - 1].timestamp)
-  const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
-  return a.toDateString() === b.toDateString() ? fmt(a) : `${fmt(a)} — ${fmt(b)}`
-}
-
 export function VelocityChart({ data }: VelocityChartProps) {
   const chartData = data?.data.map((p) => ({
     time: formatTime(p.timestamp),
+    fullDate: formatFullDate(p.timestamp),
     velocity: p.value,
   })) || []
 
   return (
     <div className="glass-panel border-glow p-4">
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-xs text-slate-400 uppercase tracking-wider font-medium">
-            Velocity Profile
-          </h3>
-          {data?.data && <div className="text-[8px] text-slate-600 mt-0.5">{formatDateRange(data.data)}</div>}
-        </div>
+        <h3 className="text-xs text-slate-400 uppercase tracking-wider font-medium">
+          Velocity Profile
+        </h3>
         <span className="font-mono text-sm text-cyan-glow font-semibold">
           {chartData.length > 0 ? `${chartData[chartData.length - 1].velocity.toFixed(2)}` : '—'}
           <span className="text-[9px] text-slate-500 ml-1">km/s</span>
