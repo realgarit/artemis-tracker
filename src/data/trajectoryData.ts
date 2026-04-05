@@ -298,6 +298,36 @@ export function getVelocity(day: number): number {
   return distKm / (step * 86400)
 }
 
+// ——— Full Mission Profile (computed from trajectory data) ———
+
+export interface MissionHistoryPoint {
+  timestamp: number
+  value: number
+}
+
+export function buildVelocityProfile(): MissionHistoryPoint[] {
+  const { launchTime, missionDays, trajStartDay } = active
+  const points: MissionHistoryPoint[] = []
+  const steps = Math.min(200, Math.floor(missionDays * 12))
+  for (let i = 0; i <= steps; i++) {
+    const day = trajStartDay + (i / steps) * (missionDays - trajStartDay)
+    points.push({ timestamp: launchTime + day * 86400000, value: getVelocity(day) })
+  }
+  return points
+}
+
+export function buildDistanceProfile(): MissionHistoryPoint[] {
+  const { launchTime, missionDays, trajStartDay } = active
+  const points: MissionHistoryPoint[] = []
+  const steps = Math.min(200, Math.floor(missionDays * 12))
+  for (let i = 0; i <= steps; i++) {
+    const day = trajStartDay + (i / steps) * (missionDays - trajStartDay)
+    const pos = getTrajectoryPos(day)
+    points.push({ timestamp: launchTime + day * 86400000, value: Math.max(0, pos.length() / SCALE - EARTH_RADIUS_KM) })
+  }
+  return points
+}
+
 // ——— Pre-computed curves (mutable, rebuilt on mission switch) ———
 
 export let fullTrajPts = buildTrajectoryCurve()

@@ -3,7 +3,7 @@ import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { OrbitControls, Stars, Html, Line, Points, PointMaterial } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
-import { Globe, Moon as MoonIcon, Rocket, Maximize2, Minimize2, RotateCcw, FastForward } from 'lucide-react'
+import { Globe, Moon as MoonIcon, Rocket, Maximize2, Minimize2, RotateCcw, FastForward, Play, Pause } from 'lucide-react'
 import {
   eR, mR, SCALE, EARTH_RADIUS_KM, MOON_RADIUS_KM,
   getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity,
@@ -308,11 +308,23 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryM
       simOverride = null; simSpeed = 0; setSimDay(null); setSpeed(0)
     }
   }, [isCompleted])
+  const togglePlay = useCallback(() => {
+    if (speed > 0) {
+      // Pause
+      simSpeed = 0; setSpeed(0)
+    } else {
+      // Play at 1x
+      simSpeed = 1
+      if (simOverride === null) simOverride = isCompleted ? 0 : getCurrentMissionDay()
+      setSpeed(1)
+    }
+  }, [speed, isCompleted])
   const cycleSpeed = useCallback(() => {
-    const speeds = [0, 10, 100, 1000]
-    const next = speeds[(speeds.indexOf(speed) + 1) % speeds.length]
+    const speeds = [1, 10, 100, 1000]
+    const idx = speeds.indexOf(speed)
+    const next = speeds[(idx + 1) % speeds.length]
     simSpeed = next
-    if (next > 0 && simOverride === null) simOverride = isCompleted ? 0 : getCurrentMissionDay()
+    if (simOverride === null) simOverride = isCompleted ? 0 : getCurrentMissionDay()
     setSpeed(next)
   }, [speed, isCompleted])
 
@@ -364,11 +376,11 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryM
         </div>
       </WebGLBoundary>
 
-      {/* Bottom bar — scrubber */}
+      {/* Bottom bar — scrubber + play controls */}
       <div className={`flex items-center gap-3 mt-1 px-1 ${isFullscreen?'px-4 pb-3':''}`}>
         <div className="flex items-center gap-2 flex-1">
           {isCompleted ? (
-            <button onClick={resetToLive} className="h-6 px-2 rounded bg-amber-glow/10 border border-amber-glow/25 text-[8px] font-bold text-amber-glow tracking-wider flex items-center gap-1 shrink-0">
+            <button onClick={resetToLive} className="h-6 px-2 rounded bg-amber-glow/10 border border-amber-glow/25 text-[8px] font-bold text-amber-glow tracking-wider flex items-center gap-1 shrink-0" title="Reset to start">
               <RotateCcw className="h-3 w-3"/> RESET
             </button>
           ) : simDay !== null ? (
@@ -378,12 +390,15 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryM
           ) : (
             <span className="text-[8px] text-green-glow font-mono font-semibold tracking-wider shrink-0">● LIVE</span>
           )}
+          <button onClick={togglePlay} className={`h-6 w-6 rounded flex items-center justify-center shrink-0 transition-all ${speed>0?'bg-cyan-glow/15 text-cyan-glow border border-cyan-glow/25':'bg-space-950/80 text-slate-400 border border-slate-700/40 hover:text-cyan-glow'}`} title={speed > 0 ? 'Pause' : 'Play'}>
+            {speed > 0 ? <Pause className="h-3 w-3"/> : <Play className="h-3 w-3"/>}
+          </button>
           <input type="range" min={tsd} max={md} step={0.01} value={currentDay} onChange={handleScrub}
             className="flex-1 max-w-xs h-1 accent-cyan-glow cursor-pointer" />
           <span className="font-mono text-[9px] text-slate-500 w-16 shrink-0">
             Day {currentDay.toFixed(1)}/{md}
           </span>
-          <button onClick={cycleSpeed} className={`h-6 px-2 rounded text-[8px] font-semibold tracking-wider flex items-center gap-1 shrink-0 transition-all ${speed>0?'bg-amber-glow/10 text-amber-glow border border-amber-glow/25':'bg-space-950/80 text-slate-500 border border-slate-700/40 hover:text-slate-300'}`}>
+          <button onClick={cycleSpeed} className={`h-6 px-2 rounded text-[8px] font-semibold tracking-wider flex items-center gap-1 shrink-0 transition-all ${speed>0?'bg-amber-glow/10 text-amber-glow border border-amber-glow/25':'bg-space-950/80 text-slate-500 border border-slate-700/40 hover:text-slate-300'}`} title="Cycle speed">
             <FastForward className="h-3 w-3"/> {speed > 0 ? `${speed}×` : '1×'}
           </button>
         </div>

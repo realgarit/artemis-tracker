@@ -1,8 +1,8 @@
-import { lazy, Suspense, useEffect, useCallback, useState } from 'react'
+import { lazy, Suspense, useEffect, useCallback, useState, useMemo } from 'react'
 import { Route, Switch } from 'wouter'
 import { useMission, useTrajectory, useSpaceWeather, useVelocityHistory, useDistanceHistory, useDSN } from './lib/api'
 import { startHistoryRecording } from './lib/history'
-import { getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity, getMissionPhase, SCALE, EARTH_RADIUS_KM, MOON_RADIUS_KM, getActiveMission, setActiveMission } from './data/trajectoryData'
+import { getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity, getMissionPhase, SCALE, EARTH_RADIUS_KM, MOON_RADIUS_KM, getActiveMission, setActiveMission, buildVelocityProfile, buildDistanceProfile } from './data/trajectoryData'
 import { Header } from './components/Header'
 import { MetricsBar } from './components/MetricsBar'
 import { MissionTimeline } from './components/MissionTimeline'
@@ -33,8 +33,10 @@ function TrajectoryFallback() {
 
 function Dashboard() {
   const [activeMissionId, setActiveMissionId] = useState('artemis-ii')
-  const isCompleted = getActiveMission().status === 'completed'
+  const activeMission = getActiveMission()
+  const isCompleted = activeMission.status === 'completed'
 
+  // Live API data — only fetch for active missions
   const mission = useMission()
   const trajectory = useTrajectory()
   const weather = useSpaceWeather()
@@ -42,11 +44,21 @@ function Dashboard() {
   const distanceHistory = useDistanceHistory()
   const dsn = useDSN()
 
+  // Pre-computed profiles from trajectory data (for completed missions or as fallback)
+  const velocityProfile = useMemo(() => {
+    const pts = buildVelocityProfile()
+    return { labels: pts.map(p => new Date(p.timestamp).toISOString()), values: pts.map(p => p.value) }
+  }, [activeMissionId])
+  const distanceProfile = useMemo(() => {
+    const pts = buildDistanceProfile()
+    return { labels: pts.map(p => new Date(p.timestamp).toISOString()), values: pts.map(p => p.value) }
+  }, [activeMissionId])
+
   useEffect(() => {
     if (isCompleted) return
     startHistoryRecording(() => {
       const day = getCurrentMissionDay()
-      if (day < 0 || day > getActiveMission().missionDays + 1) return null
+      if (day < 0 || day > activeMission.missionDays + 1) return null
       const pos = getTrajectoryPos(day)
       const moonPos = getMoonPos(day)
       return {
@@ -59,41 +71,43 @@ function Dashboard() {
   }, [activeMissionId, isCompleted])
 
   const handleMissionChange = useCallback((id: string) => {
-    setActiveMission(id) // switch trajectory data immediately (before re-render)
+    setActiveMission(id)
     setActiveMissionId(id)
   }, [])
 
   return (
     <>
-      <Header missionName={getActiveMission().name} activeMissionId={activeMissionId} onMissionChange={handleMissionChange} />
-      <MetricsBar mission={mission.data} trajectory={trajectory.data} />
+      <Header missionName={activeMission.name} activeMissionId={activeMissionId} onMissionChange={handleMissionChange} />
+      {!isCompleted && <MetricsBar mission={mission.data} trajectory={trajectory.data} />}
 
       <main className="mx-auto max-w-[1600px] px-3 sm:px-4 pt-3 sm:pt-4 pb-6 space-y-3 sm:space-y-4">
-        <MissionTimeline mission={mission.data} />
+        {!isCompleted && <MissionTimeline mission={mission.data} />}
 
         {/* 3D Trajectory — FULL WIDTH */}
         <Suspense fallback={<TrajectoryFallback />}>
           <TrajectoryMap mission={mission.data} missionId={activeMissionId} />
         </Suspense>
 
-        {/* Crew */}
-        <CrewPanel crew={mission.data?.crew} />
+        {/* Crew — only for crewed missions */}
+        {!isCompleted && <CrewPanel crew={mission.data?.crew} />}
 
         {/* Charts + Flight Log */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-          <VelocityChart data={velocityHistory.data} />
-          <DistanceChart data={distanceHistory.data} />
-          <ActivityLog phase={mission.data?.currentPhase} />
+        <div className={`grid grid-cols-1 ${isCompleted ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-3 sm:gap-4`}>
+          <VelocityChart data={isCompleted ? velocityProfile : velocityHistory.data} />
+          <DistanceChart data={isCompleted ? distanceProfile : distanceHistory.data} />
+          {!isCompleted && <ActivityLog phase={mission.data?.currentPhase} />}
         </div>
 
-        {/* DSN + Space Weather */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4">
-          <DSNPanel data={dsn.data} />
-          <SpaceWeather data={weather.data} />
-        </div>
+        {/* DSN + Space Weather — only for active missions */}
+        {!isCompleted && (
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4">
+            <DSNPanel data={dsn.data} />
+            <SpaceWeather data={weather.data} />
+          </div>
+        )}
 
-        {/* NASA Live — bottom */}
-        <LiveFeeds />
+        {/* NASA Live — only for active missions */}
+        {!isCompleted && <LiveFeeds />}
       </main>
 
       <Footer trajectory={trajectory.data} />
