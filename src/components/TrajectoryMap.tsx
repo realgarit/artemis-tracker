@@ -1,233 +1,325 @@
 import { useRef, useMemo, Component, type ReactNode } from 'react'
 import { Canvas, useFrame, useLoader } from '@react-three/fiber'
 import { OrbitControls, Stars, Html, Line } from '@react-three/drei'
+import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
-import type { TrajectoryData, MissionData } from '../lib/types'
+import {
+  eR, mR, SCALE, EARTH_RADIUS_KM, MOON_RADIUS_KM,
+  getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity,
+  buildTrajectoryCurve, buildMoonArc, getMissionPhase,
+} from '../data/trajectoryData'
+import type { MissionData } from '../lib/types'
 
 interface TrajectoryMapProps {
-  trajectory?: TrajectoryData
   mission?: MissionData
 }
 
-const EARTH_R = 1
-const MOON_R = 0.27
-const EARTH_POS = new THREE.Vector3(0, 0, 0)
-const MOON_POS = new THREE.Vector3(7, 5, 0.3)
+// Pre-compute full trajectory curve (TLI → splashdown)
+const fullTrajPts = buildTrajectoryCurve()
+const moonArcPts = buildMoonArc()
 
-const outboundCurve = new THREE.CubicBezierCurve3(
-  new THREE.Vector3(1.15, 0, 0),
-  new THREE.Vector3(3, 3, 0.5),
-  new THREE.Vector3(6, 5.5, 0.8),
-  new THREE.Vector3(8.2, 5.8, 0.3),
-)
-const returnCurve = new THREE.CubicBezierCurve3(
-  new THREE.Vector3(8.2, 5.8, 0.3),
-  new THREE.Vector3(6, 3, -0.5),
-  new THREE.Vector3(3, -1.5, -0.4),
-  new THREE.Vector3(1.15, 0, 0),
-)
-
-function getOrionPos(progress: number): THREE.Vector3 {
-  const p = progress / 100
-  if (p < 0.5) return outboundCurve.getPoint(p / 0.5)
-  return returnCurve.getPoint((p - 0.5) / 0.5)
-}
-
-// --- Textured Earth ---
+// ——— Earth ———
 function Earth() {
   const ref = useRef<THREE.Mesh>(null)
   const texture = useLoader(THREE.TextureLoader, '/textures/earth.jpg')
-  useFrame(() => { if (ref.current) ref.current.rotation.y += 0.0006 })
+  useFrame((_, dt) => { if (ref.current) ref.current.rotation.y += dt * 0.02 })
 
   return (
-    <group position={EARTH_POS}>
+    <group>
+      {/* Atmosphere inner glow */}
       <mesh>
-        <sphereGeometry args={[EARTH_R * 1.2, 64, 64]} />
-        <meshBasicMaterial color="#38bdf8" transparent opacity={0.04} side={THREE.BackSide} />
+        <sphereGeometry args={[eR * 1.06, 64, 64]} />
+        <meshBasicMaterial color="#4499ff" transparent opacity={0.06} side={THREE.BackSide} />
       </mesh>
+      {/* Outer halo */}
       <mesh>
-        <sphereGeometry args={[EARTH_R * 1.08, 64, 64]} />
-        <meshBasicMaterial color="#7dd3fc" transparent opacity={0.03} side={THREE.BackSide} />
+        <sphereGeometry args={[eR * 2.5, 32, 32]} />
+        <meshBasicMaterial color="#2266aa" transparent opacity={0.02} side={THREE.BackSide} />
       </mesh>
+      {/* Planet */}
       <mesh ref={ref}>
-        <sphereGeometry args={[EARTH_R, 64, 64]} />
-        <meshStandardMaterial map={texture} roughness={0.8} metalness={0.05} emissive="#0c1a3a" emissiveIntensity={0.3} />
+        <sphereGeometry args={[eR, 128, 64]} />
+        <meshStandardMaterial map={texture} roughness={0.8} metalness={0.05} />
       </mesh>
-      <Html position={[0, -1.6, 0]} center style={{ pointerEvents: 'none' }}>
-        <span style={{ fontFamily: 'Orbitron', fontSize: 10, color: 'rgba(148,163,184,0.7)', letterSpacing: 4, userSelect: 'none' }}>EARTH</span>
+      <Html position={[0, -(eR + 1), 0]} center style={{ pointerEvents: 'none' }}>
+        <span style={{ fontFamily: 'Orbitron', fontSize: 10, color: '#4499ff', letterSpacing: 4, userSelect: 'none', opacity: 0.7 }}>EARTH</span>
       </Html>
     </group>
   )
 }
 
-// --- Textured Moon ---
+// ——— Moon (moves each frame) ———
 function Moon() {
+  const ref = useRef<THREE.Group>(null)
   const texture = useLoader(THREE.TextureLoader, '/textures/moon.jpg')
 
+  useFrame(() => {
+    if (!ref.current) return
+    const day = getCurrentMissionDay()
+    const pos = getMoonPos(day)
+    ref.current.position.copy(pos)
+  })
+
   return (
-    <group position={MOON_POS}>
+    <group ref={ref}>
       <mesh>
-        <sphereGeometry args={[MOON_R, 32, 32]} />
+        <sphereGeometry args={[mR, 64, 32]} />
         <meshStandardMaterial map={texture} roughness={0.95} metalness={0} />
       </mesh>
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[MOON_R + 0.18, MOON_R + 0.2, 64]} />
-        <meshBasicMaterial color="#475569" transparent opacity={0.1} side={THREE.DoubleSide} />
+      {/* Subtle glow */}
+      <mesh>
+        <sphereGeometry args={[mR * 2.5, 16, 16]} />
+        <meshBasicMaterial color="#888899" transparent opacity={0.015} side={THREE.BackSide} />
       </mesh>
-      <Html position={[0, -0.7, 0]} center style={{ pointerEvents: 'none' }}>
-        <span style={{ fontFamily: 'Orbitron', fontSize: 9, color: 'rgba(148,163,184,0.6)', letterSpacing: 3, userSelect: 'none' }}>MOON</span>
+      <Html position={[0, -(mR + 0.8), 0]} center style={{ pointerEvents: 'none' }}>
+        <span style={{ fontFamily: 'Orbitron', fontSize: 9, color: '#aaaacc', letterSpacing: 3, userSelect: 'none', opacity: 0.6 }}>MOON</span>
       </Html>
     </group>
   )
 }
 
-function TrajectoryPath({ curve, color }: { curve: THREE.CubicBezierCurve3; color: string }) {
-  const points = useMemo(() => curve.getPoints(120).map((p) => [p.x, p.y, p.z] as [number, number, number]), [curve])
-  const dots = useMemo(() => Array.from({ length: 22 }, (_, i) => curve.getPoint((i + 1) / 23)), [curve])
+// ——— Trajectory lines ———
+function TrajectoryLines() {
+  const traveledRef = useRef<any>(null)
+
+  // Full predicted path (dashed, dim)
+  const fullPts = useMemo(() => fullTrajPts.map(p => [p.x, p.y, p.z] as [number, number, number]), [])
+
+  // Moon orbit arc
+  const moonPts = useMemo(() => moonArcPts.map(p => [p.x, p.y, p.z] as [number, number, number]), [])
+
+  useFrame(() => {
+    if (!traveledRef.current) return
+    const day = getCurrentMissionDay()
+    // Find how far along the trajectory we are
+    const totalPts = fullTrajPts.length
+    const orionPos = getTrajectoryPos(day)
+    // Find closest point index
+    let closestIdx = 0
+    let closestDist = Infinity
+    for (let i = 0; i < totalPts; i++) {
+      const d = fullTrajPts[i].distanceTo(orionPos)
+      if (d < closestDist) { closestDist = d; closestIdx = i }
+    }
+    // Update traveled line to show only up to current position
+    const traveled = fullTrajPts.slice(0, closestIdx + 1).map(p => [p.x, p.y, p.z] as [number, number, number])
+    if (traveled.length > 1) {
+      traveledRef.current.geometry.setPositions(traveled.flat())
+    }
+  })
+
   return (
     <>
-      <Line points={points} color={color} lineWidth={1.5} transparent opacity={0.45} />
-      {dots.map((d, i) => (
-        <mesh key={i} position={d}>
-          <sphereGeometry args={[0.022, 6, 6]} />
-          <meshBasicMaterial color={color} transparent opacity={0.18} />
-        </mesh>
-      ))}
+      {/* Full predicted trajectory — dim dashed */}
+      <Line points={fullPts} color="#ff8855" lineWidth={1} transparent opacity={0.15} dashed dashSize={0.4} gapSize={0.3} />
+      {/* Subtle glow line */}
+      <Line points={fullPts} color="#ff6b35" lineWidth={2} transparent opacity={0.03} />
+
+      {/* Traveled portion — bright */}
+      <Line ref={traveledRef} points={fullPts.slice(0, 2)} color="#ff6b35" lineWidth={2} transparent opacity={0.85} />
+
+      {/* Moon orbit arc */}
+      <Line points={moonPts} color="#ffffff" lineWidth={1} transparent opacity={0.3} />
     </>
   )
 }
 
-function FlowingParticles({ curve, color, count = 7 }: { curve: THREE.CubicBezierCurve3; color: string; count?: number }) {
-  const refs = useRef<THREE.Mesh[]>([])
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime()
-    refs.current.forEach((mesh, i) => {
-      if (!mesh) return
-      const progress = ((t / 10) + i / count) % 1
-      mesh.position.copy(curve.getPoint(progress))
-      ;(mesh.material as THREE.MeshBasicMaterial).opacity = Math.sin(progress * Math.PI) * 0.75
-    })
-  })
-  return (
-    <>
-      {Array.from({ length: count }, (_, i) => (
-        <mesh key={i} ref={(el) => { if (el) refs.current[i] = el }}>
-          <sphereGeometry args={[0.04, 8, 8]} />
-          <meshBasicMaterial color={color} transparent opacity={0} />
-        </mesh>
-      ))}
-    </>
-  )
-}
+// ——— Orion spacecraft ———
+function Orion() {
+  const ref = useRef<THREE.Group>(null)
+  const labelRef = useRef<HTMLDivElement>(null)
 
-function OrionMarker({ progress, distLabel }: { progress: number; distLabel: string }) {
-  const pos = useMemo(() => getOrionPos(progress), [progress])
-  const glowRef = useRef<THREE.Mesh>(null)
-  useFrame(({ clock }) => {
-    if (glowRef.current) glowRef.current.scale.setScalar(1 + Math.sin(clock.getElapsedTime() * 2.5) * 0.2)
+  useFrame(() => {
+    if (!ref.current) return
+    const day = getCurrentMissionDay()
+    const pos = getTrajectoryPos(day)
+    ref.current.position.copy(pos)
+
+    // Orient along velocity vector
+    const step = 0.002
+    const nextPos = getTrajectoryPos(day + step)
+    if (nextPos.distanceTo(pos) > 0.001) {
+      ref.current.lookAt(nextPos)
+    }
+
+    // Update distance label
+    if (labelRef.current) {
+      const distEarth = Math.max(0, pos.length() / SCALE - EARTH_RADIUS_KM)
+      const moonPos = getMoonPos(day)
+      const distMoon = Math.max(0, pos.clone().sub(moonPos).length() / SCALE - MOON_RADIUS_KM)
+      const vel = getVelocity(day)
+      labelRef.current.innerHTML = `
+        <div style="font-family:Space Mono,monospace;font-size:9px;color:#ccc;white-space:nowrap">
+          ${Math.round(distEarth).toLocaleString()} km
+        </div>
+      `
+    }
   })
+
   return (
-    <group position={pos}>
-      <mesh ref={glowRef}>
-        <sphereGeometry args={[0.22, 16, 16]} />
-        <meshBasicMaterial color="#67e8f9" transparent opacity={0.06} />
-      </mesh>
+    <group ref={ref}>
+      {/* Beacon glow — visible from far away */}
       <mesh>
-        <sphereGeometry args={[0.08, 16, 16]} />
+        <sphereGeometry args={[0.8, 16, 16]} />
+        <meshBasicMaterial color="#ff8844" transparent opacity={0.04} />
+      </mesh>
+      {/* Craft body */}
+      <mesh>
+        <sphereGeometry args={[0.12, 16, 16]} />
         <meshBasicMaterial color="#e0f2fe" />
       </mesh>
       <mesh>
-        <sphereGeometry args={[0.05, 12, 12]} />
+        <sphereGeometry args={[0.07, 12, 12]} />
         <meshBasicMaterial color="#ffffff" />
       </mesh>
-      <pointLight color="#67e8f9" intensity={0.6} distance={3} />
-      <Html position={[0.35, 0.22, 0]} style={{ pointerEvents: 'none' }}>
-        <span style={{ fontFamily: 'Orbitron', fontSize: 10, color: '#22d3ee', fontWeight: 700, letterSpacing: 1.5, userSelect: 'none' }}>ORION</span>
+      {/* Beacon light */}
+      <pointLight color="#ff8844" intensity={1} distance={10} />
+
+      <Html position={[1.2, 0.5, 0]} style={{ pointerEvents: 'none' }}>
+        <span style={{ fontFamily: 'Orbitron', fontSize: 10, color: '#ff8844', fontWeight: 700, letterSpacing: 1.5, userSelect: 'none' }}>ORION</span>
       </Html>
-      <Html position={[-0.3, -0.05, 0]} style={{ pointerEvents: 'none' }}>
-        <span style={{ fontFamily: 'Space Mono', fontSize: 9, color: '#94a3b8', userSelect: 'none', whiteSpace: 'nowrap' }}>{distLabel}</span>
+      <Html position={[-1.2, -0.3, 0]} style={{ pointerEvents: 'none' }}>
+        <div ref={labelRef} />
       </Html>
     </group>
   )
 }
 
-function CameraController({ progress }: { progress: number }) {
-  const controlsRef = useRef<any>(null)
-  const orionPos = useMemo(() => getOrionPos(progress), [progress])
+// ——— Earth-Moon connection line ———
+function ConnectionLine() {
+  const ref = useRef<any>(null)
+
   useFrame(() => {
-    if (!controlsRef.current) return
-    const cam = controlsRef.current.object as THREE.PerspectiveCamera
-    const dist = cam.position.distanceTo(controlsRef.current.target)
-    const blend = THREE.MathUtils.clamp(1 - (dist - 6) / 16, 0, 0.8)
-    const mid = new THREE.Vector3(3.5, 2, 0)
-    controlsRef.current.target.lerp(mid.clone().lerp(orionPos, blend), 0.02)
-    controlsRef.current.update()
+    if (!ref.current) return
+    const moonPos = getMoonPos(getCurrentMissionDay())
+    ref.current.geometry.setPositions([0, 0, 0, moonPos.x, moonPos.y, moonPos.z])
   })
-  return (
-    <OrbitControls
-      ref={controlsRef}
-      enableZoom enablePan={false}
-      minDistance={4} maxDistance={28}
-      autoRotate autoRotateSpeed={0.2}
-      maxPolarAngle={Math.PI * 0.72}
-      minPolarAngle={Math.PI * 0.18}
-    />
-  )
+
+  return <Line ref={ref} points={[[0,0,0],[1,0,0]]} color="#ffffff" lineWidth={0.5} transparent opacity={0.06} />
 }
 
-function Scene({ trajectory, mission }: TrajectoryMapProps) {
-  const progress = mission?.progress ?? 0
-  const dist = trajectory ? `${Math.round(trajectory.distanceFromEarth).toLocaleString()} km` : '—'
-  return (
-    <>
-      <ambientLight intensity={0.08} />
-      <directionalLight position={[20, 10, 15]} intensity={1.6} color="#fffbeb" />
-      <pointLight position={[0, 0, 0]} intensity={0.15} color="#3b82f6" distance={4} />
-      <Stars radius={200} depth={80} count={3500} factor={3} saturation={0} fade speed={0.3} />
-      <Earth />
-      <Moon />
-      <TrajectoryPath curve={outboundCurve} color="#22d3ee" />
-      <TrajectoryPath curve={returnCurve} color="#f59e0b" />
-      <FlowingParticles curve={outboundCurve} color="#22d3ee" count={7} />
-      <FlowingParticles curve={returnCurve} color="#f59e0b" count={7} />
-      <OrionMarker progress={progress} distLabel={dist} />
-      <CameraController progress={progress} />
-    </>
-  )
+// ——— Sun light that slowly orbits ———
+function SunLight() {
+  const ref = useRef<THREE.DirectionalLight>(null)
+  useFrame(({ clock }) => {
+    if (!ref.current) return
+    const t = clock.getElapsedTime() * 0.01
+    ref.current.position.set(300 * Math.cos(t), 80, -150 * Math.sin(t))
+  })
+  return <directionalLight ref={ref} position={[300, 80, -150]} intensity={2.5} color="#ffffff" />
 }
 
-// --- Error boundary: falls back gracefully if WebGL fails ---
-class WebGLErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
-  state = { hasError: false }
-  static getDerivedStateFromError() { return { hasError: true } }
-  render() { return this.state.hasError ? this.props.fallback : this.props.children }
-}
+// ——— HUD overlay (updates every frame via RAF, not polling) ———
+function HUDOverlay() {
+  const ref = useRef<HTMLDivElement>(null)
 
-function FallbackView({ trajectory, mission }: TrajectoryMapProps) {
-  const dist = trajectory ? `${Math.round(trajectory.distanceFromEarth).toLocaleString()} km` : '—'
+  // Update HUD every animation frame for true realtime
+  const updateHUD = () => {
+    if (!ref.current) return
+    const day = getCurrentMissionDay()
+    const pos = getTrajectoryPos(day)
+    const moonPos = getMoonPos(day)
+    const distEarth = Math.max(0, Math.round(pos.length() / SCALE - EARTH_RADIUS_KM))
+    const distMoon = Math.max(0, Math.round(pos.clone().sub(moonPos).length() / SCALE - MOON_RADIUS_KM))
+    const vel = getVelocity(day).toFixed(3)
+    const phase = getMissionPhase(day)
+
+    ref.current.querySelector('[data-dist-earth]')!.textContent = distEarth.toLocaleString() + ' km'
+    ref.current.querySelector('[data-dist-moon]')!.textContent = distMoon.toLocaleString() + ' km'
+    ref.current.querySelector('[data-velocity]')!.textContent = vel + ' km/s'
+    ref.current.querySelector('[data-phase]')!.textContent = phase.toUpperCase()
+
+    requestAnimationFrame(updateHUD)
+  }
+
+  // Start RAF loop on mount
+  useMemo(() => { requestAnimationFrame(updateHUD) }, [])
+
   return (
-    <div className="flex-1 min-h-[240px] flex items-center justify-center text-center">
-      <div>
-        <div className="font-display text-lg text-cyan-glow glow-cyan mb-1">ORION</div>
-        <div className="font-mono text-2xl text-slate-200">{dist}</div>
-        <div className="text-[10px] text-slate-500 mt-2">3D visualization unavailable — WebGL required</div>
+    <div ref={ref} className="absolute bottom-12 left-3 z-10 space-y-1">
+      <div className="bg-space-950/80 backdrop-blur-sm border border-cyan-mid/10 rounded px-2.5 py-1.5 space-y-0.5">
+        <div className="flex items-center gap-3">
+          <span className="text-[7px] text-slate-600 uppercase tracking-wider w-12">Earth</span>
+          <span data-dist-earth className="font-mono text-[11px] text-cyan-glow font-semibold">— km</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[7px] text-slate-600 uppercase tracking-wider w-12">Moon</span>
+          <span data-dist-moon className="font-mono text-[11px] text-slate-300 font-semibold">— km</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[7px] text-slate-600 uppercase tracking-wider w-12">Speed</span>
+          <span data-velocity className="font-mono text-[11px] text-amber-glow font-semibold">— km/s</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[7px] text-slate-600 uppercase tracking-wider w-12">Phase</span>
+          <span data-phase className="font-mono text-[9px] text-cyan-glow/70">—</span>
+        </div>
       </div>
     </div>
   )
 }
 
-// --- Main export ---
-export function TrajectoryMap({ trajectory, mission }: TrajectoryMapProps) {
-  const progress = mission?.progress ?? 0
-
+// ——— Main scene ———
+function Scene() {
   return (
-    <div className="glass-panel border-glow p-3 h-full flex flex-col relative">
+    <>
+      <ambientLight intensity={0.15} color="#1a1a3a" />
+      <SunLight />
+
+      <Stars radius={1500} depth={3000} count={15000} factor={3} saturation={0} fade speed={0.3} />
+
+      <Earth />
+      <Moon />
+      <TrajectoryLines />
+      <Orion />
+      <ConnectionLine />
+
+      <EffectComposer>
+        <Bloom intensity={0.5} luminanceThreshold={0.88} luminanceSmoothing={0.3} />
+      </EffectComposer>
+
+      <OrbitControls
+        enableZoom enablePan={false}
+        minDistance={2} maxDistance={300}
+        autoRotate autoRotateSpeed={0.08}
+        maxPolarAngle={Math.PI * 0.85}
+        minPolarAngle={Math.PI * 0.1}
+        enableDamping dampingFactor={0.06}
+      />
+    </>
+  )
+}
+
+// ——— Error boundary ———
+class WebGLBoundary extends Component<{ children: ReactNode }, { err: boolean }> {
+  state = { err: false }
+  static getDerivedStateFromError() { return { err: true } }
+  render() {
+    if (this.state.err) return (
+      <div className="flex-1 flex items-center justify-center text-center p-8">
+        <div>
+          <div className="font-display text-lg text-cyan-glow mb-2">3D Visualization Unavailable</div>
+          <div className="text-[10px] text-slate-500">WebGL required — try a different browser</div>
+        </div>
+      </div>
+    )
+    return this.props.children
+  }
+}
+
+// ——— Export ———
+export function TrajectoryMap({ mission }: TrajectoryMapProps) {
+  return (
+    <div className="glass-panel border-glow p-2 h-full flex flex-col relative overflow-hidden">
+      {/* Source badge */}
       <div className="absolute top-3 left-3 z-10">
         <div className="bg-space-950/80 backdrop-blur-sm border border-cyan-mid/12 rounded px-2.5 py-1 flex items-center gap-1.5">
           <div className="h-1.5 w-1.5 rounded-full bg-green-glow live-pulse" />
-          <span className="font-mono text-[7.5px] text-slate-500 tracking-wide">NASA JSC OEM · OFFICIAL</span>
+          <span className="font-mono text-[7.5px] text-slate-500 tracking-wide">JPL HORIZONS · REALTIME</span>
         </div>
       </div>
+
+      {/* Phase label */}
       <div className="absolute top-3 right-3 z-10 text-right">
         <div className="text-[7.5px] text-slate-600 tracking-[2px] uppercase">Current Phase</div>
         <div className="font-display text-[13px] text-cyan-glow font-bold tracking-wider glow-cyan mt-0.5">
@@ -235,20 +327,25 @@ export function TrajectoryMap({ trajectory, mission }: TrajectoryMapProps) {
         </div>
       </div>
 
-      <WebGLErrorBoundary fallback={<FallbackView trajectory={trajectory} mission={mission} />}>
-        <div className="flex-1 min-h-[280px] sm:min-h-[340px] rounded overflow-hidden">
+      {/* Realtime HUD */}
+      <HUDOverlay />
+
+      {/* 3D Canvas */}
+      <WebGLBoundary>
+        <div className="flex-1 min-h-[380px] sm:min-h-[420px]">
           <Canvas
-            camera={{ position: [2, 5.5, 15], fov: 42 }}
-            gl={{ antialias: true, alpha: true }}
+            camera={{ position: [44, 100, 60], fov: 45, near: 0.01, far: 8000 }}
+            gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
             style={{ background: 'transparent' }}
+            dpr={[1, 2]}
           >
-            <Scene trajectory={trajectory} mission={mission} />
+            <Scene />
           </Canvas>
         </div>
-      </WebGLErrorBoundary>
+      </WebGLBoundary>
 
-      {/* Crew + progress */}
-      <div className="flex items-center justify-between mt-2 gap-3">
+      {/* Crew strip */}
+      <div className="flex items-center justify-between mt-1.5 gap-3 px-1">
         {mission?.crew && (
           <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto">
             {mission.crew.map((member) => (
@@ -264,11 +361,6 @@ export function TrajectoryMap({ trajectory, mission }: TrajectoryMapProps) {
             ))}
           </div>
         )}
-        <div className="flex-1 max-w-[180px]">
-          <div className="h-[3px] bg-space-800 rounded-full overflow-hidden">
-            <div className="h-full rounded-full bg-gradient-to-r from-cyan-mid to-amber-glow transition-all duration-1000" style={{ width: `${progress}%` }} />
-          </div>
-        </div>
       </div>
     </div>
   )
