@@ -58,7 +58,10 @@ function Dashboard() {
     })
   }, [activeMissionId, isCompleted])
 
-  const handleMissionChange = useCallback((id: string) => { setActiveMissionId(id) }, [])
+  const handleMissionChange = useCallback((id: string) => {
+    setActiveMission(id) // switch trajectory data immediately (before re-render)
+    setActiveMissionId(id)
+  }, [])
 
   return (
     <>

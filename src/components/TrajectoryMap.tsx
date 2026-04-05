@@ -264,12 +264,13 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryM
   const [speed, setSpeed] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
+  // Ensure active mission data is in sync (may already be set by App.tsx)
+  if (getActiveMission().id !== missionId) setActiveMission(missionId)
   const activeMission = getActiveMission()
   const isCompleted = activeMission.status === 'completed'
 
-  // Switch active mission data + reset sim state
+  // Reset sim state on mission switch
   useEffect(() => {
-    setActiveMission(missionId)
     cameraMode = 'overview'
     lastCameraMode = 'overview'
     transitionFrames = 0
