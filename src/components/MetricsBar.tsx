@@ -47,7 +47,7 @@ export function MetricsBar({ mission, trajectory }: MetricsBarProps) {
   if (!mission) return null
 
   return (
-    <div className="glass-panel-solid border-b border-cyan-mid/6">
+    <div className="glass-panel-solid border-b border-cyan-mid/6 sticky top-[49px] z-30">
       <div className="mx-auto max-w-[1600px] px-2 flex items-center justify-between overflow-x-auto">
         <div className="flex items-center gap-1 px-3 py-1.5 border-r border-slate-800/60">
           <span className="text-[8px] text-slate-600 uppercase tracking-wider mr-1.5">Phase</span>
