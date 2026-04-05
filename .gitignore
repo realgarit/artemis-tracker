@@ -6,4 +6,7 @@ api/local.settings.json
 *.local
 .DS_Store
 .playwright-mcp/
+# Playwright/temp screenshots (keep README + public assets tracked)
 *.png
+!screenshot-*.png
+!public/*.png

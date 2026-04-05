@@ -4,15 +4,19 @@ Real-time 3D mission dashboard tracking NASA's Artemis lunar program. Built with
 
 **[Live Demo](https://mango-plant-0a0b9ee03.6.azurestaticapps.net/)**
 
+![Artemis II — Live Tracking](screenshot-artemis2.png)
+
+![Artemis I — Historical Replay](screenshot-artemis1.png)
+
 ## Features
 
 - **3D Trajectory Visualization** — Real-time Orion spacecraft position with Earth, Moon, and flight path rendered in WebGL
 - **Multi-Mission Support** — Switch between Artemis I (historical replay) and Artemis II (live tracking)
-- **JPL Horizons Data** — Spacecraft positions sourced from NASA/JPL ephemeris (SPKID -1023, -1024)
+- **JPL Horizons Data** — Spacecraft ephemeris from NASA/JPL (SPKID -1023, -1024), EME2000 frame
 - **Mission Timeline** — Visual phase tracker with real-time progress
 - **Live Telemetry** — Velocity, distance, and trajectory metrics
 - **Space Weather** — Kp index, solar wind, and IMF data from NOAA SWPC
-- **Deep Space Network** — Live DSN dish status from NASA's DSN Now
+- **Deep Space Network** — Live DSN dish status from NASA DSN Now
 - **NASA Live Feeds** — Embedded YouTube streams for mission coverage
 - **Replay Mode** — Scrub through completed missions with play/pause and speed controls (1x to 36,000x)
 
@@ -28,12 +32,6 @@ Real-time 3D mission dashboard tracking NASA's Artemis lunar program. Built with
 | API | Azure Functions (Node.js) |
 | Hosting | Azure Static Web Apps |
 
-## Data Sources
-
-- **Trajectory**: [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/) — Artemis I (SPKID -1023, 304 points) and Artemis II (SPKID -1024, 107 points), EME2000 frame, 2-hour intervals
-- **Space Weather**: [NOAA SWPC](https://www.swpc.noaa.gov/) — Kp index, solar wind, IMF
-- **DSN**: [NASA DSN Now](https://eyes.nasa.gov/dsn/dsn.html) — Real-time dish status
-
 ## Local Development
 
 ```bash
@@ -41,7 +39,7 @@ npm install && cd api && npm install && cd ..
 npm run dev
 ```
 
-Starts Vite on `localhost:5173` and Azure Functions on `localhost:7071`. Requires [Azure Functions Core Tools](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local) v4+.
+Starts Vite on `localhost:5173` and Azure Functions on `localhost:7071`. Requires [Azure Functions Core Tools v4+](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local).
 
 ## Project Structure
 
@@ -50,7 +48,7 @@ src/
 ├── components/       # React components (TrajectoryMap, Header, charts, etc.)
 ├── data/
 │   ├── trajectoryData.ts   # Multi-mission trajectory engine
-│   └── artemisIData.ts     # Artemis I ephemeris (JPL Horizons)
+│   └── artemisIData.ts     # Artemis I ephemeris (304 points from JPL Horizons)
 ├── lib/              # API hooks, types, utilities
 └── App.tsx           # Dashboard layout and mission switching
 api/
