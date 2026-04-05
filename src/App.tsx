@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useCallback } from 'react'
 import { Route, Switch } from 'wouter'
 import { useMission, useTrajectory, useSpaceWeather, useVelocityHistory, useDistanceHistory, useDSN } from './lib/api'
 import { startHistoryRecording } from './lib/history'
@@ -40,7 +40,7 @@ function Dashboard() {
   const distanceHistory = useDistanceHistory()
   const dsn = useDSN()
 
-  // Start persistent history recording
+  // Persistent history recording
   useEffect(() => {
     startHistoryRecording(() => {
       const day = getCurrentMissionDay()
@@ -60,15 +60,22 @@ function Dashboard() {
     })
   }, [])
 
+  const handleMissionChange = useCallback((missionId: string) => {
+    // For now, only Artemis II has trajectory data
+    // Future missions will have their own data files
+    console.log(`Mission selected: ${missionId}`)
+  }, [])
+
   return (
     <>
-      <Header missionName={mission.data?.name} />
+      <Header missionName={mission.data?.name} onMissionChange={handleMissionChange} />
       <MetricsBar mission={mission.data} trajectory={trajectory.data} />
 
       <main className="mx-auto max-w-[1600px] px-3 sm:px-4 pt-3 sm:pt-4 pb-6 space-y-3 sm:space-y-4">
+        {/* Timeline */}
         <MissionTimeline mission={mission.data} />
 
-        {/* Trajectory Map + Stats */}
+        {/* Trajectory + Stats */}
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-3 sm:gap-4">
           <div className="xl:col-span-3">
             <Suspense fallback={<TrajectoryFallback />}>
@@ -90,14 +97,14 @@ function Dashboard() {
           <ActivityLog phase={mission.data?.currentPhase} />
         </div>
 
-        {/* NASA Live Feeds */}
-        <LiveFeeds />
-
         {/* DSN + Space Weather */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4">
           <DSNPanel data={dsn.data} />
           <SpaceWeather data={weather.data} />
         </div>
+
+        {/* NASA Live — at the very bottom */}
+        <LiveFeeds />
       </main>
 
       <Footer trajectory={trajectory.data} />

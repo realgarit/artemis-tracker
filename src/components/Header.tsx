@@ -1,10 +1,20 @@
-import { Satellite, Radio } from 'lucide-react'
+import { useState } from 'react'
+import { Satellite, Radio, ChevronDown } from 'lucide-react'
 
 interface HeaderProps {
   missionName?: string
+  onMissionChange?: (missionId: string) => void
 }
 
-export function Header({ missionName }: HeaderProps) {
+const MISSIONS = [
+  { id: 'artemis-ii', name: 'Artemis II', status: 'active', date: 'Apr 2026' },
+  { id: 'artemis-iii', name: 'Artemis III', status: 'upcoming', date: '2027' },
+  { id: 'artemis-iv', name: 'Artemis IV', status: 'planned', date: '2028' },
+]
+
+export function Header({ missionName, onMissionChange }: HeaderProps) {
+  const [showSelector, setShowSelector] = useState(false)
+
   return (
     <header className="sticky top-0 z-40 glass-panel-solid border-b border-cyan-mid/8">
       <div className="mx-auto max-w-[1600px] px-4 py-2.5 flex items-center justify-between">
@@ -14,9 +24,58 @@ export function Header({ missionName }: HeaderProps) {
             <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-glow live-pulse" />
           </div>
           <div>
-            <h1 className="font-display text-base sm:text-lg font-bold tracking-[.15em] text-cyan-glow glow-cyan leading-none">
-              {missionName?.toUpperCase() || 'ARTEMIS II'}
-            </h1>
+            {/* Mission name + selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowSelector(!showSelector)}
+                className="flex items-center gap-1.5 font-display text-base sm:text-lg font-bold tracking-[.15em] text-cyan-glow glow-cyan leading-none hover:text-cyan-glow/90 transition-colors"
+              >
+                {missionName?.toUpperCase() || 'ARTEMIS II'}
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showSelector ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Mission dropdown */}
+              {showSelector && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowSelector(false)} />
+                  <div className="absolute top-7 left-0 z-50 w-56 glass-panel-solid border border-cyan-mid/15 rounded-lg p-1.5 shadow-xl">
+                    {MISSIONS.map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => {
+                          onMissionChange?.(m.id)
+                          setShowSelector(false)
+                        }}
+                        disabled={m.status !== 'active'}
+                        className={`w-full text-left px-3 py-2 rounded flex items-center justify-between transition-colors ${
+                          m.status === 'active'
+                            ? 'hover:bg-cyan-glow/5 text-slate-200'
+                            : 'text-slate-600 cursor-not-allowed'
+                        }`}
+                      >
+                        <div>
+                          <div className="text-[11px] font-semibold font-display tracking-wider">
+                            {m.name.toUpperCase()}
+                          </div>
+                          <div className="text-[8px] text-slate-500 mt-0.5">{m.date}</div>
+                        </div>
+                        {m.status === 'active' && (
+                          <span className="text-[7px] text-green-glow font-mono font-bold tracking-wider bg-green-glow/10 px-1.5 py-0.5 rounded">
+                            LIVE
+                          </span>
+                        )}
+                        {m.status === 'upcoming' && (
+                          <span className="text-[7px] text-amber-glow font-mono tracking-wider">UPCOMING</span>
+                        )}
+                        {m.status === 'planned' && (
+                          <span className="text-[7px] text-slate-600 font-mono tracking-wider">PLANNED</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
             <p className="text-[9px] text-slate-500 tracking-[.25em] uppercase mt-0.5 font-medium">
               Mission Control — MCC-Houston
             </p>
