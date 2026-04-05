@@ -1,6 +1,7 @@
 node_modules
 dist
 api/dist
+api/local.settings.json
 .env
 *.local
 .DS_Store

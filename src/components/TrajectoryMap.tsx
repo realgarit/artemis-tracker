@@ -200,7 +200,7 @@ function CameraController() {
 function SimUpdater() {
   useFrame((_, dt) => {
     if (simSpeed > 0 && simOverride !== null) {
-      simOverride = Math.min(getActiveMission().missionDays, simOverride + dt * simSpeed / 86400 * 3600)
+      simOverride = Math.min(getActiveMission().missionDays, simOverride + dt * simSpeed / 86400)
     }
   })
   return null
@@ -320,7 +320,7 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryM
     }
   }, [speed, isCompleted])
   const cycleSpeed = useCallback(() => {
-    const speeds = [1, 10, 100, 1000]
+    const speeds = [1, 60, 600, 3600, 36000]
     const idx = speeds.indexOf(speed)
     const next = speeds[(idx + 1) % speeds.length]
     simSpeed = next
@@ -328,6 +328,7 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryM
     setSpeed(next)
   }, [speed, isCompleted])
 
+  const fmtSpeed = (s: number) => s >= 3600 ? `${s/3600}h/s` : s >= 60 ? `${s/60}m/s` : `${s}×`
   const md = getActiveMission().missionDays
   const tsd = getActiveMission().trajStartDay
   const currentDay = simDay !== null ? simDay : (isCompleted ? 0 : getCurrentMissionDay())
@@ -339,7 +340,7 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryM
         <div className="bg-space-950/85 backdrop-blur-sm border border-cyan-mid/12 rounded px-2.5 py-1 flex items-center gap-1.5">
           <div className={`h-1.5 w-1.5 rounded-full ${isCompleted ? 'bg-amber-glow' : simDay !== null ? 'bg-amber-glow' : 'bg-green-glow'} live-pulse`} />
           <span className="font-mono text-[7.5px] text-slate-500 tracking-wide">
-            {isCompleted ? (speed > 0 ? `REPLAY ${speed}×` : 'REPLAY') : simDay !== null ? (speed > 0 ? `SIM ${speed}×` : 'SIMULATION') : 'REALTIME'}
+            {isCompleted ? (speed > 0 ? `REPLAY ${fmtSpeed(speed)}` : 'REPLAY') : simDay !== null ? (speed > 0 ? `SIM ${fmtSpeed(speed)}` : 'SIMULATION') : 'REALTIME'}
           </span>
         </div>
       </div>
@@ -399,7 +400,7 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryM
             Day {currentDay.toFixed(1)}/{md}
           </span>
           <button onClick={cycleSpeed} className={`h-6 px-2 rounded text-[8px] font-semibold tracking-wider flex items-center gap-1 shrink-0 transition-all ${speed>0?'bg-amber-glow/10 text-amber-glow border border-amber-glow/25':'bg-space-950/80 text-slate-500 border border-slate-700/40 hover:text-slate-300'}`} title="Cycle speed">
-            <FastForward className="h-3 w-3"/> {speed > 0 ? `${speed}×` : '1×'}
+            <FastForward className="h-3 w-3"/> {speed > 0 ? fmtSpeed(speed) : '1×'}
           </button>
         </div>
       </div>

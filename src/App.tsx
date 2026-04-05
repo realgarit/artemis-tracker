@@ -47,11 +47,11 @@ function Dashboard() {
   // Pre-computed profiles from trajectory data (for completed missions or as fallback)
   const velocityProfile = useMemo(() => {
     const pts = buildVelocityProfile()
-    return { labels: pts.map(p => new Date(p.timestamp).toISOString()), values: pts.map(p => p.value) }
+    return { data: pts.map(p => ({ timestamp: new Date(p.timestamp).toISOString(), value: p.value })), source: 'JPL Horizons (ephemeris replay)' }
   }, [activeMissionId])
   const distanceProfile = useMemo(() => {
     const pts = buildDistanceProfile()
-    return { labels: pts.map(p => new Date(p.timestamp).toISOString()), values: pts.map(p => p.value) }
+    return { data: pts.map(p => ({ timestamp: new Date(p.timestamp).toISOString(), value: p.value })), source: 'JPL Horizons (ephemeris replay)' }
   }, [activeMissionId])
 
   useEffect(() => {
