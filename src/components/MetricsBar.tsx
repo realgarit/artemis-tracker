@@ -28,7 +28,7 @@ function formatUTC(): string {
 }
 
 function formatLocal(): string {
-  return new Date().toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Zurich' })
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
 }
 
 function Cell({ label, value, accent }: { label: string; value: string; accent?: string }) {

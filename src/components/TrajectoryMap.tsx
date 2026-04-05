@@ -297,7 +297,11 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryM
       // Resume at last speed (or default 60x)
       const resumeSpeed = lastSpeedRef.current || 60
       simSpeed = resumeSpeed
-      if (simOverride === null) simOverride = isCompleted ? 0 : getCurrentMissionDay()
+      if (simOverride === null) {
+        const startDay = isCompleted ? 0 : getCurrentMissionDay()
+        simOverride = startDay
+        setSimDay(startDay)
+      }
       setSpeed(resumeSpeed)
     }
   }, [speed, isCompleted])
@@ -306,7 +310,11 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryM
     const idx = speeds.indexOf(speed)
     const next = speeds[(idx + 1) % speeds.length]
     simSpeed = next; lastSpeedRef.current = next
-    if (simOverride === null) simOverride = isCompleted ? 0 : getCurrentMissionDay()
+    if (simOverride === null) {
+      const startDay = isCompleted ? 0 : getCurrentMissionDay()
+      simOverride = startDay
+      setSimDay(startDay)
+    }
     setSpeed(next)
   }, [speed, isCompleted])
 
