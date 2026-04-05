@@ -6,7 +6,6 @@ import { getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity, getMis
 import { Header } from './components/Header'
 import { MetricsBar } from './components/MetricsBar'
 import { MissionTimeline } from './components/MissionTimeline'
-import { StatsGrid } from './components/StatsGrid'
 import { VelocityChart } from './components/VelocityChart'
 import { DistanceChart } from './components/DistanceChart'
 import { SpaceWeather } from './components/SpaceWeather'
@@ -23,7 +22,7 @@ const TrajectoryMap = lazy(() =>
 
 function TrajectoryFallback() {
   return (
-    <div className="glass-panel border-glow p-3 h-full min-h-[380px] flex items-center justify-center">
+    <div className="glass-panel border-glow p-3 min-h-[450px] flex items-center justify-center">
       <div className="text-center">
         <div className="inline-block h-6 w-6 border-2 border-cyan-glow/30 border-t-cyan-glow rounded-full animate-spin mb-3" />
         <div className="text-[10px] text-slate-500 tracking-widest uppercase">Loading 3D Visualization</div>
@@ -40,7 +39,6 @@ function Dashboard() {
   const distanceHistory = useDistanceHistory()
   const dsn = useDSN()
 
-  // Persistent history recording
   useEffect(() => {
     startHistoryRecording(() => {
       const day = getCurrentMissionDay()
@@ -48,23 +46,15 @@ function Dashboard() {
       const pos = getTrajectoryPos(day)
       const moonPos = getMoonPos(day)
       return {
-        timestamp: Date.now(),
-        missionDay: day,
+        timestamp: Date.now(), missionDay: day,
         distanceFromEarth: Math.max(0, pos.length() / SCALE - EARTH_RADIUS_KM),
         distanceFromMoon: Math.max(0, pos.clone().sub(moonPos).length() / SCALE - MOON_RADIUS_KM),
-        velocity: getVelocity(day),
-        phase: getMissionPhase(day),
-        latitude: 0,
-        longitude: 0,
+        velocity: getVelocity(day), phase: getMissionPhase(day), latitude: 0, longitude: 0,
       }
     })
   }, [])
 
-  const handleMissionChange = useCallback((missionId: string) => {
-    // For now, only Artemis II has trajectory data
-    // Future missions will have their own data files
-    console.log(`Mission selected: ${missionId}`)
-  }, [])
+  const handleMissionChange = useCallback((id: string) => { console.log(`Mission: ${id}`) }, [])
 
   return (
     <>
@@ -72,20 +62,12 @@ function Dashboard() {
       <MetricsBar mission={mission.data} trajectory={trajectory.data} />
 
       <main className="mx-auto max-w-[1600px] px-3 sm:px-4 pt-3 sm:pt-4 pb-6 space-y-3 sm:space-y-4">
-        {/* Timeline */}
         <MissionTimeline mission={mission.data} />
 
-        {/* Trajectory + Stats */}
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-3 sm:gap-4">
-          <div className="xl:col-span-3">
-            <Suspense fallback={<TrajectoryFallback />}>
-              <TrajectoryMap mission={mission.data} />
-            </Suspense>
-          </div>
-          <div className="xl:col-span-2">
-            <StatsGrid trajectory={trajectory.data} />
-          </div>
-        </div>
+        {/* 3D Trajectory — FULL WIDTH (no stat boxes beside it) */}
+        <Suspense fallback={<TrajectoryFallback />}>
+          <TrajectoryMap mission={mission.data} />
+        </Suspense>
 
         {/* Crew */}
         <CrewPanel crew={mission.data?.crew} />
@@ -103,7 +85,7 @@ function Dashboard() {
           <SpaceWeather data={weather.data} />
         </div>
 
-        {/* NASA Live — at the very bottom */}
+        {/* NASA Live — bottom */}
         <LiveFeeds />
       </main>
 
