@@ -100,7 +100,7 @@ function PhaseNode({ phase, index, total }: { phase: MissionPhase; index: number
       {/* Fixed-height container — every circle vertically centered at the same position */}
       <div className="flex items-center justify-center mb-2" style={{ height: NODE_H }}>
         {isCompleted && (
-          <div className="h-[28px] w-[28px] rounded-full bg-green-glow/12 border-[1.5px] border-green-glow flex items-center justify-center">
+          <div className="h-[28px] w-[28px] rounded-full bg-[#071210] border-[1.5px] border-green-glow flex items-center justify-center">
             <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
               <path d="M3 7.5L5.5 10L11 4" stroke="#22c55e" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -108,7 +108,7 @@ function PhaseNode({ phase, index, total }: { phase: MissionPhase; index: number
         )}
         {isActive && (
           <div className="relative flex items-center justify-center">
-            <div className="h-[30px] w-[30px] rounded-full bg-cyan-glow/15 border-2 border-cyan-glow flex items-center justify-center">
+            <div className="h-[30px] w-[30px] rounded-full bg-[#060d14] border-2 border-cyan-glow flex items-center justify-center">
               <div className="h-3 w-3 rounded-full bg-cyan-glow" />
             </div>
             <motion.div
