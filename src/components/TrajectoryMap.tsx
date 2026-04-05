@@ -1,31 +1,56 @@
 import { useRef, useMemo, useState, useCallback, Component, type ReactNode } from 'react'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
-import { OrbitControls, Stars, Html, Line } from '@react-three/drei'
+import { OrbitControls, Stars, Html, Line, Points, PointMaterial } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
-import { Globe, Moon as MoonIcon, Rocket, Maximize2, Minimize2, Play, Pause, RotateCcw } from 'lucide-react'
+import { Globe, Moon as MoonIcon, Rocket, Maximize2, Minimize2, RotateCcw, FastForward } from 'lucide-react'
 import {
   eR, mR, SCALE, EARTH_RADIUS_KM, MOON_RADIUS_KM,
   getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity,
-  buildTrajectoryCurve, buildMoonArc, getMissionPhase, MISSION_DAYS, TRAJ_START_DAY,
+  buildTrajectoryCurve, buildMoonArc, buildLunarOrbitCircle, getMissionPhase,
+  MISSION_DAYS, TRAJ_START_DAY,
 } from '../data/trajectoryData'
 import type { MissionData } from '../lib/types'
 
-interface TrajectoryMapProps {
-  mission?: MissionData
-}
+interface TrajectoryMapProps { mission?: MissionData }
 
-// Shared state for camera target and simulation
 type CameraMode = 'overview' | 'earth' | 'moon' | 'orion'
 let cameraMode: CameraMode = 'overview'
-let simOverride: number | null = null // null = realtime, number = overridden day
+let simOverride: number | null = null
+let simSpeed = 0 // 0 = realtime, >0 = accelerated
+let simAccumulator = 0
+let lastFrameTime = 0
 
 function getSimDay(): number {
-  return simOverride !== null ? simOverride : getCurrentMissionDay()
+  if (simOverride !== null) return simOverride
+  return getCurrentMissionDay()
 }
 
 const fullTrajPts = buildTrajectoryCurve()
 const moonArcPts = buildMoonArc()
+const lunarOrbitPts = buildLunarOrbitCircle()
+
+// ——— Milky Way band — 8000 particles in equatorial plane ———
+function MilkyWayBand() {
+  const positions = useMemo(() => {
+    const arr = new Float32Array(8000 * 3)
+    for (let i = 0; i < 8000; i++) {
+      const r = 1500 + Math.random() * 3000
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.PI / 2 + (Math.random() - 0.5) * 0.3 // narrow band near equator
+      arr[i * 3] = r * Math.sin(phi) * Math.cos(theta)
+      arr[i * 3 + 1] = r * Math.cos(phi)
+      arr[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta)
+    }
+    return arr
+  }, [])
+
+  return (
+    <Points positions={positions} stride={3}>
+      <PointMaterial size={0.4} color="#6666aa" transparent opacity={0.08} sizeAttenuation depthWrite={false} />
+    </Points>
+  )
+}
 
 // ——— Earth ———
 function Earth() {
@@ -60,11 +85,69 @@ function MoonBody() {
   )
 }
 
-// ——— Trajectory lines ———
+// ——— Detailed Orion spacecraft model ———
+function Orion() {
+  const ref = useRef<THREE.Group>(null)
+  const labelRef = useRef<HTMLSpanElement>(null)
+  const OS = 0.15 // visual scale factor for spacecraft
+
+  useFrame(() => {
+    if (!ref.current) return
+    const day = getSimDay()
+    const pos = getTrajectoryPos(day)
+    ref.current.position.copy(pos)
+    const next = getTrajectoryPos(day + 0.002)
+    if (next.distanceTo(pos) > 0.001) ref.current.lookAt(next)
+    if (labelRef.current) {
+      const de = Math.max(0, Math.round(pos.length() / SCALE - EARTH_RADIUS_KM))
+      labelRef.current.textContent = de.toLocaleString() + ' km'
+    }
+  })
+
+  return (
+    <group ref={ref}>
+      {/* Beacon glow — visible from far */}
+      <mesh><sphereGeometry args={[0.8, 16, 16]} /><meshBasicMaterial color="#ff8844" transparent opacity={0.04} /></mesh>
+
+      {/* Capsule (inverted cone) */}
+      <mesh rotation={[Math.PI, 0, 0]} scale={[OS, OS, OS]}>
+        <coneGeometry args={[0.035, 0.09, 8]} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.3} roughness={0.4} metalness={0.3} />
+      </mesh>
+
+      {/* Service module */}
+      <mesh position={[0, 0, -0.008 * OS]} scale={[OS, OS, OS]}>
+        <cylinderGeometry args={[0.028, 0.032, 0.05, 8]} />
+        <meshStandardMaterial color="#cccccc" roughness={0.5} metalness={0.2} />
+      </mesh>
+
+      {/* Solar panels — 4 wings */}
+      {[0, 1, 2, 3].map((i) => (
+        <mesh key={i} position={[0, 0, -0.005 * OS]} rotation={[0, (i * Math.PI) / 2, 0]} scale={[OS, OS, OS]}>
+          <planeGeometry args={[0.15, 0.02]} />
+          <meshStandardMaterial color="#1a3a7a" emissive="#1133aa" emissiveIntensity={0.1} roughness={0.3} metalness={0.7} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+
+      {/* Engine glow */}
+      <pointLight color="#ff6b35" intensity={1} distance={8} />
+
+      <Html position={[1.2, 0.5, 0]} style={{ pointerEvents: 'none' }}>
+        <span style={{ fontFamily: 'Orbitron', fontSize: 10, color: '#ff8844', fontWeight: 700, letterSpacing: 1.5, userSelect: 'none' }}>ORION</span>
+      </Html>
+      <Html position={[-1.2, -0.3, 0]} style={{ pointerEvents: 'none' }}>
+        <span ref={labelRef} style={{ fontFamily: 'Space Mono', fontSize: 9, color: '#94a3b8', userSelect: 'none', whiteSpace: 'nowrap' }} />
+      </Html>
+    </group>
+  )
+}
+
+// ——— Trajectory + orbit lines ———
 function TrajectoryLines() {
   const traveledRef = useRef<any>(null)
   const fullPts = useMemo(() => fullTrajPts.map(p => [p.x, p.y, p.z] as [number, number, number]), [])
   const moonPts = useMemo(() => moonArcPts.map(p => [p.x, p.y, p.z] as [number, number, number]), [])
+  const orbitPts = useMemo(() => lunarOrbitPts.map(p => [p.x, p.y, p.z] as [number, number, number]), [])
 
   useFrame(() => {
     if (!traveledRef.current) return
@@ -80,43 +163,21 @@ function TrajectoryLines() {
 
   return (
     <>
+      {/* Full lunar orbit circle — dim */}
+      <Line points={orbitPts} color="#ffffff" lineWidth={0.5} transparent opacity={0.12} />
+      {/* Full lunar orbit circle glow */}
+      <Line points={orbitPts} color="#ffffff" lineWidth={1.5} transparent opacity={0.03} />
+
+      {/* Mission moon arc — brighter */}
+      <Line points={moonPts} color="#ffffff" lineWidth={1} transparent opacity={0.35} />
+
+      {/* Full predicted trajectory — dashed */}
       <Line points={fullPts} color="#ff8855" lineWidth={1} transparent opacity={0.15} dashed dashSize={0.4} gapSize={0.3} />
       <Line points={fullPts} color="#ff6b35" lineWidth={2} transparent opacity={0.03} />
-      <Line ref={traveledRef} points={fullPts.slice(0, 2)} color="#ff6b35" lineWidth={2} transparent opacity={0.85} />
-      <Line points={moonPts} color="#ffffff" lineWidth={1} transparent opacity={0.25} />
-    </>
-  )
-}
 
-// ——— Orion ———
-function Orion() {
-  const ref = useRef<THREE.Group>(null)
-  const labelRef = useRef<HTMLDivElement>(null)
-  useFrame(() => {
-    if (!ref.current) return
-    const day = getSimDay()
-    const pos = getTrajectoryPos(day)
-    ref.current.position.copy(pos)
-    const next = getTrajectoryPos(day + 0.002)
-    if (next.distanceTo(pos) > 0.001) ref.current.lookAt(next)
-    if (labelRef.current) {
-      const de = Math.max(0, Math.round(pos.length() / SCALE - EARTH_RADIUS_KM))
-      labelRef.current.textContent = de.toLocaleString() + ' km'
-    }
-  })
-  return (
-    <group ref={ref}>
-      <mesh><sphereGeometry args={[0.8, 16, 16]} /><meshBasicMaterial color="#ff8844" transparent opacity={0.04} /></mesh>
-      <mesh><sphereGeometry args={[0.12, 16, 16]} /><meshBasicMaterial color="#e0f2fe" /></mesh>
-      <mesh><sphereGeometry args={[0.07, 12, 12]} /><meshBasicMaterial color="#ffffff" /></mesh>
-      <pointLight color="#ff8844" intensity={1} distance={10} />
-      <Html position={[1.2, 0.5, 0]} style={{ pointerEvents: 'none' }}>
-        <span style={{ fontFamily: 'Orbitron', fontSize: 10, color: '#ff8844', fontWeight: 700, letterSpacing: 1.5, userSelect: 'none' }}>ORION</span>
-      </Html>
-      <Html position={[-1.2, -0.3, 0]} style={{ pointerEvents: 'none' }}>
-        <span ref={labelRef} style={{ fontFamily: 'Space Mono', fontSize: 9, color: '#94a3b8', userSelect: 'none', whiteSpace: 'nowrap' }} />
-      </Html>
-    </group>
+      {/* Traveled portion — bright */}
+      <Line ref={traveledRef} points={fullPts.slice(0, 2)} color="#ff6b35" lineWidth={2} transparent opacity={0.85} />
+    </>
   )
 }
 
@@ -132,57 +193,41 @@ function SunLight() {
   return <directionalLight ref={ref} position={[300, 80, -150]} intensity={2.5} />
 }
 
-// ——— Camera controller with modes ———
+// ——— Camera controller ———
 function CameraController() {
   const controlsRef = useRef<any>(null)
   const { camera } = useThree()
-
   useFrame(() => {
     if (!controlsRef.current) return
     const day = getSimDay()
     const orionPos = getTrajectoryPos(day)
     const moonPos = getMoonPos(day)
-
-    let targetPos: THREE.Vector3
-    let camDist: number
-
+    let targetPos: THREE.Vector3, camDist: number
     switch (cameraMode) {
-      case 'earth':
-        targetPos = new THREE.Vector3(0, 0, 0)
-        camDist = 8
-        break
-      case 'moon':
-        targetPos = moonPos.clone()
-        camDist = 4
-        break
-      case 'orion':
-        targetPos = orionPos.clone()
-        camDist = 4
-        break
-      default: // overview
-        targetPos = new THREE.Vector3(orionPos.x * 0.4, orionPos.y * 0.3, orionPos.z * 0.3)
-        camDist = 120
+      case 'earth': targetPos = new THREE.Vector3(0,0,0); camDist = 8; break
+      case 'moon': targetPos = moonPos.clone(); camDist = 4; break
+      case 'orion': targetPos = orionPos.clone(); camDist = 4; break
+      default: targetPos = new THREE.Vector3(orionPos.x*0.4, orionPos.y*0.3, orionPos.z*0.3); camDist = 120
     }
-
     controlsRef.current.target.lerp(targetPos, 0.03)
     if (cameraMode !== 'overview') {
       const dir = camera.position.clone().sub(controlsRef.current.target).normalize()
-      const desired = controlsRef.current.target.clone().add(dir.multiplyScalar(camDist))
-      camera.position.lerp(desired, 0.02)
+      camera.position.lerp(controlsRef.current.target.clone().add(dir.multiplyScalar(camDist)), 0.02)
     }
     controlsRef.current.update()
   })
+  return <OrbitControls ref={controlsRef} enableZoom enablePan={false} minDistance={1} maxDistance={400} autoRotate={cameraMode==='overview'} autoRotateSpeed={0.08} enableDamping dampingFactor={0.06} />
+}
 
-  return (
-    <OrbitControls
-      ref={controlsRef}
-      enableZoom enablePan={false}
-      minDistance={1} maxDistance={400}
-      autoRotate={cameraMode === 'overview'}
-      autoRotateSpeed={0.08}
-      enableDamping dampingFactor={0.06}
-    />
-  )
+// ——— Simulation speed updater ———
+function SimUpdater() {
+  useFrame((_, dt) => {
+    if (simSpeed > 0 && simOverride !== null) {
+      simAccumulator = Math.min(MISSION_DAYS, simOverride + dt * simSpeed / 86400 * 3600)
+      simOverride = simAccumulator
+    }
+  })
+  return null
 }
 
 // ——— Scene ———
@@ -192,11 +237,13 @@ function Scene() {
       <ambientLight intensity={0.15} color="#1a1a3a" />
       <SunLight />
       <Stars radius={1500} depth={3000} count={15000} factor={3} saturation={0} fade speed={0.3} />
+      <MilkyWayBand />
       <Earth />
       <MoonBody />
       <TrajectoryLines />
       <Orion />
       <ConnectionLine />
+      <SimUpdater />
       <EffectComposer><Bloom intensity={0.5} luminanceThreshold={0.88} luminanceSmoothing={0.3} /></EffectComposer>
       <CameraController />
     </>
@@ -204,37 +251,26 @@ function Scene() {
 }
 
 // ——— Error boundary ———
-class WebGLBoundary extends Component<{ children: ReactNode }, { err: boolean }> {
-  state = { err: false }
-  static getDerivedStateFromError() { return { err: true } }
-  render() {
-    if (this.state.err) return <div className="flex-1 flex items-center justify-center text-center p-8"><div><div className="font-display text-lg text-cyan-glow mb-2">3D Unavailable</div><div className="text-[10px] text-slate-500">WebGL required</div></div></div>
-    return this.props.children
-  }
+class WebGLBoundary extends Component<{children:ReactNode},{err:boolean}> {
+  state={err:false}; static getDerivedStateFromError(){return{err:true}}
+  render(){return this.state.err?<div className="flex-1 flex items-center justify-center p-8"><div className="font-display text-lg text-cyan-glow">3D Unavailable — WebGL required</div></div>:this.props.children}
 }
 
-// ——— HUD (pure DOM, updates via RAF) ———
+// ——— HUD ———
 function HUDOverlay() {
   const ref = useRef<HTMLDivElement>(null)
-  const raf = useRef<number>(0)
-
   const update = useCallback(() => {
-    if (!ref.current) { raf.current = requestAnimationFrame(update); return }
-    const day = getSimDay()
-    const pos = getTrajectoryPos(day)
-    const moonPos = getMoonPos(day)
-    const de = Math.max(0, Math.round(pos.length() / SCALE - EARTH_RADIUS_KM))
-    const dm = Math.max(0, Math.round(pos.clone().sub(moonPos).length() / SCALE - MOON_RADIUS_KM))
-
-    ref.current.querySelector('[data-de]')!.textContent = de.toLocaleString() + ' km'
-    ref.current.querySelector('[data-dm]')!.textContent = dm.toLocaleString() + ' km'
-    ref.current.querySelector('[data-v]')!.textContent = getVelocity(day).toFixed(3) + ' km/s'
+    if (!ref.current) { requestAnimationFrame(update); return }
+    const day = getSimDay(); const pos = getTrajectoryPos(day); const mp = getMoonPos(day)
+    const de = Math.max(0, Math.round(pos.length()/SCALE - EARTH_RADIUS_KM))
+    const dm = Math.max(0, Math.round(pos.clone().sub(mp).length()/SCALE - MOON_RADIUS_KM))
+    ref.current.querySelector('[data-de]')!.textContent = de.toLocaleString()+' km'
+    ref.current.querySelector('[data-dm]')!.textContent = dm.toLocaleString()+' km'
+    ref.current.querySelector('[data-v]')!.textContent = getVelocity(day).toFixed(3)+' km/s'
     ref.current.querySelector('[data-p]')!.textContent = getMissionPhase(day).toUpperCase()
-    raf.current = requestAnimationFrame(update)
+    requestAnimationFrame(update)
   }, [])
-
-  useMemo(() => { raf.current = requestAnimationFrame(update) }, [update])
-
+  useMemo(() => { requestAnimationFrame(update) }, [update])
   return (
     <div ref={ref} className="absolute bottom-14 left-2 z-10">
       <div className="bg-space-950/85 backdrop-blur-sm border border-cyan-mid/10 rounded px-2 py-1.5 space-y-0.5 text-[10px]">
@@ -251,138 +287,99 @@ function HUDOverlay() {
 export function TrajectoryMap({ mission }: TrajectoryMapProps) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [activeCam, setActiveCam] = useState<CameraMode>('overview')
-  const [simDay, setSimDay] = useState<number | null>(null) // null = live
+  const [simDay, setSimDay] = useState<number | null>(null)
+  const [speed, setSpeed] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const toggleFullscreen = useCallback(() => {
     if (!containerRef.current) return
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen()
-      setIsFullscreen(true)
-    } else {
-      document.exitFullscreen()
-      setIsFullscreen(false)
-    }
+    if (!document.fullscreenElement) { containerRef.current.requestFullscreen(); setIsFullscreen(true) }
+    else { document.exitFullscreen(); setIsFullscreen(false) }
   }, [])
 
-  const setCam = useCallback((mode: CameraMode) => {
-    cameraMode = mode
-    setActiveCam(mode)
-  }, [])
+  const setCam = useCallback((mode: CameraMode) => { cameraMode = mode; setActiveCam(mode) }, [])
 
   const handleScrub = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = parseFloat(e.target.value)
-    simOverride = v
-    setSimDay(v)
+    const v = parseFloat(e.target.value); simOverride = v; simSpeed = 0; setSimDay(v); setSpeed(0)
   }, [])
 
-  const resetToLive = useCallback(() => {
-    simOverride = null
-    setSimDay(null)
-  }, [])
+  const resetToLive = useCallback(() => { simOverride = null; simSpeed = 0; setSimDay(null); setSpeed(0) }, [])
+
+  const cycleSpeed = useCallback(() => {
+    const speeds = [0, 10, 100, 1000]
+    const next = speeds[(speeds.indexOf(speed) + 1) % speeds.length]
+    simSpeed = next
+    if (next > 0 && simOverride === null) simOverride = getCurrentMissionDay()
+    setSpeed(next)
+  }, [speed])
 
   const currentDay = simDay !== null ? simDay : getCurrentMissionDay()
 
   return (
-    <div
-      ref={containerRef}
-      className={`glass-panel border-glow h-full flex flex-col relative overflow-hidden ${isFullscreen ? 'p-0 rounded-none' : 'p-2'}`}
-    >
+    <div ref={containerRef} className={`glass-panel border-glow h-full flex flex-col relative overflow-hidden ${isFullscreen ? 'p-0 rounded-none' : 'p-2'}`}>
       {/* Source badge */}
       <div className="absolute top-3 left-3 z-10">
         <div className="bg-space-950/85 backdrop-blur-sm border border-cyan-mid/12 rounded px-2.5 py-1 flex items-center gap-1.5">
-          <div className="h-1.5 w-1.5 rounded-full bg-green-glow live-pulse" />
+          <div className={`h-1.5 w-1.5 rounded-full ${simDay !== null ? 'bg-amber-glow' : 'bg-green-glow'} live-pulse`} />
           <span className="font-mono text-[7.5px] text-slate-500 tracking-wide">
-            {simDay !== null ? 'SIMULATION' : 'JPL HORIZONS · REALTIME'}
+            {simDay !== null ? (speed > 0 ? `SIMULATING ${speed}×` : 'SIMULATION') : 'JPL HORIZONS · REALTIME'}
           </span>
         </div>
       </div>
 
-      {/* Phase label */}
+      {/* Phase + fullscreen */}
       <div className="absolute top-3 right-14 z-10 text-right">
         <div className="text-[7.5px] text-slate-600 tracking-[2px] uppercase">Current Phase</div>
-        <div className="font-display text-[13px] text-cyan-glow font-bold tracking-wider glow-cyan mt-0.5">
-          {getMissionPhase(currentDay).toUpperCase()}
-        </div>
+        <div className="font-display text-[13px] text-cyan-glow font-bold tracking-wider glow-cyan mt-0.5">{getMissionPhase(currentDay).toUpperCase()}</div>
       </div>
 
-      {/* Camera buttons — right side */}
+      {/* Right controls */}
       <div className="absolute top-3 right-3 z-10 flex flex-col gap-1">
-        <button onClick={toggleFullscreen} className="h-7 w-7 rounded bg-space-950/80 border border-slate-700/40 flex items-center justify-center text-slate-400 hover:text-cyan-glow hover:border-cyan-glow/30 transition-colors" title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
-          {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+        <button onClick={toggleFullscreen} className="h-7 w-7 rounded bg-space-950/80 border border-slate-700/40 flex items-center justify-center text-slate-400 hover:text-cyan-glow hover:border-cyan-glow/30 transition-colors" title={isFullscreen?'Exit':'Fullscreen'}>
+          {isFullscreen?<Minimize2 className="h-3.5 w-3.5"/>:<Maximize2 className="h-3.5 w-3.5"/>}
         </button>
       </div>
-
       <div className="absolute top-14 right-3 z-10 flex flex-col gap-1">
-        {([['overview', 'Overview', null], ['earth', 'Earth', Globe], ['moon', 'Moon', MoonIcon], ['orion', 'Orion', Rocket]] as const).map(([mode, label, Icon]) => (
-          <button
-            key={mode}
-            onClick={() => setCam(mode as CameraMode)}
-            className={`h-7 px-2 rounded text-[8px] font-semibold tracking-wider uppercase flex items-center gap-1.5 transition-all ${
-              activeCam === mode
-                ? 'bg-cyan-glow/10 text-cyan-glow border border-cyan-glow/25'
-                : 'bg-space-950/80 text-slate-500 border border-slate-700/40 hover:text-slate-300'
-            }`}
-            title={`Focus on ${label}`}
-          >
-            {Icon && <Icon className="h-3 w-3" />}
-            {label}
+        {([['overview','Overview',null],['earth','Earth',Globe],['moon','Moon',MoonIcon],['orion','Orion',Rocket]] as const).map(([mode,label,Icon])=>(
+          <button key={mode} onClick={()=>setCam(mode as CameraMode)} className={`h-7 px-2 rounded text-[8px] font-semibold tracking-wider uppercase flex items-center gap-1.5 transition-all ${activeCam===mode?'bg-cyan-glow/10 text-cyan-glow border border-cyan-glow/25':'bg-space-950/80 text-slate-500 border border-slate-700/40 hover:text-slate-300'}`}>
+            {Icon&&<Icon className="h-3 w-3"/>}{label}
           </button>
         ))}
       </div>
 
-      {/* HUD */}
       <HUDOverlay />
 
-      {/* 3D Canvas */}
       <WebGLBoundary>
-        <div className={`flex-1 ${isFullscreen ? 'min-h-screen' : 'min-h-[380px] sm:min-h-[420px]'} rounded overflow-hidden`}>
-          <Canvas
-            camera={{ position: [44, 100, 60], fov: 45, near: 0.01, far: 8000 }}
-            gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-            style={{ background: 'transparent' }}
-            dpr={[1, 2]}
-          >
+        <div className={`flex-1 ${isFullscreen?'min-h-screen':'min-h-[380px] sm:min-h-[420px]'} rounded overflow-hidden`}>
+          <Canvas camera={{position:[44,100,60],fov:45,near:0.01,far:8000}} gl={{antialias:true,alpha:true,powerPreference:'high-performance'}} style={{background:'transparent'}} dpr={[1,2]}>
             <Scene />
           </Canvas>
         </div>
       </WebGLBoundary>
 
-      {/* Bottom bar: scrubber + crew */}
-      <div className={`flex items-center gap-3 mt-1.5 px-1 ${isFullscreen ? 'px-4 pb-4' : ''}`}>
-        {/* Time scrubber */}
+      {/* Bottom bar */}
+      <div className={`flex items-center gap-3 mt-1.5 px-1 ${isFullscreen?'px-4 pb-4':''}`}>
         <div className="flex items-center gap-2 shrink-0">
           {simDay !== null ? (
-            <button onClick={resetToLive} className="h-6 px-2 rounded bg-red-glow/10 border border-red-glow/25 text-[8px] font-bold text-red-glow tracking-wider flex items-center gap-1" title="Return to live">
-              <RotateCcw className="h-3 w-3" /> LIVE
+            <button onClick={resetToLive} className="h-6 px-2 rounded bg-red-glow/10 border border-red-glow/25 text-[8px] font-bold text-red-glow tracking-wider flex items-center gap-1">
+              <RotateCcw className="h-3 w-3"/> LIVE
             </button>
           ) : (
             <span className="text-[8px] text-green-glow font-mono font-semibold tracking-wider">● LIVE</span>
           )}
-          <input
-            type="range"
-            min={TRAJ_START_DAY}
-            max={MISSION_DAYS}
-            step={0.01}
-            value={currentDay}
-            onChange={handleScrub}
-            className="w-24 sm:w-36 h-1 accent-cyan-glow cursor-pointer"
-            title={`Day ${currentDay.toFixed(1)}`}
-          />
-          <span className="font-mono text-[9px] text-slate-500 w-14">
-            Day {currentDay.toFixed(1)}
-          </span>
+          <input type="range" min={TRAJ_START_DAY} max={MISSION_DAYS} step={0.01} value={currentDay} onChange={handleScrub}
+            className="w-20 sm:w-32 h-1 accent-cyan-glow cursor-pointer" />
+          <span className="font-mono text-[9px] text-slate-500 w-12">Day {currentDay.toFixed(1)}</span>
+          <button onClick={cycleSpeed} className={`h-6 px-2 rounded text-[8px] font-semibold tracking-wider flex items-center gap-1 transition-all ${speed>0?'bg-amber-glow/10 text-amber-glow border border-amber-glow/25':'bg-space-950/80 text-slate-500 border border-slate-700/40 hover:text-slate-300'}`}>
+            <FastForward className="h-3 w-3"/> {speed > 0 ? `${speed}×` : '1×'}
+          </button>
         </div>
-
-        {/* Crew (hidden in fullscreen) */}
         {!isFullscreen && mission?.crew && (
           <div className="flex items-center gap-2 overflow-x-auto ml-auto">
-            {mission.crew.map((member) => (
-              <div key={member.name} className="flex items-center gap-1.5 shrink-0">
-                <div className="h-[18px] w-[18px] rounded-full bg-space-800 border border-cyan-mid/15 flex items-center justify-center text-[6.5px] font-bold text-cyan-glow/60 font-mono">
-                  {member.name.split(' ').map((n) => n[0]).join('')}
-                </div>
-                <span className="hidden sm:block text-[8px] text-slate-400 font-medium">{member.name}</span>
+            {mission.crew.map(m=>(
+              <div key={m.name} className="flex items-center gap-1.5 shrink-0">
+                <div className="h-[18px] w-[18px] rounded-full bg-space-800 border border-cyan-mid/15 flex items-center justify-center text-[6.5px] font-bold text-cyan-glow/60 font-mono">{m.name.split(' ').map(n=>n[0]).join('')}</div>
+                <span className="hidden sm:block text-[8px] text-slate-400 font-medium">{m.name}</span>
               </div>
             ))}
           </div>

@@ -199,6 +199,36 @@ export function getMissionPhase(day: number): string {
   return 'Re-entry'
 }
 
+// Build full lunar orbit circle from data (compute orbital plane + average radius)
+export function buildLunarOrbitCircle(): THREE.Vector3[] {
+  const p0 = horizonsToThree(NASA_MOON[0])
+  const pMid = horizonsToThree(NASA_MOON[Math.floor(NASA_MOON.length / 2)])
+  // Compute orbital plane normal via cross product
+  const v1 = pMid.clone().sub(p0)
+  const v2 = horizonsToThree(NASA_MOON[Math.floor(NASA_MOON.length / 4)]).sub(p0)
+  const normal = new THREE.Vector3().crossVectors(v1, v2).normalize()
+  // Average orbital radius
+  let avgR = 0
+  for (const d of NASA_MOON) avgR += horizonsToThree(d).length()
+  avgR /= NASA_MOON.length
+  // Build orthonormal basis on the orbital plane
+  const u = new THREE.Vector3()
+  if (Math.abs(normal.x) < 0.9) u.crossVectors(normal, new THREE.Vector3(1, 0, 0)).normalize()
+  else u.crossVectors(normal, new THREE.Vector3(0, 1, 0)).normalize()
+  const v = new THREE.Vector3().crossVectors(normal, u).normalize()
+  // Generate circle points
+  const pts: THREE.Vector3[] = []
+  for (let i = 0; i <= 360; i++) {
+    const a = (i * Math.PI) / 180
+    pts.push(new THREE.Vector3(
+      avgR * (Math.cos(a) * u.x + Math.sin(a) * v.x),
+      avgR * (Math.cos(a) * u.y + Math.sin(a) * v.y),
+      avgR * (Math.cos(a) * u.z + Math.sin(a) * v.z),
+    ))
+  }
+  return pts
+}
+
 // Calculate velocity (km/s) via finite difference
 export function getVelocity(day: number): number {
   const step = 0.002
