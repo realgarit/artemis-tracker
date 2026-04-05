@@ -100,8 +100,8 @@ function Dashboard() {
 
         {/* Charts + Flight Log */}
         <div className={`grid grid-cols-1 ${isCompleted ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-3 sm:gap-4`}>
-          <VelocityChart data={isCompleted ? velocityProfile : velocityHistory.data} />
-          <DistanceChart data={isCompleted ? distanceProfile : distanceHistory.data} />
+          <VelocityChart data={velocityProfile} />
+          <DistanceChart data={distanceProfile} />
           {!isCompleted && <ActivityLog phase={mission.data?.currentPhase} />}
         </div>
 
