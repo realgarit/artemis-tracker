@@ -32,6 +32,9 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
   const elapsedH = Math.max(0, Math.floor((Date.now() - launchMs) / 3_600_000))
   const totalH = mission.totalDays * 24
   const n = mission.phases.length
+  // Compute fill based on node positions (not raw time progress)
+  const activeIdx = mission.phases.findIndex(p => p.status === 'active')
+  const fillPct = activeIdx >= 0 ? (activeIdx / (n - 1)) * 100 : (n - 1) / (n - 1) * 100
 
   return (
     <div className="glass-panel border-glow px-5 py-4">
@@ -54,7 +57,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
           className="absolute left-6 h-[2px] bg-gradient-to-r from-green-glow to-cyan-glow"
           style={{ top: NODE_H / 2 - 1 }}
           initial={{ width: 0 }}
-          animate={{ width: `${Math.min(mission.progress, 100) * ((n - 1) / n)}%` }}
+          animate={{ width: `${fillPct}%` }}
           transition={{ duration: 1.2, ease: 'easeOut' }}
         />
 

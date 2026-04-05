@@ -131,7 +131,6 @@ function TrajectoryLines() {
   const traveledRef = useRef<any>(null)
   const fullPts = useMemo(() => fullTrajPts.map(p => [p.x, p.y, p.z] as [number, number, number]), [])
   const moonPts = useMemo(() => moonArcPts.map(p => [p.x, p.y, p.z] as [number, number, number]), [])
-  const orbitPts = useMemo(() => lunarOrbitPts.map(p => [p.x, p.y, p.z] as [number, number, number]), [])
 
   useFrame(() => {
     if (!traveledRef.current) return
@@ -144,9 +143,7 @@ function TrajectoryLines() {
 
   return (
     <>
-      <Line points={orbitPts} color="#ffffff" lineWidth={0.5} transparent opacity={0.12} />
-      <Line points={orbitPts} color="#ffffff" lineWidth={1.5} transparent opacity={0.03} />
-      <Line points={moonPts} color="#ffffff" lineWidth={1} transparent opacity={0.35} />
+      <Line points={moonPts} color="#ffffff" lineWidth={1} transparent opacity={0.25} />
       <Line points={fullPts} color="#ff8855" lineWidth={1} transparent opacity={0.15} dashed dashSize={0.4} gapSize={0.3} />
       <Line points={fullPts} color="#ff6b35" lineWidth={2} transparent opacity={0.03} />
       <Line ref={traveledRef} points={fullPts.slice(0, 2)} color="#ff6b35" lineWidth={2} transparent opacity={0.85} />
@@ -391,17 +388,21 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryM
           ) : (
             <span className="text-[8px] text-green-glow font-mono font-semibold tracking-wider shrink-0">● LIVE</span>
           )}
-          <button onClick={togglePlay} className={`h-6 w-6 rounded flex items-center justify-center shrink-0 transition-all ${speed>0?'bg-cyan-glow/15 text-cyan-glow border border-cyan-glow/25':'bg-space-950/80 text-slate-400 border border-slate-700/40 hover:text-cyan-glow'}`} title={speed > 0 ? 'Pause' : 'Play'}>
-            {speed > 0 ? <Pause className="h-3 w-3"/> : <Play className="h-3 w-3"/>}
-          </button>
+          {(isCompleted || simDay !== null) && (
+            <button onClick={togglePlay} className={`h-6 w-6 rounded flex items-center justify-center shrink-0 transition-all ${speed>0?'bg-cyan-glow/15 text-cyan-glow border border-cyan-glow/25':'bg-space-950/80 text-slate-400 border border-slate-700/40 hover:text-cyan-glow'}`} title={speed > 0 ? 'Pause' : 'Play'}>
+              {speed > 0 ? <Pause className="h-3 w-3"/> : <Play className="h-3 w-3"/>}
+            </button>
+          )}
           <input type="range" min={tsd} max={md} step={0.01} value={currentDay} onChange={handleScrub}
             className="flex-1 max-w-xs h-1 accent-cyan-glow cursor-pointer" />
           <span className="font-mono text-[9px] text-slate-500 w-16 shrink-0">
             Day {currentDay.toFixed(1)}/{md}
           </span>
-          <button onClick={cycleSpeed} className={`h-6 px-2 rounded text-[8px] font-semibold tracking-wider flex items-center gap-1 shrink-0 transition-all ${speed>0?'bg-amber-glow/10 text-amber-glow border border-amber-glow/25':'bg-space-950/80 text-slate-500 border border-slate-700/40 hover:text-slate-300'}`} title="Cycle speed">
-            <FastForward className="h-3 w-3"/> {speed > 0 ? fmtSpeed(speed) : '1×'}
-          </button>
+          {(isCompleted || simDay !== null) && (
+            <button onClick={cycleSpeed} className={`h-6 px-2 rounded text-[8px] font-semibold tracking-wider flex items-center gap-1 shrink-0 transition-all ${speed>0?'bg-amber-glow/10 text-amber-glow border border-amber-glow/25':'bg-space-950/80 text-slate-500 border border-slate-700/40 hover:text-slate-300'}`} title="Cycle speed">
+              <FastForward className="h-3 w-3"/> {speed > 0 ? fmtSpeed(speed) : '1×'}
+            </button>
+          )}
         </div>
       </div>
     </div>
