@@ -18,6 +18,8 @@ type CameraMode = 'overview' | 'earth' | 'moon' | 'orion'
 let cameraMode: CameraMode = 'overview'
 let simOverride: number | null = null
 let simSpeed = 0
+let lastCameraMode: CameraMode = 'overview'
+let transitionFrames = 0
 
 function getSimDay(): number {
   return simOverride !== null ? simOverride : getCurrentMissionDay()
@@ -76,7 +78,7 @@ function MoonBody() {
 function Orion() {
   const ref = useRef<THREE.Group>(null)
   const labelRef = useRef<HTMLSpanElement>(null)
-  const OS = 0.2
+  const OS = 5
 
   useFrame(() => {
     if (!ref.current) return
@@ -177,18 +179,26 @@ function CameraController() {
     let tp: THREE.Vector3, cd: number
     switch (cameraMode) {
       case 'earth': tp = new THREE.Vector3(0,0,0); cd = 8; break
-      case 'moon': tp = mp.clone(); cd = 4; break
-      case 'orion': tp = op.clone(); cd = 6; break
+      case 'moon': tp = mp.clone(); cd = 5; break
+      case 'orion': tp = op.clone(); cd = 5; break
       default: tp = new THREE.Vector3(op.x*0.4, op.y*0.3, op.z*0.3); cd = 120
     }
+    // Detect mode change → start transition animation
+    if (cameraMode !== lastCameraMode) {
+      transitionFrames = 90 // ~1.5s at 60fps
+      lastCameraMode = cameraMode
+    }
+    if (transitionFrames > 0) transitionFrames--
+    // Always track the orbit center (so user orbits around the focused object)
     controlsRef.current.target.lerp(tp, 0.03)
-    if (cameraMode !== 'overview') {
+    // Only animate camera distance during initial transition — then let user freely zoom/rotate
+    if (cameraMode !== 'overview' && transitionFrames > 0) {
       const dir = camera.position.clone().sub(controlsRef.current.target).normalize()
-      camera.position.lerp(controlsRef.current.target.clone().add(dir.multiplyScalar(cd)), 0.02)
+      camera.position.lerp(controlsRef.current.target.clone().add(dir.multiplyScalar(cd)), 0.03)
     }
     controlsRef.current.update()
   })
-  return <OrbitControls ref={controlsRef} enableZoom enablePan={false} minDistance={1} maxDistance={400} autoRotate={cameraMode==='overview'} autoRotateSpeed={0.08} enableDamping dampingFactor={0.06} />
+  return <OrbitControls ref={controlsRef} enableZoom enablePan={false} minDistance={0.5} maxDistance={500} autoRotate={cameraMode==='overview'} autoRotateSpeed={0.08} enableDamping dampingFactor={0.06} />
 }
 
 function SimUpdater() {
@@ -319,8 +329,8 @@ export function TrajectoryMap({ mission }: TrajectoryMapProps) {
       <HUDOverlay />
 
       <WebGLBoundary>
-        <div className={`flex-1 ${isFullscreen?'min-h-screen':'min-h-[450px] sm:min-h-[500px]'} rounded overflow-hidden`}>
-          <Canvas camera={{position:[44,100,60],fov:45,near:0.01,far:8000}} gl={{antialias:true,alpha:true,powerPreference:'high-performance'}} style={{background:'transparent'}} dpr={[1,2]}>
+        <div className={`flex-1 ${isFullscreen?'min-h-screen':'min-h-[450px] sm:min-h-[500px]'} rounded overflow-hidden bg-black`}>
+          <Canvas camera={{position:[44,100,60],fov:45,near:0.01,far:8000}} gl={{antialias:true,alpha:false,powerPreference:'high-performance'}} dpr={[1,2]}>
             <Scene />
           </Canvas>
         </div>

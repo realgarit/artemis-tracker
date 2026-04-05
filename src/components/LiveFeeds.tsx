@@ -5,21 +5,21 @@ const FEEDS = [
   {
     id: 'coverage',
     label: 'Mission Coverage',
-    embedUrl: 'https://www.youtube.com/embed/m3kR2KK8TEs?autoplay=0&rel=0&modestbranding=1',
+    embedUrl: 'https://www.youtube-nocookie.com/embed/m3kR2KK8TEs?autoplay=0&rel=0&modestbranding=1',
     description: 'Official NASA broadcast with live commentary',
     fallbackUrl: 'https://www.youtube.com/watch?v=m3kR2KK8TEs',
   },
   {
     id: 'orion',
     label: 'Views from Orion',
-    embedUrl: 'https://www.youtube.com/embed/6RwfNBtepa4?autoplay=0&rel=0&modestbranding=1',
+    embedUrl: 'https://www.youtube-nocookie.com/embed/6RwfNBtepa4?autoplay=0&rel=0&modestbranding=1',
     description: 'Live camera feed from the Orion spacecraft',
     fallbackUrl: 'https://www.youtube.com/watch?v=6RwfNBtepa4',
   },
   {
     id: 'briefing',
     label: 'Daily Briefing',
-    embedUrl: 'https://www.youtube.com/embed/j3Pq35gm4qA?autoplay=0&rel=0&modestbranding=1',
+    embedUrl: 'https://www.youtube-nocookie.com/embed/j3Pq35gm4qA?autoplay=0&rel=0&modestbranding=1',
     description: 'Artemis II daily news conference',
     fallbackUrl: 'https://www.youtube.com/watch?v=j3Pq35gm4qA',
   },
@@ -73,6 +73,7 @@ export function LiveFeeds() {
           src={feed.embedUrl}
           title={feed.label}
           className="absolute inset-0 w-full h-full"
+          referrerPolicy="strict-origin-when-cross-origin"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         />
