@@ -1,8 +1,8 @@
-import { lazy, Suspense, useEffect, useCallback } from 'react'
+import { lazy, Suspense, useEffect, useCallback, useState } from 'react'
 import { Route, Switch } from 'wouter'
 import { useMission, useTrajectory, useSpaceWeather, useVelocityHistory, useDistanceHistory, useDSN } from './lib/api'
 import { startHistoryRecording } from './lib/history'
-import { getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity, getMissionPhase, SCALE, EARTH_RADIUS_KM, MOON_RADIUS_KM } from './data/trajectoryData'
+import { getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity, getMissionPhase, SCALE, EARTH_RADIUS_KM, MOON_RADIUS_KM, getActiveMission } from './data/trajectoryData'
 import { Header } from './components/Header'
 import { MetricsBar } from './components/MetricsBar'
 import { MissionTimeline } from './components/MissionTimeline'
@@ -32,6 +32,9 @@ function TrajectoryFallback() {
 }
 
 function Dashboard() {
+  const [activeMissionId, setActiveMissionId] = useState('artemis-ii')
+  const isCompleted = getActiveMission().status === 'completed'
+
   const mission = useMission()
   const trajectory = useTrajectory()
   const weather = useSpaceWeather()
@@ -40,9 +43,10 @@ function Dashboard() {
   const dsn = useDSN()
 
   useEffect(() => {
+    if (isCompleted) return
     startHistoryRecording(() => {
       const day = getCurrentMissionDay()
-      if (day < 0 || day > 11) return null
+      if (day < 0 || day > getActiveMission().missionDays + 1) return null
       const pos = getTrajectoryPos(day)
       const moonPos = getMoonPos(day)
       return {
@@ -52,21 +56,21 @@ function Dashboard() {
         velocity: getVelocity(day), phase: getMissionPhase(day), latitude: 0, longitude: 0,
       }
     })
-  }, [])
+  }, [activeMissionId, isCompleted])
 
-  const handleMissionChange = useCallback((id: string) => { console.log(`Mission: ${id}`) }, [])
+  const handleMissionChange = useCallback((id: string) => { setActiveMissionId(id) }, [])
 
   return (
     <>
-      <Header missionName={mission.data?.name} onMissionChange={handleMissionChange} />
+      <Header missionName={getActiveMission().name} activeMissionId={activeMissionId} onMissionChange={handleMissionChange} />
       <MetricsBar mission={mission.data} trajectory={trajectory.data} />
 
       <main className="mx-auto max-w-[1600px] px-3 sm:px-4 pt-3 sm:pt-4 pb-6 space-y-3 sm:space-y-4">
         <MissionTimeline mission={mission.data} />
 
-        {/* 3D Trajectory — FULL WIDTH (no stat boxes beside it) */}
+        {/* 3D Trajectory — FULL WIDTH */}
         <Suspense fallback={<TrajectoryFallback />}>
-          <TrajectoryMap mission={mission.data} />
+          <TrajectoryMap mission={mission.data} missionId={activeMissionId} />
         </Suspense>
 
         {/* Crew */}

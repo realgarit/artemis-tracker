@@ -7,12 +7,12 @@ import { Globe, Moon as MoonIcon, Rocket, Maximize2, Minimize2, RotateCcw, FastF
 import {
   eR, mR, SCALE, EARTH_RADIUS_KM, MOON_RADIUS_KM,
   getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity,
-  buildTrajectoryCurve, buildMoonArc, buildLunarOrbitCircle, getMissionPhase,
-  MISSION_DAYS, TRAJ_START_DAY,
+  getMissionPhase, getActiveMission, setActiveMission,
+  fullTrajPts, moonArcPts, lunarOrbitPts,
 } from '../data/trajectoryData'
 import type { MissionData } from '../lib/types'
 
-interface TrajectoryMapProps { mission?: MissionData }
+interface TrajectoryMapProps { mission?: MissionData; missionId?: string }
 
 type CameraMode = 'overview' | 'earth' | 'moon' | 'orion'
 let cameraMode: CameraMode = 'overview'
@@ -24,10 +24,6 @@ let transitionFrames = 0
 function getSimDay(): number {
   return simOverride !== null ? simOverride : getCurrentMissionDay()
 }
-
-const fullTrajPts = buildTrajectoryCurve()
-const moonArcPts = buildMoonArc()
-const lunarOrbitPts = buildLunarOrbitCircle()
 
 // ——— Milky Way ———
 function MilkyWayBand() {
@@ -204,7 +200,7 @@ function CameraController() {
 function SimUpdater() {
   useFrame((_, dt) => {
     if (simSpeed > 0 && simOverride !== null) {
-      simOverride = Math.min(MISSION_DAYS, simOverride + dt * simSpeed / 86400 * 3600)
+      simOverride = Math.min(getActiveMission().missionDays, simOverride + dt * simSpeed / 86400 * 3600)
     }
   })
   return null
@@ -261,12 +257,33 @@ function HUDOverlay() {
 }
 
 // ——— Export ———
-export function TrajectoryMap({ mission }: TrajectoryMapProps) {
+export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryMapProps) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [activeCam, setActiveCam] = useState<CameraMode>('overview')
   const [simDay, setSimDay] = useState<number | null>(null)
   const [speed, setSpeed] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const activeMission = getActiveMission()
+  const isCompleted = activeMission.status === 'completed'
+
+  // Switch active mission data + reset sim state
+  useEffect(() => {
+    setActiveMission(missionId)
+    cameraMode = 'overview'
+    lastCameraMode = 'overview'
+    transitionFrames = 0
+    setActiveCam('overview')
+    setSpeed(0)
+    simSpeed = 0
+    if (getActiveMission().status === 'completed') {
+      simOverride = 0
+      setSimDay(0)
+    } else {
+      simOverride = null
+      setSimDay(null)
+    }
+  }, [missionId])
 
   // Listen for fullscreen exit (Escape key etc.)
   useEffect(() => {
@@ -283,25 +300,33 @@ export function TrajectoryMap({ mission }: TrajectoryMapProps) {
 
   const setCam = useCallback((m: CameraMode) => { cameraMode = m; setActiveCam(m) }, [])
   const handleScrub = useCallback((e: React.ChangeEvent<HTMLInputElement>) => { const v = parseFloat(e.target.value); simOverride = v; simSpeed = 0; setSimDay(v); setSpeed(0) }, [])
-  const resetToLive = useCallback(() => { simOverride = null; simSpeed = 0; setSimDay(null); setSpeed(0) }, [])
+  const resetToLive = useCallback(() => {
+    if (isCompleted) {
+      simOverride = 0; simSpeed = 0; setSimDay(0); setSpeed(0)
+    } else {
+      simOverride = null; simSpeed = 0; setSimDay(null); setSpeed(0)
+    }
+  }, [isCompleted])
   const cycleSpeed = useCallback(() => {
     const speeds = [0, 10, 100, 1000]
     const next = speeds[(speeds.indexOf(speed) + 1) % speeds.length]
     simSpeed = next
-    if (next > 0 && simOverride === null) simOverride = getCurrentMissionDay()
+    if (next > 0 && simOverride === null) simOverride = isCompleted ? 0 : getCurrentMissionDay()
     setSpeed(next)
-  }, [speed])
+  }, [speed, isCompleted])
 
-  const currentDay = simDay !== null ? simDay : getCurrentMissionDay()
+  const md = getActiveMission().missionDays
+  const tsd = getActiveMission().trajStartDay
+  const currentDay = simDay !== null ? simDay : (isCompleted ? 0 : getCurrentMissionDay())
 
   return (
     <div ref={containerRef} className={`glass-panel border-glow h-full flex flex-col relative overflow-hidden ${isFullscreen ? 'p-0 rounded-none bg-space-950' : 'p-2'}`}>
       {/* Source badge */}
       <div className="absolute top-3 left-3 z-10">
         <div className="bg-space-950/85 backdrop-blur-sm border border-cyan-mid/12 rounded px-2.5 py-1 flex items-center gap-1.5">
-          <div className={`h-1.5 w-1.5 rounded-full ${simDay !== null ? 'bg-amber-glow' : 'bg-green-glow'} live-pulse`} />
+          <div className={`h-1.5 w-1.5 rounded-full ${isCompleted ? 'bg-amber-glow' : simDay !== null ? 'bg-amber-glow' : 'bg-green-glow'} live-pulse`} />
           <span className="font-mono text-[7.5px] text-slate-500 tracking-wide">
-            {simDay !== null ? (speed > 0 ? `SIM ${speed}×` : 'SIMULATION') : 'REALTIME'}
+            {isCompleted ? (speed > 0 ? `REPLAY ${speed}×` : 'REPLAY') : simDay !== null ? (speed > 0 ? `SIM ${speed}×` : 'SIMULATION') : 'REALTIME'}
           </span>
         </div>
       </div>
@@ -331,27 +356,31 @@ export function TrajectoryMap({ mission }: TrajectoryMapProps) {
       <WebGLBoundary>
         <div className={`flex-1 ${isFullscreen?'min-h-screen':'min-h-[450px] sm:min-h-[500px]'} rounded overflow-hidden bg-black relative`}>
           <div className="absolute inset-0">
-            <Canvas camera={{position:[44,100,60],fov:45,near:0.01,far:8000}} gl={{antialias:true,alpha:false,powerPreference:'high-performance'}} dpr={[1,2]}>
+            <Canvas key={missionId} camera={{position:[44,100,60],fov:45,near:0.01,far:8000}} gl={{antialias:true,alpha:false,powerPreference:'high-performance'}} dpr={[1,2]}>
               <Scene />
             </Canvas>
           </div>
         </div>
       </WebGLBoundary>
 
-      {/* Bottom bar — scrubber only, no crew */}
+      {/* Bottom bar — scrubber */}
       <div className={`flex items-center gap-3 mt-1 px-1 ${isFullscreen?'px-4 pb-3':''}`}>
         <div className="flex items-center gap-2 flex-1">
-          {simDay !== null ? (
+          {isCompleted ? (
+            <button onClick={resetToLive} className="h-6 px-2 rounded bg-amber-glow/10 border border-amber-glow/25 text-[8px] font-bold text-amber-glow tracking-wider flex items-center gap-1 shrink-0">
+              <RotateCcw className="h-3 w-3"/> RESET
+            </button>
+          ) : simDay !== null ? (
             <button onClick={resetToLive} className="h-6 px-2 rounded bg-red-glow/10 border border-red-glow/25 text-[8px] font-bold text-red-glow tracking-wider flex items-center gap-1 shrink-0">
               <RotateCcw className="h-3 w-3"/> LIVE
             </button>
           ) : (
             <span className="text-[8px] text-green-glow font-mono font-semibold tracking-wider shrink-0">● LIVE</span>
           )}
-          <input type="range" min={TRAJ_START_DAY} max={MISSION_DAYS} step={0.01} value={currentDay} onChange={handleScrub}
+          <input type="range" min={tsd} max={md} step={0.01} value={currentDay} onChange={handleScrub}
             className="flex-1 max-w-xs h-1 accent-cyan-glow cursor-pointer" />
           <span className="font-mono text-[9px] text-slate-500 w-16 shrink-0">
-            Day {currentDay.toFixed(1)}/{MISSION_DAYS}
+            Day {currentDay.toFixed(1)}/{md}
           </span>
           <button onClick={cycleSpeed} className={`h-6 px-2 rounded text-[8px] font-semibold tracking-wider flex items-center gap-1 shrink-0 transition-all ${speed>0?'bg-amber-glow/10 text-amber-glow border border-amber-glow/25':'bg-space-950/80 text-slate-500 border border-slate-700/40 hover:text-slate-300'}`}>
             <FastForward className="h-3 w-3"/> {speed > 0 ? `${speed}×` : '1×'}

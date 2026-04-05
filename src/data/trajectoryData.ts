@@ -1,10 +1,8 @@
-// Real NASA/JPL Horizons ephemeris data for Artemis II
-// Spacecraft ID: -1024 (Orion/Integrity)
-// Reference frame: Earth-centered EME2000 (J2000 equatorial)
-// Units: km, 2-hour intervals
-// Coverage: Apr 2 03:00 TDB → Apr 10 23:00 TDB (107 points)
+// Multi-mission trajectory data system
+// Supports switching between Artemis I (completed) and Artemis II (active)
 
 import * as THREE from 'three'
+import { NASA_TRAJ_A1, NASA_MOON_A1, getMissionPhaseA1 } from './artemisIData'
 
 export const EARTH_RADIUS_KM = 6371
 export const MOON_RADIUS_KM = 1737
@@ -14,16 +12,37 @@ export const SCALE = 1 / 4000 // 1 Three.js unit = 4000 km
 export const eR = EARTH_RADIUS_KM * SCALE  // ~1.59
 export const mR = MOON_RADIUS_KM * SCALE   // ~0.43
 
-export const LAUNCH_TIME = Date.UTC(2026, 3, 1, 22, 35, 0) // Apr 1 2026 22:35 UTC
-export const MISSION_DAYS = 10
+// ——— Mission Configuration ———
 
-// Data starts at Apr 2 03:00 UTC = day 0.184 after launch
-export const TRAJ_START_DAY = (3 + 24 - 22.5833) / 24
-export const TRAJ_STEP_DAYS = 2 / 24 // 2 hours
-export const TLI_INDEX = 11 // Trans-Lunar Injection point
+export interface MissionTrajConfig {
+  id: string
+  name: string
+  status: 'completed' | 'active'
+  launchTime: number
+  missionDays: number
+  trajStartDay: number
+  trajStepDays: number
+  tliIndex: number
+  trajectory: number[][]
+  moon: number[][]
+  getPhase: (day: number) => string
+}
 
-// Spacecraft trajectory — [X, Y, Z] in km, EME2000
-export const NASA_TRAJ: number[][] = [
+// ——— Artemis II Data ———
+
+const LAUNCH_TIME_A2 = Date.UTC(2026, 3, 1, 22, 35, 0) // Apr 1 2026 22:35 UTC
+
+function getMissionPhaseA2(day: number): string {
+  if (day < 0) return 'Pre-Launch'
+  if (day < 1.06) return 'Earth Orbit'
+  if (day < 1.5) return 'Trans-Lunar Injection'
+  if (day < 5.3) return 'Translunar Coast'
+  if (day < 6.3) return 'Lunar Flyby'
+  if (day < 9.5) return 'Return Transit'
+  return 'Re-entry'
+}
+
+const NASA_TRAJ_A2: number[][] = [
 [-29093,-27111,-2392],[-31496,-45814,-4008],[-29834,-58891,-5132],
 [-25980,-67721,-5886],[-20697,-72881,-6316],[-14424,-74597,-6442],
 [-7456,-72813,-6251],[-106,-67200,-5732],[7219,-56991,-4818],
@@ -62,8 +81,7 @@ export const NASA_TRAJ: number[][] = [
 [11584,-48236,-13381],[13214,-16560,-7286]
 ]
 
-// Moon positions — [X, Y, Z] in km, EME2000, same timing
-export const NASA_MOON: number[][] = [
+const NASA_MOON_A2: number[][] = [
 [-384033,-84399,-19978],[-382670,-91473,-20528],[-381177,-98515,-21072],
 [-379556,-105524,-21608],[-377807,-112498,-22137],[-375932,-119434,-22658],
 [-373931,-126329,-23171],[-371804,-133182,-23677],[-369554,-139990,-24174],
@@ -102,12 +120,70 @@ export const NASA_MOON: number[][] = [
 [187107,-349989,-22838],[193150,-346321,-22324]
 ]
 
-// Convert Horizons EME2000 [X,Y,Z] → Three.js Y-up [X,Z,Y]
+// ——— Mission Configs ———
+
+const ARTEMIS_I_CONFIG: MissionTrajConfig = {
+  id: 'artemis-i',
+  name: 'Artemis I',
+  status: 'completed',
+  launchTime: Date.UTC(2022, 10, 16, 6, 47, 44), // Nov 16 2022 06:47:44 UTC
+  missionDays: 26,
+  trajStartDay: 0.134, // Data starts ~3h 13m after launch
+  trajStepDays: 2 / 24,
+  tliIndex: 0, // TLI happens very early, use all data
+  trajectory: NASA_TRAJ_A1,
+  moon: NASA_MOON_A1,
+  getPhase: getMissionPhaseA1,
+}
+
+const ARTEMIS_II_CONFIG: MissionTrajConfig = {
+  id: 'artemis-ii',
+  name: 'Artemis II',
+  status: 'active',
+  launchTime: LAUNCH_TIME_A2,
+  missionDays: 10,
+  trajStartDay: (3 + 24 - 22.5833) / 24, // ~0.184
+  trajStepDays: 2 / 24,
+  tliIndex: 11,
+  trajectory: NASA_TRAJ_A2,
+  moon: NASA_MOON_A2,
+  getPhase: getMissionPhaseA2,
+}
+
+const MISSION_MAP: Record<string, MissionTrajConfig> = {
+  'artemis-i': ARTEMIS_I_CONFIG,
+  'artemis-ii': ARTEMIS_II_CONFIG,
+}
+
+// ——— Active Mission State ———
+
+let active: MissionTrajConfig = ARTEMIS_II_CONFIG
+
+export function getActiveMission(): MissionTrajConfig { return active }
+export function getMissionConfigs(): MissionTrajConfig[] { return Object.values(MISSION_MAP) }
+
+export function setActiveMission(id: string) {
+  const cfg = MISSION_MAP[id]
+  if (!cfg) return
+  active = cfg
+  // Rebuild pre-computed curves
+  fullTrajPts = buildTrajectoryCurve()
+  moonArcPts = buildMoonArc()
+  lunarOrbitPts = buildLunarOrbitCircle()
+}
+
+// ——— Backward-compatible exports (read from active mission) ———
+
+export { LAUNCH_TIME_A2 as LAUNCH_TIME }
+export const MISSION_DAYS = 10 // kept for compat, but use active.missionDays
+export const TRAJ_START_DAY = (3 + 24 - 22.5833) / 24
+
+// ——— Core Math (mission-independent) ———
+
 export function horizonsToThree(d: number[]): THREE.Vector3 {
   return new THREE.Vector3(d[0] * SCALE, d[2] * SCALE, d[1] * SCALE)
 }
 
-// Catmull-Rom interpolation for smooth curves through data points
 export function catmullRom(
   p0: THREE.Vector3, p1: THREE.Vector3, p2: THREE.Vector3, p3: THREE.Vector3, t: number
 ): THREE.Vector3 {
@@ -119,104 +195,87 @@ export function catmullRom(
   )
 }
 
-// Get spacecraft position at a given mission day
+// ——— Position Functions (use active mission) ———
+
 export function getTrajectoryPos(day: number): THREE.Vector3 {
-  if (day <= TRAJ_START_DAY) return horizonsToThree(NASA_TRAJ[0])
-  const maxDay = TRAJ_START_DAY + (NASA_TRAJ.length - 1) * TRAJ_STEP_DAYS
-  if (day >= maxDay) return horizonsToThree(NASA_TRAJ[NASA_TRAJ.length - 1])
-
-  const fIdx = (day - TRAJ_START_DAY) / TRAJ_STEP_DAYS
-  const i = Math.floor(fIdx)
-  const t = fIdx - i
-  const N = NASA_TRAJ.length
-
+  const { trajectory, trajStartDay, trajStepDays } = active
+  if (day <= trajStartDay) return horizonsToThree(trajectory[0])
+  const maxDay = trajStartDay + (trajectory.length - 1) * trajStepDays
+  if (day >= maxDay) return horizonsToThree(trajectory[trajectory.length - 1])
+  const fIdx = (day - trajStartDay) / trajStepDays
+  const i = Math.floor(fIdx), t = fIdx - i, N = trajectory.length
   return catmullRom(
-    horizonsToThree(NASA_TRAJ[Math.max(0, i - 1)]),
-    horizonsToThree(NASA_TRAJ[Math.min(N - 1, i)]),
-    horizonsToThree(NASA_TRAJ[Math.min(N - 1, i + 1)]),
-    horizonsToThree(NASA_TRAJ[Math.min(N - 1, i + 2)]),
+    horizonsToThree(trajectory[Math.max(0, i - 1)]),
+    horizonsToThree(trajectory[Math.min(N - 1, i)]),
+    horizonsToThree(trajectory[Math.min(N - 1, i + 1)]),
+    horizonsToThree(trajectory[Math.min(N - 1, i + 2)]),
     t
   )
 }
 
-// Get Moon position at a given mission day
 export function getMoonPos(day: number): THREE.Vector3 {
-  if (day <= TRAJ_START_DAY) return horizonsToThree(NASA_MOON[0])
-  const maxDay = TRAJ_START_DAY + (NASA_MOON.length - 1) * TRAJ_STEP_DAYS
-  if (day >= maxDay) return horizonsToThree(NASA_MOON[NASA_MOON.length - 1])
-
-  const fIdx = (day - TRAJ_START_DAY) / TRAJ_STEP_DAYS
-  const i = Math.floor(fIdx)
-  const t = fIdx - i
-  const N = NASA_MOON.length
-
+  const { moon, trajStartDay, trajStepDays } = active
+  if (day <= trajStartDay) return horizonsToThree(moon[0])
+  const maxDay = trajStartDay + (moon.length - 1) * trajStepDays
+  if (day >= maxDay) return horizonsToThree(moon[moon.length - 1])
+  const fIdx = (day - trajStartDay) / trajStepDays
+  const i = Math.floor(fIdx), t = fIdx - i, N = moon.length
   return catmullRom(
-    horizonsToThree(NASA_MOON[Math.max(0, i - 1)]),
-    horizonsToThree(NASA_MOON[Math.min(N - 1, i)]),
-    horizonsToThree(NASA_MOON[Math.min(N - 1, i + 1)]),
-    horizonsToThree(NASA_MOON[Math.min(N - 1, i + 2)]),
+    horizonsToThree(moon[Math.max(0, i - 1)]),
+    horizonsToThree(moon[Math.min(N - 1, i)]),
+    horizonsToThree(moon[Math.min(N - 1, i + 1)]),
+    horizonsToThree(moon[Math.min(N - 1, i + 2)]),
     t
   )
 }
 
-// Get current mission day from real time
 export function getCurrentMissionDay(): number {
-  return (Date.now() - LAUNCH_TIME) / 86400000
+  return (Date.now() - active.launchTime) / 86400000
 }
 
-// Build trajectory curve points for rendering (from TLI onward)
+export function getMissionPhase(day: number): string {
+  return active.getPhase(day)
+}
+
+// ——— Curve Builders (use active mission) ———
+
 export function buildTrajectoryCurve(): THREE.Vector3[] {
+  const { trajectory, tliIndex } = active
   const pts: THREE.Vector3[] = []
-  const N = NASA_TRAJ.length
-  for (let i = TLI_INDEX; i < N - 1; i++) {
-    const i0 = Math.max(TLI_INDEX, i - 1)
+  const N = trajectory.length
+  for (let i = tliIndex; i < N - 1; i++) {
+    const i0 = Math.max(tliIndex, i - 1)
     const i3 = Math.min(N - 1, i + 2)
-    const p0 = horizonsToThree(NASA_TRAJ[i0])
-    const p1 = horizonsToThree(NASA_TRAJ[i])
-    const p2 = horizonsToThree(NASA_TRAJ[i + 1])
-    const p3 = horizonsToThree(NASA_TRAJ[i3])
+    const p0 = horizonsToThree(trajectory[i0])
+    const p1 = horizonsToThree(trajectory[i])
+    const p2 = horizonsToThree(trajectory[i + 1])
+    const p3 = horizonsToThree(trajectory[i3])
     for (let s = 0; s < 10; s++) {
       pts.push(catmullRom(p0, p1, p2, p3, s / 10))
     }
   }
-  pts.push(horizonsToThree(NASA_TRAJ[N - 1]))
+  pts.push(horizonsToThree(trajectory[N - 1]))
   return pts
 }
 
-// Build Moon orbit arc from data
 export function buildMoonArc(): THREE.Vector3[] {
-  return NASA_MOON.map((d) => horizonsToThree(d))
+  return active.moon.map((d) => horizonsToThree(d))
 }
 
-// Get mission phase from day
-export function getMissionPhase(day: number): string {
-  if (day < 0) return 'Pre-Launch'
-  if (day < 1.06) return 'Earth Orbit'
-  if (day < 1.5) return 'Trans-Lunar Injection'
-  if (day < 5.3) return 'Translunar Coast'
-  if (day < 6.3) return 'Lunar Flyby'
-  if (day < 9.5) return 'Return Transit'
-  return 'Re-entry'
-}
-
-// Build full lunar orbit circle from data (compute orbital plane + average radius)
 export function buildLunarOrbitCircle(): THREE.Vector3[] {
-  const p0 = horizonsToThree(NASA_MOON[0])
-  const pMid = horizonsToThree(NASA_MOON[Math.floor(NASA_MOON.length / 2)])
-  // Compute orbital plane normal via cross product
+  const moonData = active.moon
+  const p0 = horizonsToThree(moonData[0])
+  const pMid = horizonsToThree(moonData[Math.floor(moonData.length / 2)])
   const v1 = pMid.clone().sub(p0)
-  const v2 = horizonsToThree(NASA_MOON[Math.floor(NASA_MOON.length / 4)]).sub(p0)
+  const v2 = horizonsToThree(moonData[Math.floor(moonData.length / 4)]).sub(p0)
   const normal = new THREE.Vector3().crossVectors(v1, v2).normalize()
-  // Average orbital radius
   let avgR = 0
-  for (const d of NASA_MOON) avgR += horizonsToThree(d).length()
-  avgR /= NASA_MOON.length
-  // Build orthonormal basis on the orbital plane
+  for (const d of moonData) avgR += horizonsToThree(d).length()
+  avgR /= moonData.length
   const u = new THREE.Vector3()
   if (Math.abs(normal.x) < 0.9) u.crossVectors(normal, new THREE.Vector3(1, 0, 0)).normalize()
   else u.crossVectors(normal, new THREE.Vector3(0, 1, 0)).normalize()
   const v = new THREE.Vector3().crossVectors(normal, u).normalize()
-  // Generate circle points
   const pts: THREE.Vector3[] = []
   for (let i = 0; i <= 360; i++) {
     const a = (i * Math.PI) / 180
@@ -229,12 +288,18 @@ export function buildLunarOrbitCircle(): THREE.Vector3[] {
   return pts
 }
 
-// Calculate velocity (km/s) via finite difference
+// ——— Velocity ———
+
 export function getVelocity(day: number): number {
   const step = 0.002
   const pos1 = getTrajectoryPos(day)
   const pos2 = getTrajectoryPos(Math.max(0, day - step))
-  // Positions are in scaled units, convert back to km
   const distKm = pos1.clone().sub(pos2).length() / SCALE
   return distKm / (step * 86400)
 }
+
+// ——— Pre-computed curves (mutable, rebuilt on mission switch) ———
+
+export let fullTrajPts = buildTrajectoryCurve()
+export let moonArcPts = buildMoonArc()
+export let lunarOrbitPts = buildLunarOrbitCircle()

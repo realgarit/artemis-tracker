@@ -24,7 +24,7 @@ export function Footer({ trajectory }: FooterProps) {
           </div>
           <div className="flex gap-x-5 gap-y-1 font-mono">
             <span>All times UTC</span>
-            <span>Updates every 5s</span>
+
             <span className="text-slate-700">v{APP_VERSION}</span>
           </div>
         </div>

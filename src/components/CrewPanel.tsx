@@ -37,7 +37,11 @@ const AGENCY_COLORS: Record<string, string> = {
 }
 
 export function CrewPanel({ crew, compact = false }: CrewPanelProps) {
-  if (!crew || crew.length === 0) return null
+  if (!crew || crew.length === 0) return (
+    <div className="glass-panel border-glow p-4 text-center">
+      <span className="text-[10px] text-slate-500 tracking-[.2em] uppercase font-semibold">Uncrewed Test Flight</span>
+    </div>
+  )
 
   return (
     <motion.div

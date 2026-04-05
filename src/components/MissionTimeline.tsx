@@ -10,9 +10,15 @@ const PHASE_DESC: Record<string, string> = {
   'Launch & Ascent': 'SLS launch and powered ascent to orbit',
   'Earth Orbit': 'Systems checkout in low Earth orbit',
   'Trans-Lunar Injection': 'ICPS burn to escape Earth orbit',
-  'Outbound Coast': '~4 days coasting to the Moon',
-  'Lunar Flyby': 'Powered flyby ~6,400 km above lunar surface',
-  'Return Coast': '~4 days coasting home to Earth',
+  'Outbound Coast': 'Coasting to the Moon',
+  'Translunar Coast': 'Coasting to the Moon',
+  'Lunar Flyby': 'Powered flyby above lunar surface',
+  'DRO Insertion': 'Burn to enter distant retrograde orbit',
+  'Distant Retrograde Orbit': 'Orbiting Moon at ~70,000 km distance',
+  'DRO Departure': 'Burn to leave lunar orbit and return home',
+  'Return Coast': 'Coasting home to Earth',
+  'Return Transit': 'Coasting home to Earth',
+  'Re-entry': 'Atmospheric re-entry and splashdown',
   'Re-entry & Splashdown': 'Atmospheric re-entry and Pacific splashdown',
 }
 
