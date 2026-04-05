@@ -57,4 +57,4 @@ api/
 
 ## License
 
-MIT
+MIT — except the Orion 3D model (`public/models/orion.glb`) which is GPL-3.0, created by [Mikius538](https://www.printables.com/model/1665038-esa-orion-capsule-arremis).

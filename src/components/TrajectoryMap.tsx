@@ -45,8 +45,6 @@ function Earth() {
   useFrame((_, dt) => { if (ref.current) ref.current.rotation.y += dt * 0.02 })
   return (
     <group>
-      <mesh><sphereGeometry args={[eR * 1.06, 64, 64]} /><meshBasicMaterial color="#4499ff" transparent opacity={0.06} side={THREE.BackSide} /></mesh>
-      <mesh><sphereGeometry args={[eR * 2.5, 32, 32]} /><meshBasicMaterial color="#2266aa" transparent opacity={0.02} side={THREE.BackSide} /></mesh>
       <mesh ref={ref}><sphereGeometry args={[eR, 128, 64]} /><meshStandardMaterial map={texture} roughness={0.8} metalness={0.05} /></mesh>
       <Html position={[0, -(eR + 1), 0]} center style={{ pointerEvents: 'none' }}>
         <span style={{ fontFamily: 'Orbitron', fontSize: 10, color: '#4499ff', letterSpacing: 4, userSelect: 'none', opacity: 0.7 }}>EARTH</span>
@@ -62,7 +60,6 @@ function MoonBody() {
   return (
     <group ref={ref}>
       <mesh><sphereGeometry args={[mR, 64, 32]} /><meshStandardMaterial map={texture} roughness={0.95} /></mesh>
-      <mesh><sphereGeometry args={[mR * 2.5, 16, 16]} /><meshBasicMaterial color="#888899" transparent opacity={0.015} side={THREE.BackSide} /></mesh>
       <Html position={[0, -(mR + 0.8), 0]} center style={{ pointerEvents: 'none' }}>
         <span style={{ fontFamily: 'Orbitron', fontSize: 9, color: '#aaaacc', letterSpacing: 3, userSelect: 'none', opacity: 0.6 }}>MOON</span>
       </Html>
@@ -92,22 +89,10 @@ function Orion() {
 
   return (
     <group ref={ref}>
-      {/* Beacon glow — visible from overview */}
-      <mesh><sphereGeometry args={[1.2, 16, 16]} /><meshBasicMaterial color="#ff8844" transparent opacity={0.05} /></mesh>
-      <mesh><sphereGeometry args={[0.4, 16, 16]} /><meshBasicMaterial color="#ff8844" transparent opacity={0.12} /></mesh>
+      {/* Orion spacecraft model — by Mikius538, GPL-3.0 */}
+      <primitive object={orionModel} scale={0.8} rotation={[0, 0, Math.PI / 2]} />
 
-      {/* NASA Orion capsule model */}
-      <primitive object={orionModel} scale={0.6} rotation={[Math.PI / 2, 0, 0]} />
-
-      {/* Solar panel arrays — 4 panels in X-pattern from service module */}
-      {[0, 1, 2, 3].map((i) => (
-        <mesh key={i} position={[0, 0, -0.15]} rotation={[0, (i * Math.PI) / 2, 0]}>
-          <boxGeometry args={[0.7, 0.008, 0.1]} />
-          <meshStandardMaterial color="#1a3a7a" emissive="#1133aa" emissiveIntensity={0.15} roughness={0.3} metalness={0.7} />
-        </mesh>
-      ))}
-
-      <pointLight color="#ff6b35" intensity={1.5} distance={12} />
+      <pointLight color="#ff6b35" intensity={1} distance={8} />
 
       {/* ORION label — ABOVE */}
       <Html position={[0, 1.8, 0]} center style={{ pointerEvents: 'none' }}>
@@ -290,8 +275,12 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryM
     else document.exitFullscreen()
   }, [])
 
+  const lastSpeedRef = useRef(60) // remember last playback speed for resume
   const setCam = useCallback((m: CameraMode) => { cameraMode = m; setActiveCam(m) }, [])
-  const handleScrub = useCallback((e: React.ChangeEvent<HTMLInputElement>) => { const v = parseFloat(e.target.value); simOverride = v; simSpeed = 0; setSimDay(v); setSpeed(0) }, [])
+  const handleScrub = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = parseFloat(e.target.value)
+    simOverride = v; simSpeed = 0; setSimDay(v); setSpeed(0)
+  }, [])
   const resetToLive = useCallback(() => {
     if (isCompleted) {
       simOverride = 0; simSpeed = 0; setSimDay(0); setSpeed(0)
@@ -301,20 +290,22 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryM
   }, [isCompleted])
   const togglePlay = useCallback(() => {
     if (speed > 0) {
-      // Pause
+      // Pause — remember current speed for resume
+      lastSpeedRef.current = speed
       simSpeed = 0; setSpeed(0)
     } else {
-      // Play at 1x
-      simSpeed = 1
+      // Resume at last speed (or default 60x)
+      const resumeSpeed = lastSpeedRef.current || 60
+      simSpeed = resumeSpeed
       if (simOverride === null) simOverride = isCompleted ? 0 : getCurrentMissionDay()
-      setSpeed(1)
+      setSpeed(resumeSpeed)
     }
   }, [speed, isCompleted])
   const cycleSpeed = useCallback(() => {
     const speeds = [1, 60, 600, 3600, 36000]
     const idx = speeds.indexOf(speed)
     const next = speeds[(idx + 1) % speeds.length]
-    simSpeed = next
+    simSpeed = next; lastSpeedRef.current = next
     if (simOverride === null) simOverride = isCompleted ? 0 : getCurrentMissionDay()
     setSpeed(next)
   }, [speed, isCompleted])
@@ -380,23 +371,19 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii' }: TrajectoryM
               <RotateCcw className="h-3 w-3"/> LIVE
             </button>
           ) : (
-            <span className="text-[8px] text-green-glow font-mono font-semibold tracking-wider shrink-0">● LIVE</span>
+            <span className="text-[8px] text-green-glow font-mono font-semibold tracking-wider shrink-0 w-[52px]">● LIVE</span>
           )}
-          {(isCompleted || simDay !== null) && (
-            <button onClick={togglePlay} className={`h-6 w-6 rounded flex items-center justify-center shrink-0 transition-all ${speed>0?'bg-cyan-glow/15 text-cyan-glow border border-cyan-glow/25':'bg-space-950/80 text-slate-400 border border-slate-700/40 hover:text-cyan-glow'}`} title={speed > 0 ? 'Pause' : 'Play'}>
-              {speed > 0 ? <Pause className="h-3 w-3"/> : <Play className="h-3 w-3"/>}
-            </button>
-          )}
+          <button onClick={togglePlay} className={`h-6 w-6 rounded flex items-center justify-center shrink-0 transition-all ${speed>0?'bg-cyan-glow/15 text-cyan-glow border border-cyan-glow/25':'bg-space-950/80 text-slate-400 border border-slate-700/40 hover:text-cyan-glow'}`} title={speed > 0 ? 'Pause' : 'Play'}>
+            {speed > 0 ? <Pause className="h-3 w-3"/> : <Play className="h-3 w-3"/>}
+          </button>
           <input type="range" min={tsd} max={md} step={0.01} value={currentDay} onChange={handleScrub}
             className="flex-1 max-w-xs h-1 accent-cyan-glow cursor-pointer" />
           <span className="font-mono text-[9px] text-slate-500 w-16 shrink-0">
             Day {currentDay.toFixed(1)}/{md}
           </span>
-          {(isCompleted || simDay !== null) && (
-            <button onClick={cycleSpeed} className={`h-6 px-2 rounded text-[8px] font-semibold tracking-wider flex items-center gap-1 shrink-0 transition-all ${speed>0?'bg-amber-glow/10 text-amber-glow border border-amber-glow/25':'bg-space-950/80 text-slate-500 border border-slate-700/40 hover:text-slate-300'}`} title="Cycle speed">
-              <FastForward className="h-3 w-3"/> {speed > 0 ? fmtSpeed(speed) : '1×'}
-            </button>
-          )}
+          <button onClick={cycleSpeed} className={`h-6 px-2 rounded text-[8px] font-semibold tracking-wider flex items-center gap-1 shrink-0 transition-all ${speed>0?'bg-amber-glow/10 text-amber-glow border border-amber-glow/25':'bg-space-950/80 text-slate-500 border border-slate-700/40 hover:text-slate-300'}`} title="Cycle speed">
+            <FastForward className="h-3 w-3"/> {speed > 0 ? fmtSpeed(speed) : fmtSpeed(lastSpeedRef.current)}
+          </button>
         </div>
       </div>
     </div>
