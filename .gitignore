@@ -2,6 +2,7 @@ node_modules
 dist
 api/dist
 api/local.settings.json
+.vscode/
 .env
 *.local
 .DS_Store
