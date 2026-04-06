@@ -6,19 +6,23 @@ interface MissionTimelineProps {
 }
 
 const PHASE_DESC: Record<string, string> = {
+  // Artemis II — official NASA phases
   'Pre-Launch': 'Final countdown and launch preparations',
-  'Launch & Ascent': 'SLS launch and powered ascent to orbit',
-  'Earth Orbit': 'Systems checkout in low Earth orbit',
+  'LEO': 'Low Earth orbit — systems checkout',
+  'High Earth Orbit': 'Orbital maneuvers before TLI burn',
+  'Trans-Lunar': 'Outbound transit to the Moon',
+  'Trans-Earth': 'Return transit to Earth',
+  'EDL': 'Entry, descent, and landing',
+  'Recovery': 'Crew recovery in the Pacific',
+  // Artemis I — historical phases
+  'Launch & Ascent': 'SLS launch and powered ascent',
   'Trans-Lunar Injection': 'ICPS burn to escape Earth orbit',
   'Outbound Coast': 'Coasting to the Moon',
-  'Translunar Coast': 'Coasting to the Moon',
   'Lunar Flyby': 'Powered flyby above lunar surface',
   'DRO Insertion': 'Burn to enter distant retrograde orbit',
   'Distant Retrograde Orbit': 'Orbiting Moon at ~70,000 km distance',
   'DRO Departure': 'Burn to leave lunar orbit and return home',
   'Return Coast': 'Coasting home to Earth',
-  'Return Transit': 'Coasting home to Earth',
-  'Re-entry': 'Atmospheric re-entry and splashdown',
   'Re-entry & Splashdown': 'Atmospheric re-entry and Pacific splashdown',
 }
 
@@ -32,15 +36,18 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
   const elapsedH = Math.max(0, Math.floor((Date.now() - launchMs) / 3_600_000))
   const totalH = mission.totalDays * 24
   const n = mission.phases.length
-  // Compute fill — smoothly interpolates within the active phase segment
+  // Fill from last completed node toward active node based on phase progress
   const activeIdx = mission.phases.findIndex(p => p.status === 'active')
+  const nodeCenter = (i: number) => ((2 * i + 1) / (2 * n)) * 100
   let fillPct = 100
   if (activeIdx >= 0) {
     const phase = mission.phases[activeIdx]
     const ps = new Date(phase.startTime).getTime()
     const pe = new Date(phase.endTime).getTime()
     const intra = pe > ps ? Math.max(0, Math.min(1, (Date.now() - ps) / (pe - ps))) : 0
-    fillPct = ((activeIdx + intra) / (n - 1)) * 100
+    const prevCenter = activeIdx > 0 ? nodeCenter(activeIdx - 1) : 0
+    const activeCenter = nodeCenter(activeIdx)
+    fillPct = prevCenter + intra * (activeCenter - prevCenter)
   }
 
   return (
@@ -59,14 +66,15 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
       <div className="relative px-6 mb-5">
         {/* Background track — vertically centered in NODE_H */}
         <div className="absolute left-6 right-6 h-[2px] bg-slate-800" style={{ top: NODE_H / 2 - 1 }} />
-        {/* Filled track */}
-        <motion.div
-          className="absolute left-6 h-[2px] bg-gradient-to-r from-green-glow to-cyan-glow"
-          style={{ top: NODE_H / 2 - 1 }}
-          initial={{ width: 0 }}
-          animate={{ width: `${fillPct}%` }}
-          transition={{ duration: 1.2, ease: 'easeOut' }}
-        />
+        {/* Filled track — inside left-6 right-6 so % aligns with node positions */}
+        <div className="absolute left-6 right-6 h-[2px] overflow-hidden" style={{ top: NODE_H / 2 - 1 }}>
+          <motion.div
+            className="h-full bg-gradient-to-r from-green-glow to-cyan-glow"
+            initial={{ width: 0 }}
+            animate={{ width: `${fillPct}%` }}
+            transition={{ duration: 1.2, ease: 'easeOut' }}
+          />
+        </div>
 
         <div className="relative flex justify-between">
           {mission.phases.map((phase, i) => (

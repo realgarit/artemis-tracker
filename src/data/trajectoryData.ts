@@ -32,14 +32,15 @@ export interface MissionTrajConfig {
 
 const LAUNCH_TIME_A2 = Date.UTC(2026, 3, 1, 22, 35, 0) // Apr 1 2026 22:35 UTC
 
+// Official NASA Artemis II Overview Timeline (MET-based phase boundaries)
 function getMissionPhaseA2(day: number): string {
   if (day < 0) return 'Pre-Launch'
-  if (day < 1.06) return 'Earth Orbit'
-  if (day < 1.5) return 'Trans-Lunar Injection'
-  if (day < 5.3) return 'Translunar Coast'
-  if (day < 6.3) return 'Lunar Flyby'
-  if (day < 9.5) return 'Return Transit'
-  return 'Re-entry'
+  if (day < 0.035) return 'LEO'                // MET 0:00 → 0:50 (PRM)
+  if (day < 1.063) return 'High Earth Orbit'    // MET 0:50 → 1/01:31 (TLI)
+  if (day < 5.058) return 'Trans-Lunar'         // MET 1/01:31 → 5/01:23 (Lunar Close Approach)
+  if (day < 9.052) return 'Trans-Earth'         // MET 5/01:23 → 9/01:13 (CM/SM Sep)
+  if (day < 9.074) return 'EDL'                 // MET 9/01:13 → 9/01:46 (Splashdown)
+  return 'Recovery'
 }
 
 const NASA_TRAJ_A2: number[][] = [
