@@ -32,9 +32,16 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
   const elapsedH = Math.max(0, Math.floor((Date.now() - launchMs) / 3_600_000))
   const totalH = mission.totalDays * 24
   const n = mission.phases.length
-  // Compute fill based on node positions (not raw time progress)
+  // Compute fill — smoothly interpolates within the active phase segment
   const activeIdx = mission.phases.findIndex(p => p.status === 'active')
-  const fillPct = activeIdx >= 0 ? (activeIdx / (n - 1)) * 100 : (n - 1) / (n - 1) * 100
+  let fillPct = 100
+  if (activeIdx >= 0) {
+    const phase = mission.phases[activeIdx]
+    const ps = new Date(phase.startTime).getTime()
+    const pe = new Date(phase.endTime).getTime()
+    const intra = pe > ps ? Math.max(0, Math.min(1, (Date.now() - ps) / (pe - ps))) : 0
+    fillPct = ((activeIdx + intra) / (n - 1)) * 100
+  }
 
   return (
     <div className="glass-panel border-glow px-5 py-4">
