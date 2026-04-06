@@ -61,7 +61,7 @@ export function getMissionStatus(config: MissionConfig) {
   const splashdown = new Date(config.splashdownDate)
   const elapsed = now.getTime() - launch.getTime()
   const total = splashdown.getTime() - launch.getTime()
-  const missionDay = Math.max(1, Math.ceil(elapsed / (24 * 60 * 60 * 1000)))
+  const missionDay = Math.max(0, Math.round((elapsed / (24 * 60 * 60 * 1000)) * 10) / 10)
   const progress = Math.min(100, Math.max(0, (elapsed / total) * 100))
 
   let currentPhase = config.phases[0].name

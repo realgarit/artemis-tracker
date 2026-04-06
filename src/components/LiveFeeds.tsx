@@ -18,10 +18,10 @@ const FEEDS = [
   },
   {
     id: 'briefing',
-    label: 'Daily Briefing',
-    embedUrl: 'https://www.youtube-nocookie.com/embed/j3Pq35gm4qA?autoplay=0&rel=0&modestbranding=1',
-    description: 'Artemis II daily news conference',
-    fallbackUrl: 'https://www.youtube.com/watch?v=j3Pq35gm4qA',
+    label: 'NASA TV Live',
+    embedUrl: 'https://www.youtube-nocookie.com/embed/live_stream?channel=UCLA_DiR1FfKNvjuUpBHmylQ&autoplay=0&rel=0&modestbranding=1',
+    description: 'NASA TV — latest briefings and live broadcasts',
+    fallbackUrl: 'https://www.youtube.com/@NASA/live',
   },
 ]
 
