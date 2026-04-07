@@ -1,7 +1,7 @@
 import { useRef, useMemo, useState, useCallback, useEffect, Component, type ReactNode } from 'react'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { OrbitControls, Stars, Html, Line, Points, PointMaterial, useGLTF } from '@react-three/drei'
-import { EffectComposer, Bloom } from '@react-three/postprocessing'
+// postprocessing removed — EffectComposer crashes on WebGL context loss
 import * as THREE from 'three'
 import { Globe, Moon as MoonIcon, Rocket, Maximize2, Minimize2, RotateCcw, FastForward, Play, Pause } from 'lucide-react'
 import {
@@ -195,7 +195,6 @@ function Scene() {
       <Orion />
       <ConnectionLine />
       <SimUpdater />
-      <EffectComposer><Bloom intensity={0.5} luminanceThreshold={0.88} luminanceSmoothing={0.3} /></EffectComposer>
       <CameraController />
     </>
   )

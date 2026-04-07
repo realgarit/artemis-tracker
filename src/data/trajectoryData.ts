@@ -181,8 +181,10 @@ export const TRAJ_START_DAY = (3 + 24 - 22.5833) / 24
 
 // ——— Core Math (mission-independent) ———
 
+// EME2000 (Z-up right-handed) → Three.js (Y-up right-handed)
+// Correct rotation: X'=X, Y'=Z, Z'=-Y (preserves handedness)
 export function horizonsToThree(d: number[]): THREE.Vector3 {
-  return new THREE.Vector3(d[0] * SCALE, d[2] * SCALE, d[1] * SCALE)
+  return new THREE.Vector3(d[0] * SCALE, d[2] * SCALE, -d[1] * SCALE)
 }
 
 export function catmullRom(
