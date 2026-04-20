@@ -29,7 +29,7 @@ export async function trajectory(request: HttpRequest, context: InvocationContex
         ...traj,
         altitude: traj.distanceFromEarth,
         phase: status.currentPhase,
-        source: `JPL Horizons - LIVE (SPKID ${config.horizonsId} - ${config.spacecraft})`,
+        source: `JPL Horizons (SPKID ${config.horizonsId} - ${config.spacecraft})`,
       },
     }
   } catch (err) {

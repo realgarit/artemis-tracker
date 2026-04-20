@@ -65,7 +65,7 @@ app.get('/api/artemis/trajectory', async (req, res) => {
       ...trajectory,
       altitude: trajectory.distanceFromEarth,
       phase: status.currentPhase,
-      source: `JPL Horizons - LIVE (SPKID ${config.horizonsId} - ${config.spacecraft})`,
+      source: `JPL Horizons (SPKID ${config.horizonsId} - ${config.spacecraft})`,
     })
   } catch (err) {
     console.error('Trajectory endpoint error:', err)

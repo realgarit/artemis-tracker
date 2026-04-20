@@ -19,7 +19,7 @@ export function Footer({ trajectory }: FooterProps) {
               </span>
             </span>
             <span>
-              Space weather: <span className="text-slate-500">NOAA SWPC (live)</span>
+              Space weather: <span className="text-slate-500">NOAA SWPC</span>
             </span>
           </div>
           <div className="flex gap-x-5 gap-y-1 font-mono">

@@ -84,7 +84,7 @@ export async function fetchSpaceWeather(): Promise<SpaceWeatherResult> {
     solarWindDensity: Math.round(solarWind.density * 10) / 10,
     imfBz: Math.round(imf.bz * 10) / 10,
     imfBt: Math.round(imf.bt * 10) / 10,
-    source: 'NOAA SWPC (live)',
+    source: 'NOAA SWPC',
     timestamp: kpData.timestamp,
   }
 

@@ -33,8 +33,9 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
   if (!mission) return null
 
   const launchMs = new Date(mission.launchDate).getTime()
-  const elapsedH = Math.max(0, Math.floor((Date.now() - launchMs) / 3_600_000))
   const totalH = mission.totalDays * 24
+  const allComplete = mission.phases.every(p => p.status === 'completed')
+  const elapsedH = allComplete ? totalH : Math.max(0, Math.floor((Date.now() - launchMs) / 3_600_000))
   const n = mission.phases.length
   // Fill from last completed node toward active node based on phase progress
   const activeIdx = mission.phases.findIndex(p => p.status === 'active')
@@ -92,18 +93,36 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
 
       {/* Phase description */}
       <div className="flex items-center justify-between text-xs border-t border-slate-700/30 pt-3 px-1">
-        <span>
-          <span className="text-slate-600 mr-1">&gt;</span>
-          <span className="text-cyan-glow font-bold uppercase tracking-wide text-[11px]">
-            {mission.currentPhase}
-          </span>
-          <span className="text-slate-500 ml-2">
-            {PHASE_DESC[mission.currentPhase] || ''}
-          </span>
-        </span>
-        <span className="text-amber-glow text-[11px] font-mono shrink-0 ml-4">
-          Next: {mission.nextMilestone.name}
-        </span>
+        {allComplete ? (
+          <>
+            <span className="flex items-center gap-2">
+              <span className="text-green-glow font-bold uppercase tracking-wide text-[11px]">
+                Mission Complete
+              </span>
+              <span className="text-slate-500">
+                All phases nominal — crew recovered safely
+              </span>
+            </span>
+            <span className="text-green-glow text-[11px] font-mono shrink-0 ml-4">
+              SUCCESS
+            </span>
+          </>
+        ) : (
+          <>
+            <span>
+              <span className="text-slate-600 mr-1">&gt;</span>
+              <span className="text-cyan-glow font-bold uppercase tracking-wide text-[11px]">
+                {mission.currentPhase}
+              </span>
+              <span className="text-slate-500 ml-2">
+                {PHASE_DESC[mission.currentPhase] || ''}
+              </span>
+            </span>
+            <span className="text-amber-glow text-[11px] font-mono shrink-0 ml-4">
+              Next: {mission.nextMilestone.name}
+            </span>
+          </>
+        )}
       </div>
     </div>
   )

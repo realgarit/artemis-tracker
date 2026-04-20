@@ -9,7 +9,7 @@ interface HeaderProps {
 
 const MISSIONS = [
   { id: 'artemis-i', name: 'Artemis I', status: 'completed', date: 'Nov 2022' },
-  { id: 'artemis-ii', name: 'Artemis II', status: 'active', date: 'Apr 2026' },
+  { id: 'artemis-ii', name: 'Artemis II', status: 'completed', date: 'Apr 2026' },
   { id: 'artemis-iii', name: 'Artemis III', status: 'upcoming', date: '2027' },
   { id: 'artemis-iv', name: 'Artemis IV', status: 'planned', date: '2028' },
 ]

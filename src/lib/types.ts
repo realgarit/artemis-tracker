@@ -84,12 +84,3 @@ export interface DSNData {
   timestamp: string
   source: string
 }
-
-// === Activity Log ===
-
-export interface ActivityLogEntry {
-  id: string
-  timestamp: string
-  message: string
-  phase: string
-}

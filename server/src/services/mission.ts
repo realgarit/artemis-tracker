@@ -102,8 +102,11 @@ export function getMissionStatus(config: MissionConfig) {
 
   const missionElapsedMs = now.getTime() - launch.getTime()
   const totalMissionMs = splashdown.getTime() - launch.getTime()
-  const missionDay = Math.max(1, Math.ceil(missionElapsedMs / (24 * 60 * 60 * 1000)))
-  const progress = Math.min(100, Math.max(0, (missionElapsedMs / totalMissionMs) * 100))
+  const isComplete = now >= splashdown
+  const missionDay = isComplete
+    ? config.totalDays
+    : Math.max(1, Math.ceil(missionElapsedMs / (24 * 60 * 60 * 1000)))
+  const progress = isComplete ? 100 : Math.min(100, Math.max(0, (missionElapsedMs / totalMissionMs) * 100))
 
   // Determine current phase
   let currentPhase = config.phases[0].name
@@ -123,6 +126,11 @@ export function getMissionStatus(config: MissionConfig) {
 
     return { ...phase, status }
   })
+
+  // For completed missions, set phase to last phase
+  if (isComplete) {
+    currentPhase = config.phases[config.phases.length - 1].name
+  }
 
   // Find next milestone
   let nextMilestone = config.milestones[config.milestones.length - 1]

@@ -16,7 +16,6 @@ import { MissionTimeline } from './components/MissionTimeline'
 import { VelocityChart } from './components/VelocityChart'
 import { DistanceChart } from './components/DistanceChart'
 import { SpaceWeather } from './components/SpaceWeather'
-import { ActivityLog } from './components/ActivityLog'
 import { DSNPanel } from './components/DSNPanel'
 import { CrewPanel } from './components/CrewPanel'
 import { LiveFeeds } from './components/LiveFeeds'
@@ -88,28 +87,25 @@ function Dashboard() {
       {!isCompleted && <MetricsBar mission={mission.data} trajectory={trajectory.data} />}
 
       <main className="mx-auto max-w-[1600px] px-3 sm:px-4 pt-3 sm:pt-4 pb-6 space-y-3 sm:space-y-4">
-        {!isCompleted && <MissionTimeline mission={mission.data} />}
+        <MissionTimeline mission={mission.data} />
 
         {/* 3D Trajectory — FULL WIDTH */}
         <Suspense fallback={<TrajectoryFallback />}>
           <TrajectoryMap mission={mission.data} missionId={activeMissionId} />
         </Suspense>
 
-        {/* Crew — only for crewed missions */}
-        {!isCompleted && <CrewPanel crew={mission.data?.crew} />}
+        {/* Crew — for crewed missions */}
+        <CrewPanel crew={mission.data?.crew} />
 
-        {/* Charts + Flight Log */}
-        <div className={`grid grid-cols-1 ${isCompleted ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-3 sm:gap-4`}>
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
           <VelocityChart data={velocityProfile} />
           <DistanceChart data={distanceProfile} />
-          {!isCompleted && <ActivityLog phase={mission.data?.currentPhase} />}
         </div>
 
         {/* DSN + Space Weather */}
         {isCompleted ? (
-          <div className="grid grid-cols-1 gap-3 sm:gap-4">
-            <SpaceWeather data={ARTEMIS_I_WEATHER} />
-          </div>
+          <SpaceWeather data={ARTEMIS_I_WEATHER} />
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4">
             <DSNPanel data={dsn.data} />

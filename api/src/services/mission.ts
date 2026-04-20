@@ -61,8 +61,11 @@ export function getMissionStatus(config: MissionConfig) {
   const splashdown = new Date(config.splashdownDate)
   const elapsed = now.getTime() - launch.getTime()
   const total = splashdown.getTime() - launch.getTime()
-  const missionDay = Math.max(0, Math.round((elapsed / (24 * 60 * 60 * 1000)) * 10) / 10)
-  const progress = Math.min(100, Math.max(0, (elapsed / total) * 100))
+  const isComplete = now >= splashdown
+  const missionDay = isComplete
+    ? config.totalDays
+    : Math.max(0, Math.round((elapsed / (24 * 60 * 60 * 1000)) * 10) / 10)
+  const progress = isComplete ? 100 : Math.min(100, Math.max(0, (elapsed / total) * 100))
 
   let currentPhase = config.phases[0].name
   const phases = config.phases.map(phase => {
@@ -74,6 +77,10 @@ export function getMissionStatus(config: MissionConfig) {
     else { status = 'upcoming' }
     return { ...phase, status }
   })
+
+  if (isComplete) {
+    currentPhase = config.phases[config.phases.length - 1].name
+  }
 
   let nextMilestone = config.milestones[config.milestones.length - 1]
   for (const m of config.milestones) {

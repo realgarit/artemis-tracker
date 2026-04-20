@@ -140,7 +140,7 @@ const ARTEMIS_I_CONFIG: MissionTrajConfig = {
 const ARTEMIS_II_CONFIG: MissionTrajConfig = {
   id: 'artemis-ii',
   name: 'Artemis II',
-  status: 'active',
+  status: 'completed',
   launchTime: LAUNCH_TIME_A2,
   missionDays: 10,
   trajStartDay: (3 + 24 - 22.5833) / 24, // ~0.184
