@@ -3,6 +3,7 @@ import type { MissionData, MissionPhase } from '../lib/types'
 
 interface MissionTimelineProps {
   mission?: MissionData
+  crewed?: boolean
 }
 
 const PHASE_DESC: Record<string, string> = {
@@ -29,7 +30,7 @@ const PHASE_DESC: Record<string, string> = {
 // Fixed height for all nodes so they align perfectly on the track
 const NODE_H = 30
 
-export function MissionTimeline({ mission }: MissionTimelineProps) {
+export function MissionTimeline({ mission, crewed = false }: MissionTimelineProps) {
   if (!mission) return null
 
   const launchMs = new Date(mission.launchDate).getTime()
@@ -100,7 +101,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
                 Mission Complete
               </span>
               <span className="text-slate-500">
-                All phases nominal — crew recovered safely
+                {crewed ? 'All phases nominal — crew recovered safely' : 'All phases nominal — capsule recovered'}
               </span>
             </span>
             <span className="text-green-glow text-[11px] font-mono shrink-0 ml-4">

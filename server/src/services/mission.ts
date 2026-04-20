@@ -21,6 +21,39 @@ export interface MissionConfig {
   }[]
 }
 
+// Artemis I mission definition (uncrewed test flight)
+export const ARTEMIS_I: MissionConfig = {
+  id: 'artemis-i',
+  name: 'Artemis I',
+  spacecraft: 'Orion (uncrewed)',
+  horizonsId: '-1024',
+  launchDate: '2022-11-16T06:47:44Z',
+  splashdownDate: '2022-12-11T17:40:00Z',
+  totalDays: 26,
+  crew: [],
+  phases: [
+    { name: 'Pre-Launch', startTime: '2022-11-16T00:00:00Z', endTime: '2022-11-16T06:47:44Z' },
+    { name: 'Launch & Ascent', startTime: '2022-11-16T06:47:44Z', endTime: '2022-11-16T08:42:00Z' },
+    { name: 'Trans-Lunar Injection', startTime: '2022-11-16T08:42:00Z', endTime: '2022-11-16T11:07:00Z' },
+    { name: 'Outbound Coast', startTime: '2022-11-16T11:07:00Z', endTime: '2022-11-21T12:00:00Z' },
+    { name: 'Lunar Flyby', startTime: '2022-11-21T12:00:00Z', endTime: '2022-11-21T19:00:00Z' },
+    { name: 'DRO Insertion', startTime: '2022-11-21T19:00:00Z', endTime: '2022-11-25T20:52:00Z' },
+    { name: 'Distant Retrograde Orbit', startTime: '2022-11-25T20:52:00Z', endTime: '2022-12-01T21:53:00Z' },
+    { name: 'DRO Departure', startTime: '2022-12-01T21:53:00Z', endTime: '2022-12-05T16:43:00Z' },
+    { name: 'Return Coast', startTime: '2022-12-05T16:43:00Z', endTime: '2022-12-11T16:20:00Z' },
+    { name: 'Re-entry & Splashdown', startTime: '2022-12-11T16:20:00Z', endTime: '2022-12-11T17:40:00Z' },
+  ],
+  milestones: [
+    { name: 'Launch', time: '2022-11-16T06:47:44Z' },
+    { name: 'TLI Burn', time: '2022-11-16T08:42:00Z' },
+    { name: 'Outbound Powered Flyby', time: '2022-11-21T12:44:00Z' },
+    { name: 'DRO Insertion Burn', time: '2022-11-25T20:52:00Z' },
+    { name: 'DRO Departure Burn', time: '2022-12-01T21:53:00Z' },
+    { name: 'Return Powered Flyby', time: '2022-12-05T16:43:00Z' },
+    { name: 'Splashdown', time: '2022-12-11T17:40:00Z' },
+  ],
+}
+
 // Artemis II mission definition
 export const ARTEMIS_II: MissionConfig = {
   id: 'artemis-ii',
@@ -92,6 +125,7 @@ export const ARTEMIS_II: MissionConfig = {
 
 // Registry of all missions (extensible for Artemis III, IV, etc.)
 export const MISSIONS: Record<string, MissionConfig> = {
+  'artemis-i': ARTEMIS_I,
   'artemis-ii': ARTEMIS_II,
 }
 

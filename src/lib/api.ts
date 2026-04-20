@@ -9,19 +9,19 @@ async function fetchJSON<T>(url: string): Promise<T> {
   return res.json()
 }
 
-export function useTrajectory() {
+export function useTrajectory(missionId: string) {
   return useQuery<TrajectoryData>({
-    queryKey: ['trajectory'],
-    queryFn: () => fetchJSON(`${BASE}/trajectory`),
+    queryKey: ['trajectory', missionId],
+    queryFn: () => fetchJSON(`${BASE}/trajectory?mission=${missionId}`),
     refetchInterval: 5_000,
     staleTime: 4_000,
   })
 }
 
-export function useMission() {
+export function useMission(missionId: string) {
   return useQuery<MissionData>({
-    queryKey: ['mission'],
-    queryFn: () => fetchJSON(`${BASE}/mission`),
+    queryKey: ['mission', missionId],
+    queryFn: () => fetchJSON(`${BASE}/mission?mission=${missionId}`),
     refetchInterval: 30_000,
     staleTime: 10_000,
   })

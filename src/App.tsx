@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, useCallback, useState, useMemo } from 'react'
-import { Route, Switch } from 'wouter'
+import { lazy, Suspense, useEffect, useCallback, useMemo } from 'react'
+import { Route, Switch, Redirect, useParams, useLocation } from 'wouter'
 import { useMission, useTrajectory, useSpaceWeather, useVelocityHistory, useDistanceHistory, useDSN } from './lib/api'
 import { startHistoryRecording } from './lib/history'
 import { getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity, getMissionPhase, SCALE, EARTH_RADIUS_KM, MOON_RADIUS_KM, getActiveMission, setActiveMission, buildVelocityProfile, buildDistanceProfile } from './data/trajectoryData'
@@ -38,27 +38,35 @@ function TrajectoryFallback() {
 }
 
 function Dashboard() {
-  const [activeMissionId, setActiveMissionId] = useState('artemis-ii')
+  const { missionId } = useParams<{ missionId: string }>()
+  const [, navigate] = useLocation()
+
+  // Sync trajectory engine with route
+  useEffect(() => {
+    if (missionId) setActiveMission(missionId)
+  }, [missionId])
+
   const activeMission = getActiveMission()
   const isCompleted = activeMission.status === 'completed'
+  const isCrewed = (activeMission as any).id === 'artemis-ii' // Artemis I was uncrewed
 
-  // Live API data — only fetch for active missions
-  const mission = useMission()
-  const trajectory = useTrajectory()
+  // API data — keyed to mission
+  const mission = useMission(missionId!)
+  const trajectory = useTrajectory(missionId!)
   const weather = useSpaceWeather()
   const velocityHistory = useVelocityHistory()
   const distanceHistory = useDistanceHistory()
   const dsn = useDSN()
 
-  // Pre-computed profiles from trajectory data (for completed missions or as fallback)
+  // Pre-computed profiles from trajectory data
   const velocityProfile = useMemo(() => {
     const pts = buildVelocityProfile()
     return { data: pts.map(p => ({ timestamp: new Date(p.timestamp).toISOString(), value: p.value })), source: 'JPL Horizons (ephemeris replay)' }
-  }, [activeMissionId])
+  }, [missionId])
   const distanceProfile = useMemo(() => {
     const pts = buildDistanceProfile()
     return { data: pts.map(p => ({ timestamp: new Date(p.timestamp).toISOString(), value: p.value })), source: 'JPL Horizons (ephemeris replay)' }
-  }, [activeMissionId])
+  }, [missionId])
 
   useEffect(() => {
     if (isCompleted) return
@@ -74,28 +82,27 @@ function Dashboard() {
         velocity: getVelocity(day), phase: getMissionPhase(day), latitude: 0, longitude: 0,
       }
     })
-  }, [activeMissionId, isCompleted])
+  }, [missionId, isCompleted])
 
   const handleMissionChange = useCallback((id: string) => {
-    setActiveMission(id)
-    setActiveMissionId(id)
-  }, [])
+    navigate(`/${id}`)
+  }, [navigate])
 
   return (
     <>
-      <Header missionName={activeMission.name} activeMissionId={activeMissionId} onMissionChange={handleMissionChange} />
+      <Header missionName={activeMission.name} activeMissionId={missionId} onMissionChange={handleMissionChange} />
       {!isCompleted && <MetricsBar mission={mission.data} trajectory={trajectory.data} />}
 
       <main className="mx-auto max-w-[1600px] px-3 sm:px-4 pt-3 sm:pt-4 pb-6 space-y-3 sm:space-y-4">
-        <MissionTimeline mission={mission.data} />
+        <MissionTimeline mission={mission.data} crewed={isCrewed} />
 
         {/* 3D Trajectory — FULL WIDTH */}
         <Suspense fallback={<TrajectoryFallback />}>
-          <TrajectoryMap mission={mission.data} missionId={activeMissionId} />
+          <TrajectoryMap mission={mission.data} missionId={missionId!} />
         </Suspense>
 
-        {/* Crew — for crewed missions */}
-        <CrewPanel crew={mission.data?.crew} />
+        {/* Crew — only for crewed missions */}
+        {isCrewed && <CrewPanel crew={mission.data?.crew} missionId={missionId} />}
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
@@ -129,8 +136,11 @@ export default function App() {
       <div className="scan-line" />
       <div className="relative z-10 min-h-screen">
         <Switch>
-          <Route path="/crew" component={CrewPage} />
-          <Route path="/" component={Dashboard} />
+          <Route path="/:missionId/crew" component={CrewPage} />
+          <Route path="/:missionId" component={Dashboard} />
+          <Route path="/">
+            <Redirect to="/artemis-ii" />
+          </Route>
         </Switch>
       </div>
     </>

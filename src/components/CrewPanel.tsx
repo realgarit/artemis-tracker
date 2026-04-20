@@ -6,6 +6,7 @@ import type { CrewMember } from '../lib/types'
 interface CrewPanelProps {
   crew?: CrewMember[]
   compact?: boolean
+  missionId?: string
 }
 
 const CREW_DATA: Record<string, { photo: string; flights: number; bio: string }> = {
@@ -36,7 +37,7 @@ const AGENCY_COLORS: Record<string, string> = {
   CSA: '#dc2626',
 }
 
-export function CrewPanel({ crew, compact = false }: CrewPanelProps) {
+export function CrewPanel({ crew, compact = false, missionId = 'artemis-ii' }: CrewPanelProps) {
   if (!crew || crew.length === 0) return (
     <div className="glass-panel border-glow p-4 text-center">
       <span className="text-[10px] text-slate-500 tracking-[.2em] uppercase font-semibold">Uncrewed Test Flight</span>
@@ -56,7 +57,7 @@ export function CrewPanel({ crew, compact = false }: CrewPanelProps) {
             Crew — {crew.length} Aboard
           </span>
         </div>
-        <Link href="/crew" className="flex items-center gap-1 text-[9px] text-slate-500 hover:text-cyan-glow transition-colors">
+        <Link href={`/${missionId}/crew`} className="flex items-center gap-1 text-[9px] text-slate-500 hover:text-cyan-glow transition-colors">
           View profiles <ChevronRight className="h-3 w-3" />
         </Link>
       </div>

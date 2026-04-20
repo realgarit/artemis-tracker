@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLocation } from 'wouter'
 import { Satellite, Radio, ChevronDown } from 'lucide-react'
 
 interface HeaderProps {
@@ -17,6 +18,7 @@ const MISSIONS = [
 export function Header({ missionName, activeMissionId, onMissionChange }: HeaderProps) {
   const isCompleted = MISSIONS.find(m => m.id === activeMissionId)?.status === 'completed'
   const [showSelector, setShowSelector] = useState(false)
+  const [, navigate] = useLocation()
 
   return (
     <header className="sticky top-0 z-40 glass-panel-solid border-b border-cyan-mid/8">
@@ -45,7 +47,10 @@ export function Header({ missionName, activeMissionId, onMissionChange }: Header
                       <button
                         key={m.id}
                         onClick={() => {
-                          onMissionChange?.(m.id)
+                          if (m.status === 'active' || m.status === 'completed') {
+                            navigate(`/${m.id}`)
+                            onMissionChange?.(m.id)
+                          }
                           setShowSelector(false)
                         }}
                         disabled={m.status !== 'active' && m.status !== 'completed'}

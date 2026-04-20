@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
-import { useLocation } from 'wouter'
+import { useLocation, useParams } from 'wouter'
 
 const CREW = [
   {
@@ -47,6 +47,7 @@ const CREW = [
 
 export function CrewPage() {
   const [, setLocation] = useLocation()
+  const { missionId } = useParams<{ missionId: string }>()
 
   return (
     <div className="min-h-screen">
@@ -55,7 +56,7 @@ export function CrewPage() {
       <div className="relative z-10 mx-auto max-w-[1200px] px-4 py-8">
         {/* Back button */}
         <button
-          onClick={() => setLocation('/')}
+          onClick={() => setLocation(`/${missionId || 'artemis-ii'}`)}
           className="flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-glow transition-colors mb-8"
         >
           <ArrowLeft className="h-4 w-4" />
