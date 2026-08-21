@@ -1,0 +1,201 @@
+{
+  "dishes": [
+    {
+      "name": "DSS14",
+      "site": "Goldstone",
+      "azimuth": 0,
+      "elevation": 90,
+      "targets": [
+        {
+          "name": "DSN",
+          "upSignal": -1,
+          "downSignal": -1
+        }
+      ]
+    },
+    {
+      "name": "DSS24",
+      "site": "Goldstone",
+      "azimuth": 278,
+      "elevation": 27,
+      "targets": [
+        {
+          "name": "PSYC",
+          "upSignal": -1,
+          "downSignal": -1
+        }
+      ]
+    },
+    {
+      "name": "DSS26",
+      "site": "Goldstone",
+      "azimuth": 222,
+      "elevation": 55,
+      "targets": [
+        {
+          "name": "SOHO",
+          "upSignal": -1,
+          "downSignal": -1
+        }
+      ]
+    },
+    {
+      "name": "DSS25",
+      "site": "Goldstone",
+      "azimuth": 209,
+      "elevation": 62,
+      "targets": [
+        {
+          "name": "IMAP",
+          "upSignal": -1,
+          "downSignal": -1
+        }
+      ]
+    },
+    {
+      "name": "DSS23",
+      "site": "Goldstone",
+      "azimuth": 283,
+      "elevation": 24,
+      "targets": [
+        {
+          "name": "TGO",
+          "upSignal": -1,
+          "downSignal": -1
+        }
+      ]
+    },
+    {
+      "name": "DSS55",
+      "site": "Madrid",
+      "azimuth": 0,
+      "elevation": 90,
+      "targets": [
+        {
+          "name": "DSN",
+          "upSignal": -1,
+          "downSignal": -1
+        }
+      ]
+    },
+    {
+      "name": "DSS65",
+      "site": "Madrid",
+      "azimuth": 0,
+      "elevation": 90,
+      "targets": [
+        {
+          "name": "DSN",
+          "upSignal": -1,
+          "downSignal": -1
+        }
+      ]
+    },
+    {
+      "name": "DSS63",
+      "site": "Madrid",
+      "azimuth": 0,
+      "elevation": 90,
+      "targets": [
+        {
+          "name": "DSN",
+          "upSignal": -1,
+          "downSignal": -1
+        }
+      ]
+    },
+    {
+      "name": "DSS56",
+      "site": "Madrid",
+      "azimuth": 207,
+      "elevation": 16,
+      "targets": [
+        {
+          "name": "LRO",
+          "upSignal": 404000,
+          "downSignal": 404000
+        }
+      ]
+    },
+    {
+      "name": "DSS54",
+      "site": "Madrid",
+      "azimuth": 90,
+      "elevation": 90,
+      "targets": [
+        {
+          "name": "TEST",
+          "upSignal": -1,
+          "downSignal": -1
+        }
+      ]
+    },
+    {
+      "name": "DSS53",
+      "site": "Madrid",
+      "azimuth": 161,
+      "elevation": 33,
+      "targets": [
+        {
+          "name": "JWST",
+          "upSignal": 1390000,
+          "downSignal": 1390000
+        }
+      ]
+    },
+    {
+      "name": "DSS36",
+      "site": "Canberra",
+      "azimuth": 0,
+      "elevation": 90,
+      "targets": [
+        {
+          "name": "DSN",
+          "upSignal": -1,
+          "downSignal": -1
+        }
+      ]
+    },
+    {
+      "name": "DSS43",
+      "site": "Canberra",
+      "azimuth": 201,
+      "elevation": 12,
+      "targets": [
+        {
+          "name": "VGR2",
+          "upSignal": 21400000000,
+          "downSignal": 21400000000
+        }
+      ]
+    },
+    {
+      "name": "DSS35",
+      "site": "Canberra",
+      "azimuth": 19,
+      "elevation": 29,
+      "targets": [
+        {
+          "name": "MRO",
+          "upSignal": -1,
+          "downSignal": -1
+        }
+      ]
+    },
+    {
+      "name": "DSS34",
+      "site": "Canberra",
+      "azimuth": 19,
+      "elevation": 29,
+      "targets": [
+        {
+          "name": "M01O",
+          "upSignal": -1,
+          "downSignal": -1
+        }
+      ]
+    }
+  ],
+  "timestamp": "2026-08-21T21:22:10.111Z",
+  "source": "NASA DSN Now"
+}

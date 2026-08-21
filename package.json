@@ -4,11 +4,12 @@
   "version": "1.14.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev:api\" \"npm run dev:client\"",
+    "dev": "vite",
     "dev:client": "vite",
-    "dev:api": "cd api && npm run build && func start",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-data": "tsx scripts/generate-data.ts",
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -34,7 +35,6 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^4.4.0",
-    "concurrently": "^9.1.0",
     "tailwindcss": "^4.1.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",

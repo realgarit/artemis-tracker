@@ -1,15 +1,9 @@
 import { lazy, Suspense, useEffect, useCallback, useMemo } from 'react'
 import { Route, Switch, Redirect, useParams, useLocation } from 'wouter'
-import { useMission, useTrajectory, useSpaceWeather, useVelocityHistory, useDistanceHistory, useDSN } from './lib/api'
+import { useMission, useTrajectory, useSpaceWeather, useDSN } from './lib/api'
 import { startHistoryRecording } from './lib/history'
 import { getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity, getMissionPhase, SCALE, EARTH_RADIUS_KM, MOON_RADIUS_KM, getActiveMission, setActiveMission, buildVelocityProfile, buildDistanceProfile } from './data/trajectoryData'
-import type { SpaceWeatherData } from './lib/types'
-
-// Representative space weather during Artemis I (Nov-Dec 2022, solar cycle 25 rising phase)
-const ARTEMIS_I_WEATHER: SpaceWeatherData = {
-  kpIndex: 2, kpCategory: 'Quiet', solarWindSpeed: 410, solarWindDensity: 4.2,
-  imfBz: -1.1, imfBt: 5.3, source: 'NOAA SWPC (historical archive)', timestamp: '2022-11-21T12:00:00Z',
-}
+import { ARTEMIS_I_WEATHER } from './data/fallbackData'
 import { Header } from './components/Header'
 import { MetricsBar } from './components/MetricsBar'
 import { MissionTimeline } from './components/MissionTimeline'
@@ -54,8 +48,6 @@ function Dashboard() {
   const mission = useMission(missionId!)
   const trajectory = useTrajectory(missionId!)
   const weather = useSpaceWeather()
-  const velocityHistory = useVelocityHistory()
-  const distanceHistory = useDistanceHistory()
   const dsn = useDSN()
 
   // Pre-computed profiles from trajectory data
