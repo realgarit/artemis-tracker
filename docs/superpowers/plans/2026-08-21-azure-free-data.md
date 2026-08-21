@@ -87,7 +87,7 @@
 
   Run `npm ci`, `npm test`, `npm run build`, and `npm run dev`/preview checks. Inspect the generated bundle for Azure API calls. Use the live browser to verify the custom domain, mission/crew view, fallback trajectory, weather/DSN states, direct route handling, and absence of `/api` failures caused by the app. Confirm workflow YAML and generated asset paths.
 
-- [ ] **Task 7: Publish, merge, deploy, and record final state**
+- [x] **Task 7: Publish, merge, deploy, and record final state**
 
   Commit the implementation on `codex/azure-free-data`, push it, open a draft PR, run the available checks, update/fix as needed, then merge through GitHub without force-pushing. Verify the Pages deployment corresponds to the merge SHA and recheck the live dashboard/data flows. Remove the merged local/remote feature branch and append durable results to `AGENTS.md` before finishing.
 
