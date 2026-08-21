@@ -9,7 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "generate-data": "tsx scripts/generate-data.ts",
-    "test": "node --import tsx --test \"src/**/*.test.ts\""
+    "test": "node --import tsx --test"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
