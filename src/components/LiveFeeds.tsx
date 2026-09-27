@@ -30,10 +30,13 @@ export function LiveFeeds({ missionId, onSeek }: { missionId: string; onSeek?: (
         {entries.map((item) => <li key={item.id} className="flex min-w-0 flex-col rounded border border-slate-700/60 bg-space-900/70 p-4">
           <p className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wider text-amber-glow"><span>{item.type} · {item.missionId.toUpperCase()}</span><span className="rounded border border-slate-600 px-2 py-1">{effectiveMediaStatus(item).replace('-', ' ')}</span></p>
           <h3 className="mt-2 flex-1 text-base font-semibold text-slate-100">{item.title}</h3>
-          <p className="mt-2 text-xs text-slate-400">{item.published}</p>
+          <p className="mt-2 text-xs text-slate-400">Source page: {item.published}</p>
+          <p className="mt-1 text-xs text-slate-400">Media date: {item.mediaDate}</p>
           <p className="mt-2 text-xs leading-relaxed text-slate-400">Credit: {item.credit}</p>
           <p className="mt-1 text-xs leading-relaxed text-slate-500">Reuse: {item.reuseStatus}</p>
-          <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.captionStatus === 'not-applicable' ? 'Captions: not applicable to this text or image collection.' : item.captionStatus === 'not-available' ? 'Captions or transcript were not listed at the last editorial check.' : 'Caption availability varies by NASA video. Use the linked player to check its controls; this archive does not assert captions are present or copy transcripts.'}</p>
+          <a href={item.reuseGuidanceUrl} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex min-h-11 items-center text-xs text-slate-400 underline underline-offset-4 hover:text-cyan-glow focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">NASA media-use guidance<span className="sr-only"> in a new tab</span></a>
+          <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.captionStatus === 'not-applicable' ? 'Captions: not applicable to this text or image collection.' : item.captionStatus === 'not-available' ? 'Captions or transcript were not listed at the last editorial check.' : item.captionStatus === 'source-linked' ? 'An English transcript is linked directly from the NASA source.' : 'Caption availability varies by NASA video. Check the linked provider; this archive does not assert captions are present or copy transcripts.'}</p>
+          {item.transcriptUrl && <a href={item.transcriptUrl} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex min-h-11 items-center text-xs text-cyan-glow underline underline-offset-4 hover:text-cyan-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">Open source transcript ({item.transcriptFormat})<span className="sr-only"> in a new tab</span></a>}
           <div className="mt-2 flex flex-wrap gap-2">{item.eventIds.map((id) => {
             const event = MISSION_EVENTS.find((candidate) => candidate.id === id)
             if (!event) return null

@@ -6,7 +6,10 @@ test('media archive has sufficient NASA records and complete rights/source/event
   assert.deepEqual(validateMediaArchive(), [])
   assert.ok(MEDIA_ARCHIVE.filter((item) => item.missionId === 'artemis-i').length >= 4)
   assert.ok(MEDIA_ARCHIVE.filter((item) => item.missionId === 'artemis-ii').length >= 4)
-  assert.ok(MEDIA_ARCHIVE.every((item) => item.status === 'archive' && item.eventIds.length > 0 && item.credit && item.reuseStatus && item.captionStatus))
+  assert.ok(MEDIA_ARCHIVE.every((item) => item.status === 'archive' && item.eventIds.length > 0 && item.mediaDate && item.credit && item.reuseStatus && item.reuseGuidanceUrl && item.captionStatus))
+  const captioned = MEDIA_ARCHIVE.find((item) => item.id === 'a2-multimedia')
+  assert.equal(captioned?.captionStatus, 'source-linked')
+  assert.match(captioned?.transcriptUrl || '', /\.srt$/)
 })
 
 test('editorial validator flags duplicate, unapproved, and cross-mission media references', () => {
@@ -16,6 +19,9 @@ test('editorial validator flags duplicate, unapproved, and cross-mission media r
   assert.ok(issues.some((issue) => issue.includes('duplicate stable media ID')))
   assert.ok(issues.some((issue) => issue.includes('approved NASA host')))
   assert.ok(issues.some((issue) => issue.includes('cross-mission')))
+  const captioned = MEDIA_ARCHIVE.find((item) => item.id === 'a2-multimedia')!
+  const transcriptIssues = validateMediaArchive([{ ...captioned, transcriptUrl: 'https://example.com/captions.srt' }])
+  assert.ok(transcriptIssues.some((issue) => issue.includes('transcript URL is outside the approved NASA SVS host')))
 })
 
 test('a live label expires without a recent time-bounded NASA confirmation', () => {
