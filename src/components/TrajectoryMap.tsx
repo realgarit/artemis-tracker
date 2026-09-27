@@ -14,6 +14,7 @@ import {
 import type { Vector3Like } from '../data/trajectoryData'
 import type { MissionData } from '../lib/types'
 import type { DataProvenance } from '../lib/provenance'
+import { advanceMissionDay } from '../lib/replayClock'
 import { DataSourceBadge } from './DataSourceBadge'
 
 interface TrajectoryMapProps { mission?: MissionData; missionId?: string; initialDay?: number; onReplayDayChange?: (day: number) => void; provenance?: DataProvenance; initialCamera?: CameraMode; onCameraModeChange?: (camera: CameraMode) => void }
@@ -209,7 +210,7 @@ function CameraController() {
 function SimUpdater() {
   useFrame((_, dt) => {
     if (simSpeed > 0 && simOverride !== null) {
-      simOverride = Math.min(getActiveMission().missionDays, simOverride + dt * simSpeed / 86400)
+      simOverride = advanceMissionDay(simOverride, dt, simSpeed, getActiveMission().missionDays)
     }
   })
   return null
