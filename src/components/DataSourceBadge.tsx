@@ -21,7 +21,7 @@ export function DataSourceBadge({ provenance }: { provenance?: DataProvenance })
   return (
     <div className="flex min-w-0 items-center gap-1.5 text-[9px] leading-relaxed text-slate-400" aria-label={`Data provenance: ${label}`}>
       {provenance.url
-        ? <a href={provenance.url} target="_blank" rel="noreferrer noopener" className="flex min-w-0 items-center gap-1.5 underline decoration-slate-700 underline-offset-2 hover:text-cyan-glow focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">{content}<span className="sr-only">(opens source in a new tab)</span></a>
+        ? <a href={provenance.url} target="_blank" rel="noreferrer noopener" className="flex min-h-11 min-w-0 items-center gap-1.5 underline decoration-slate-700 underline-offset-2 hover:text-cyan-glow focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">{content}<span className="sr-only">(opens source in a new tab)</span></a>
         : content}
     </div>
   )

@@ -65,4 +65,9 @@ CI verifies a cold offline mission route and that an interrupted update preserve
 
 ## Manual accessibility and device check for issue #12
 
-The automated suite checks axe findings and captures layouts at 320, 390, 768, and 1440 CSS pixels. Before claiming the manual criterion, complete the workflow with keyboard-only input and one screen reader on desktop, then with VoiceOver on iOS or TalkBack on Android. Test at 200% browser zoom, with reduced motion, with WebGL unavailable, and after a 2D replay has been paused. Verify visible focus, correct selected-time announcements, the source link destination, and the copy-link fallback. Record browser/device and screen-reader versions, task completion, and any blocker. No manual run is recorded yet.
+The automated suite checks axe for serious/critical violations, tests keyboard activation through mission selection → event seek → source opening → share, and asserts 44×44 CSS pixel hit areas for key mobile controls. It also captures layouts at 320, 390, 768, and 1440 CSS pixels. Before claiming the manual criterion, complete the workflow with one screen reader on desktop, then with VoiceOver on iOS or TalkBack on Android. Test at 200% browser zoom, with reduced motion, with WebGL unavailable, and after a 2D replay has been paused. Verify visible focus, correct selected-time announcements, the source link destination, and the copy-link fallback. Record browser/device and screen-reader versions, task completion, and any blocker. No manual run is recorded yet.
+
+| Target | Browser/device and screen reader version | Keyboard flow | Announcements and focus | 200% zoom / reduced motion / no WebGL | Result and blocker |
+|---|---|---|---|---|---|
+| Desktop | Pending | Pending | Pending | Pending | Pending |
+| Mobile | Pending iOS/Android device, browser, and VoiceOver/TalkBack version | Pending | Pending | Pending | Pending |

@@ -64,7 +64,7 @@ export function Header({ missionName, activeMissionId, onMissionChange }: Header
                 aria-controls="mission-selector-menu"
                 aria-label={`Select mission. Current mission: ${missionName || 'Artemis'}`}
                 onClick={() => setShowSelector(!showSelector)}
-                className="flex min-w-0 flex-wrap items-center gap-1 font-display text-sm font-bold tracking-[.05em] text-cyan-glow glow-cyan leading-tight hover:text-cyan-glow/90 transition-colors sm:gap-1.5 sm:text-lg sm:tracking-[.15em]"
+                className="flex min-h-11 min-w-0 flex-wrap items-center gap-1 font-display text-sm font-bold tracking-[.05em] text-cyan-glow glow-cyan leading-tight hover:text-cyan-glow/90 transition-colors sm:gap-1.5 sm:text-lg sm:tracking-[.15em]"
               >
                 {missionName?.toUpperCase() || 'ARTEMIS II'}
                 <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showSelector ? 'rotate-180' : ''}`} />
@@ -85,7 +85,7 @@ export function Header({ missionName, activeMissionId, onMissionChange }: Header
                           onMissionChange?.(m.id)
                           setShowSelector(false)
                         }}
-                        className={`w-full text-left px-3 py-2 rounded flex items-center justify-between transition-colors ${
+                        className={`min-h-11 w-full text-left px-3 py-2 rounded flex items-center justify-between transition-colors ${
                           'hover:bg-cyan-glow/5 text-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow'
                         } ${m.id === activeMissionId ? 'bg-cyan-glow/8' : ''}`}
                       >
