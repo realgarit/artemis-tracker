@@ -28,5 +28,6 @@ Keep the GitHub Pages deployment workflow aligned with the Vite build and preser
 - The Pages deployment for merge SHA `2803bd2` succeeded as workflow run `32529322946`; the custom domain root, live JSON snapshots, and direct crew route were checked afterward.
 - Keep the test script as `node --import tsx --test` without a quoted shell glob: GitHub's Linux runner does not expand the Windows-oriented glob form.
 - Mission comparisons accept independent `left` and `right` flown-mission IDs in the query string; profile selection, event/elapsed/UTC alignment, selected offset, and browser history are restored together. Keep samples separate by mission and preserve explicit nulls for missing coverage.
+- Replay acceleration is the magnitude of the finite-difference NASA velocity vector across covered OEM epochs, in km/s²; samples without a neighboring covered epoch remain null. It describes the ephemeris velocity change, not spacecraft thrust.
 
 - 2026-09-16 — Codex-first layout sweep: repository-local shared skills use `.agents/skills/` as the canonical source. Any `.claude/skills/` path is only a compatibility bridge or generated mirror.

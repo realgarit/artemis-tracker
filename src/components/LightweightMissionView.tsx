@@ -113,12 +113,15 @@ export function LightweightMissionView({ mission, missionId, missionTime, trajec
         <figcaption id="map-caption" className="mt-2 text-xs leading-relaxed text-slate-400">NASA flight ephemeris and a separately sourced JPL lunar ephemeris, projected into two dimensions. Earth and Moon sizes are enlarged for legibility. The marker is hidden where no state-vector sample covers the selected time.</figcaption>
       </figure>
 
-      <div className="mt-4 grid gap-3 rounded border border-slate-800/80 p-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Selected illustrative replay values">
+      <div className="mt-4 grid min-w-0 grid-cols-2 gap-3 rounded border border-slate-800/80 p-3 sm:grid-cols-3 lg:grid-cols-6" aria-label="Selected replay measurements">
         <div><p className="text-xs text-slate-500">Mission phase</p><p className="mt-1 text-sm font-semibold text-cyan-glow">{sample.phase}</p></div>
         <div><p className="text-xs text-slate-500">Distance from Earth center</p><p className="mt-1 font-mono text-sm text-slate-100">{sample.distanceFromEarth === null ? 'Unavailable' : `${sample.distanceFromEarth.toLocaleString()} km`}</p></div>
         <div><p className="text-xs text-slate-500">Distance from Moon center</p><p className="mt-1 font-mono text-sm text-slate-100">{sample.distanceFromMoon === null ? 'Unavailable' : `${sample.distanceFromMoon.toLocaleString()} km`}</p></div>
+        <div><p className="text-xs text-slate-500">Speed</p><p className="mt-1 font-mono text-sm text-slate-100">{sample.velocity === null ? 'Unavailable' : `${sample.velocity.toFixed(3)} km/s`}</p></div>
+        <div><p className="text-xs text-slate-500">Acceleration · sampled</p><p className="mt-1 font-mono text-sm text-slate-100">{sample.acceleration === null ? 'Unavailable' : `${sample.acceleration.toExponential(3)} km/s²`}</p></div>
         <div><p className="text-xs text-slate-500">Replay time · UTC</p><time dateTime={missionTime} className="mt-1 block font-mono text-xs text-slate-100">{formatUTC(missionTime)}</time></div>
       </div>
+      <p className="mt-2 text-xs text-slate-500">Acceleration is the finite-difference magnitude of the NASA velocity vector over adjacent covered OEM epochs. It is not spacecraft-propulsion acceleration.</p>
       <p className="mt-2 text-xs text-slate-500">Geographic latitude and longitude are unavailable because EME2000 is an inertial frame, not an Earth-fixed coordinate system.</p>
 
       <div className="mt-4 grid gap-3 md:grid-cols-[auto_minmax(120px,1fr)_auto] md:items-end">

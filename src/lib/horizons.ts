@@ -19,7 +19,7 @@ export interface TrajectoryPoint {
   distanceFromEarth: number
   distanceFromMoon: number | null
   velocity: number
-  acceleration: number
+  acceleration: number | null
   commsDelay: number
   latitude: number | null
   longitude: number | null
@@ -87,12 +87,11 @@ export function computeTrajectoryPoints(scVectors: StateVector[], moonVectors: S
       ? Math.hypot(state.x - moon.x, state.y - moon.y, state.z - moon.z)
       : null
 
-    let acceleration = 0
+    let acceleration: number | null = null
     if (index > 0) {
       const previous = scVectors[index - 1]
-      const previousVelocity = Math.hypot(previous.vx, previous.vy, previous.vz)
       const seconds = (new Date(state.timestamp).getTime() - new Date(previous.timestamp).getTime()) / 1000
-      if (seconds > 0) acceleration = (velocity - previousVelocity) / seconds
+      if (seconds > 0) acceleration = round(Math.hypot(state.vx - previous.vx, state.vy - previous.vy, state.vz - previous.vz) / seconds, 4)
     }
 
     return {
@@ -100,7 +99,7 @@ export function computeTrajectoryPoints(scVectors: StateVector[], moonVectors: S
       distanceFromEarth: round(distanceFromEarth, 2),
       distanceFromMoon: distanceFromMoon === null ? null : round(distanceFromMoon, 2),
       velocity: round(velocity, 3),
-      acceleration: round(acceleration, 4),
+      acceleration,
       commsDelay: round(distanceFromEarth / SPEED_OF_LIGHT_KM_S, 2),
       // An inertial J2000 direction is not a geographic latitude/longitude.
       latitude: null,
@@ -167,7 +166,9 @@ function interpolatePoint(points: TrajectoryPoint[], targetTime: Date): Trajecto
         ? null
         : interpolate(first.distanceFromMoon, second.distanceFromMoon),
       velocity: interpolate(first.velocity, second.velocity),
-      acceleration: interpolate(first.acceleration, second.acceleration),
+      acceleration: first.acceleration === null || second.acceleration === null
+        ? null
+        : interpolate(first.acceleration, second.acceleration),
       commsDelay: interpolate(first.commsDelay, second.commsDelay),
       latitude: null,
       longitude: null,

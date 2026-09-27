@@ -45,6 +45,12 @@ test('source epochs and a held-out midpoint reproduce Earth-centered distance an
   assert.ok(recorded)
   assert.ok(Math.abs(recorded.distanceFromEarth - Math.hypot(sourceEpoch[1], sourceEpoch[2], sourceEpoch[3])) < 0.001)
   assert.ok(Math.abs(recorded.velocity - Math.hypot(sourceEpoch[4], sourceEpoch[5], sourceEpoch[6])) < 0.00001)
+  const before = mission.samples[1233]
+  const after = mission.samples[1235]
+  const centralSeconds = (after[0] - before[0]) / 1000
+  const expectedSourceAcceleration = Math.hypot((after[4]! - before[4]!) / centralSeconds, (after[5]! - before[5]!) / centralSeconds, (after[6]! - before[6]!) / centralSeconds)
+  assert.ok(recorded.acceleration !== null)
+  assert.ok(Math.abs(recorded.acceleration - expectedSourceAcceleration) < 0.00001)
 
   const left = mission.samples[1234]
   const right = mission.samples[1235]
@@ -56,6 +62,10 @@ test('source epochs and a held-out midpoint reproduce Earth-centered distance an
   const expectedVelocity = [4, 5, 6].map((index) => (left[index]! + right[index]!) / 2)
   assert.ok(Math.abs(midpoint.distanceFromEarth - Math.hypot(...expectedPosition)) < 1)
   assert.ok(Math.abs(midpoint.velocity - Math.hypot(...expectedVelocity)) < 0.01)
+  const stepSeconds = (right[0] - left[0]) / 1000
+  const expectedMidpointAcceleration = Math.hypot((right[4]! - left[4]!) / stepSeconds, (right[5]! - left[5]!) / stepSeconds, (right[6]! - left[6]!) / stepSeconds)
+  assert.ok(midpoint.acceleration !== null)
+  assert.ok(Math.abs(midpoint.acceleration - expectedMidpointAcceleration) < 0.00001)
 })
 
 test('replay does not extrapolate positions beyond source ephemeris coverage', () => {

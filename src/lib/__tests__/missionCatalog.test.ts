@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert'
 import test from 'node:test'
 import { MISSIONS, getMission } from '../../data/missionData'
-import { MISSION_EVENTS } from '../../data/missionEvents'
+import { GLOSSARY, MISSION_EVENTS } from '../../data/missionEvents'
 import { validateMissionCatalog } from '../../data/validateMissionCatalog'
 import { buildMissionProfiles } from '../../data/trajectoryData'
 import { loadEphemerisFixture } from './ephemerisFixture'
@@ -34,6 +34,15 @@ test('guided events have unique, dated source links for both flown missions', ()
     const events = MISSION_EVENTS.filter((event) => event.missionId === missionId)
     assert.ok(events.length >= 6)
     assert.ok(events.every((event) => event.sourceUrl.startsWith('https://') && Number.isFinite(Date.parse(event.occurredAt))))
+  }
+})
+
+test('environment glossary entries explain Kp, solar wind, and IMF with official references', () => {
+  for (const term of ['Kp index', 'Solar wind', 'Interplanetary magnetic field (IMF)']) {
+    const entry = GLOSSARY.find((item) => item.term === term)
+    assert.ok(entry)
+    assert.match(entry.explanation, /current Earth|Earth|Sun|magnetic field/i)
+    assert.match(entry.sourceUrl || '', /^https:\/\//)
   }
 })
 

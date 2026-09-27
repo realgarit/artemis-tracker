@@ -32,7 +32,7 @@ export function validateSnapshot(id: string, value: unknown): boolean {
     return validInstant(value.timestamp)
       && isFiniteValue(value.distanceFromEarth)
       && (value.distanceFromMoon === null || isFiniteValue(value.distanceFromMoon))
-      && isFiniteValue(value.velocity) && isFiniteValue(value.acceleration)
+      && isFiniteValue(value.velocity) && (value.acceleration === null || isFiniteValue(value.acceleration))
       && (value.altitude === null || isFiniteValue(value.altitude))
       && (value.commsDelay === null || isFiniteValue(value.commsDelay))
       && (value.latitude === null || isFiniteValue(value.latitude))

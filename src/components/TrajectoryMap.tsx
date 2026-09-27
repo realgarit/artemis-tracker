@@ -7,7 +7,7 @@ import * as THREE from 'three'
 import { Globe, Moon as MoonIcon, Rocket, Maximize2, Minimize2, RotateCcw, FastForward, Play, Pause } from 'lucide-react'
 import {
   eR, mR, SCALE,
-  getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity,
+  getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity, getAcceleration,
   getMissionPhase, getActiveMission, setActiveMission,
   fullTrajPts, moonArcPts, lunarOrbitPts,
 } from '../data/trajectoryData'
@@ -243,12 +243,13 @@ function HUDOverlay() {
   const ref = useRef<HTMLDivElement>(null)
   const update = useCallback(() => {
     if (!ref.current) { requestAnimationFrame(update); return }
-    const day = getSimDay(); const pos = getTrajectoryPos(day); const mp = getMoonPos(day); const velocity = getVelocity(day)
+    const day = getSimDay(); const pos = getTrajectoryPos(day); const mp = getMoonPos(day); const velocity = getVelocity(day); const acceleration = getAcceleration(day)
     const de = pos ? Math.round(Math.hypot(pos.x, pos.y, pos.z)/SCALE) : null
     const dm = pos && mp ? Math.round(pointDistance(pos, mp)/SCALE) : null
     ref.current.querySelector('[data-de]')!.textContent = de === null ? 'Unavailable' : de.toLocaleString()+' km'
     ref.current.querySelector('[data-dm]')!.textContent = dm === null ? 'Unavailable' : dm.toLocaleString()+' km'
     ref.current.querySelector('[data-v]')!.textContent = velocity === null ? 'Unavailable' : velocity.toFixed(3)+' km/s'
+    ref.current.querySelector('[data-a]')!.textContent = acceleration === null ? 'Unavailable' : acceleration.toExponential(3)+' km/s²'
     ref.current.querySelector('[data-p]')!.textContent = getMissionPhase(day).toUpperCase()
     requestAnimationFrame(update)
   }, [])
@@ -259,6 +260,7 @@ function HUDOverlay() {
         <div className="flex gap-2"><span className="text-slate-400 w-14">Earth center</span><span data-de className="font-mono text-cyan-glow font-semibold">—</span></div>
         <div className="flex gap-2"><span className="text-slate-400 w-14">Moon center</span><span data-dm className="font-mono text-slate-300 font-semibold">—</span></div>
         <div className="flex gap-2"><span className="text-slate-600 w-10">Speed</span><span data-v className="font-mono text-amber-glow font-semibold">—</span></div>
+        <div className="flex gap-2"><span className="text-slate-600 w-10">Accel.</span><span data-a className="font-mono text-amber-glow font-semibold">—</span></div>
         <div className="flex gap-2"><span className="text-slate-600 w-10">Phase</span><span data-p className="font-mono text-cyan-glow/70 text-[8px]">—</span></div>
       </div>
     </div>

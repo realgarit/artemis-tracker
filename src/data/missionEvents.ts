@@ -33,7 +33,7 @@ export const MISSION_EVENTS: MissionEvent[] = [
   { id: 'a2-crew-recovery', missionId: 'artemis-ii', name: 'Crew recovered from Orion', occurredAt: '2026-04-11T01:34:00Z', phase: 'Recovery', category: 'recovery', explanation: 'Recovery teams helped the four astronauts out of the spacecraft and transported them to the recovery ship.', whyItMatters: 'Splashdown and crew recovery are separate events; the mission record distinguishes both.', sourceUrl: ARTEMIS_II_HOME },
 ]
 
-export const GLOSSARY: { term: string; explanation: string }[] = [
+export const GLOSSARY: { term: string; explanation: string; sourceUrl?: string }[] = [
   { term: 'TLI', explanation: 'Trans-lunar injection: a propulsion maneuver that places a spacecraft on a path toward the Moon.' },
   { term: 'DRO', explanation: 'Distant retrograde orbit: a large, looping orbit around the Moon.' },
   { term: 'Mission elapsed time', explanation: 'Elapsed time since launch, measured from the mission’s launch epoch.' },
@@ -41,7 +41,9 @@ export const GLOSSARY: { term: string; explanation: string }[] = [
   { term: 'Reference frame', explanation: 'The origin and orientation used to describe position and velocity coordinates.' },
   { term: 'Altitude', explanation: 'Distance above a body’s adopted reference radius; this differs from distance to its center.' },
   { term: 'Light time', explanation: 'The estimated time a radio signal takes to travel a geometric distance at the speed of light.' },
-  { term: 'Kp index', explanation: 'A global index describing geomagnetic activity at Earth; it is not a spacecraft radiation dose.' },
+  { term: 'Kp index', explanation: 'A three-hour planetary index describing disturbances in Earth’s horizontal magnetic field. It is an Earth geomagnetic indicator, not a spacecraft radiation dose.', sourceUrl: 'https://www.spaceweather.gov/products/planetary-k-index' },
+  { term: 'Solar wind', explanation: 'A stream of charged particles and magnetic field flowing outward from the Sun. Speed and density are measured in the current Earth context, not historical spacecraft conditions.', sourceUrl: 'https://science.nasa.gov/sun/what-is-the-solar-wind/' },
+  { term: 'Interplanetary magnetic field (IMF)', explanation: 'The Sun’s magnetic field carried through interplanetary space by the solar wind. The Bz component here is a current Earth-environment measurement, not a crew dose or safety assessment.', sourceUrl: 'https://science.nasa.gov/heliophysics/resources/vocabulary/' },
   { term: 'Sphere of influence', explanation: 'A convenient region where one body’s gravitational influence is used as the main frame for describing a trajectory.' },
   { term: 'Line of sight', explanation: 'An unobstructed geometric path between a spacecraft and a ground antenna.' },
 ]
