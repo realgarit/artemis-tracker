@@ -35,6 +35,23 @@ test('direct mission and crew routes render their matching catalog entry', async
   await expect(page.getByRole('heading', { name: /ARTEMIS II CREW/i })).toBeVisible()
 })
 
+test('mission selector switches data catalog entries and browser history restores the previous mission', async ({ page }) => {
+  await page.goto('/artemis-i?view=2d', { waitUntil: 'domcontentloaded' })
+  const selector = () => page.getByRole('button', { name: /select mission\. current mission:/i })
+  await expect(selector()).toHaveAttribute('aria-label', /Artemis I/i)
+  await selector().click()
+  await page.getByRole('menuitem', { name: /^ARTEMIS II\b/i }).click()
+  await expect(selector()).toHaveAttribute('aria-label', /Artemis II/i)
+  await expect(page.getByRole('heading', { name: /2d trajectory and mission replay/i })).toBeVisible()
+  await selector().click()
+  await page.getByRole('menuitem', { name: /^ARTEMIS I\b/i }).click()
+  await expect(selector()).toHaveAttribute('aria-label', /Artemis I/i)
+  await page.goBack()
+  await expect(selector()).toHaveAttribute('aria-label', /Artemis II/i)
+  await page.goForward()
+  await expect(selector()).toHaveAttribute('aria-label', /Artemis I/i)
+})
+
 test('planned mission route presents sourced uncertainty and the announced crew', async ({ page }) => {
   await page.goto('/artemis-iii', { waitUntil: 'commit', timeout: 10_000 })
   await expect(page.getByRole('heading', { name: 'Artemis III' })).toBeVisible()
