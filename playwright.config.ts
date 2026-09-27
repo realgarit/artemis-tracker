@@ -3,7 +3,9 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './e2e',
   testMatch: '**/*.pw.ts',
-  fullyParallel: true,
+  // Keep the controlled mobile performance profile isolated from simultaneous
+  // axe/browser traffic so CPU and bandwidth throttles stay reproducible.
+  fullyParallel: false,
   workers: 2,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,

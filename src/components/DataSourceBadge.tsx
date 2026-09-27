@@ -4,13 +4,18 @@ import type { DataProvenance } from '../lib/provenance'
 export function DataSourceBadge({ provenance }: { provenance?: DataProvenance }) {
   if (!provenance) return null
   const label = provenanceLabel(provenance)
+  const temporalLabel = provenance.mode === 'replay' || provenance.mode === 'illustrative'
+    ? 'Selected mission epoch'
+    : provenance.mode === 'ephemeris'
+      ? 'Ephemeris epoch'
+      : 'Observation time'
   const content = (
     <>
       <span aria-hidden="true" className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
         provenance.mode === 'observed' ? 'bg-green-glow' : provenance.mode === 'unavailable' ? 'bg-red-glow' : 'bg-amber-glow'
       }`} />
       <span>{label}</span>
-      {provenance.observedAt && <time className="sr-only" dateTime={provenance.observedAt}>Observation time {provenance.observedAt}</time>}
+      {provenance.observedAt && <time className="sr-only" dateTime={provenance.observedAt}>{temporalLabel} {provenance.observedAt}</time>}
     </>
   )
   return (
