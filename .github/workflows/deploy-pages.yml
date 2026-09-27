@@ -65,9 +65,10 @@ jobs:
         run: npm run build
 
       - name: Prepare Pages artifact
-        run: |
-          cp dist/index.html dist/404.html
-          cp CNAME dist/CNAME
+        run: npm run prepare:pages
+
+      - name: Verify Pages artifact
+        run: npm run verify:pages
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

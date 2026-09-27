@@ -7,6 +7,8 @@
     "dev": "vite",
     "dev:client": "vite",
     "build": "vite build",
+    "prepare:pages": "node scripts/prepare-pages-artifact.mjs",
+    "verify:pages": "node scripts/verify-pages-artifact.mjs",
     "preview": "vite preview",
     "generate-data": "tsx scripts/generate-data.ts",
     "generate:calendar": "tsx scripts/generate-calendar.ts",
@@ -16,7 +18,7 @@
     "test": "node --import tsx --test",
     "test:e2e": "playwright test",
     "pretest:e2e": "npm run build",
-    "check": "npm run validate:catalog && npm run validate:media && npm run prepare:ephemeris && npm run generate:calendar && npm audit --audit-level=high && npx tsc --noEmit && npm test && npm run test:e2e",
+    "check": "npm run validate:catalog && npm run validate:media && npm run prepare:ephemeris && npm run generate:calendar && npm audit --audit-level=high && npx tsc --noEmit && npm test && npm run test:e2e && npm run prepare:pages && npm run verify:pages",
     "fetch:ephemeris": "tsx scripts/fetch-ephemeris-sources.ts"
   },
   "dependencies": {
