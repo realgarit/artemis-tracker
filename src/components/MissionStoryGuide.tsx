@@ -96,7 +96,7 @@ export function MissionStoryGuide({ missionId, selectedEventId, onSeek }: { miss
 
 function EventCard({ event, selected, onSeek }: { event: MissionEvent; selected: boolean; onSeek?: (time: string, eventId: string) => void }) {
   return (
-    <li aria-current={selected ? 'location' : undefined} className={`min-w-0 rounded border bg-space-900/70 p-4 ${selected ? 'border-cyan-glow/80 ring-1 ring-cyan-glow/40' : 'border-slate-700/60'}`}>
+    <li id={event.id} aria-current={selected ? 'location' : undefined} className={`min-w-0 rounded border bg-space-900/70 p-4 ${selected ? 'border-cyan-glow/80 ring-1 ring-cyan-glow/40' : 'border-slate-700/60'}`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-wider text-cyan-glow">{event.phase} · {event.category}</p>
@@ -108,6 +108,7 @@ function EventCard({ event, selected, onSeek }: { event: MissionEvent; selected:
       </div>
       <p className="mt-3 text-sm leading-relaxed text-slate-300">{event.explanation}</p>
       <p className="mt-2 text-sm leading-relaxed text-slate-400"><strong className="text-slate-300">Why it matters:</strong> {event.whyItMatters}</p>
+      {event.correctionHistory?.map((correction, index) => <p key={`${correction.correctedAt}-${index}`} className="mt-2 rounded border border-amber-glow/25 px-3 py-2 text-xs leading-relaxed text-slate-400">Editorial correction {new Date(correction.correctedAt).toLocaleDateString('en-GB', { dateStyle: 'medium', timeZone: 'UTC' })}: {correction.field} changed from “{correction.previousValue}” to “{correction.correctedValue}”. {correction.reason} <a href={correction.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-glow underline underline-offset-2">Correction source</a></p>)}
       <div className="mt-3 flex flex-wrap gap-2">
         {onSeek && <button type="button" onClick={() => onSeek(event.occurredAt, event.id)} className="inline-flex min-h-11 items-center gap-2 rounded bg-cyan-glow/10 px-3 text-sm font-semibold text-cyan-glow hover:bg-cyan-glow/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">
           <Clock3 className="h-4 w-4" /> Replay this moment

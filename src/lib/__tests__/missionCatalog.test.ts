@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert'
 import test from 'node:test'
 import { MISSIONS, getMission } from '../../data/missionData'
-import { GLOSSARY, MISSION_EVENTS } from '../../data/missionEvents'
+import { GLOSSARY, MISSION_EVENTS, validateMissionEvents } from '../../data/missionEvents'
 import { validateMissionCatalog } from '../../data/validateMissionCatalog'
 import { buildMissionProfiles } from '../../data/trajectoryData'
 import { loadEphemerisFixture } from './ephemerisFixture'
@@ -35,6 +35,18 @@ test('guided events have unique, dated source links for both flown missions', ()
     assert.ok(events.length >= 6)
     assert.ok(events.every((event) => event.sourceUrl.startsWith('https://') && Number.isFinite(Date.parse(event.occurredAt))))
   }
+})
+
+test('event corrections preserve stable IDs and require an auditable source record', () => {
+  const original = MISSION_EVENTS.find((event) => event.id === 'a2-closest')!
+  const corrected = {
+    ...original,
+    occurredAt: '2026-04-06T23:01:00Z',
+    correctionHistory: [{ correctedAt: '2026-09-27T00:00:00Z', field: 'occurredAt', previousValue: original.occurredAt, correctedValue: '2026-04-06T23:01:00Z', reason: 'Fixture correction test', sourceUrl: original.sourceUrl }],
+  }
+  assert.equal(corrected.id, original.id)
+  assert.deepEqual(validateMissionEvents([corrected]), [])
+  assert.ok(validateMissionEvents([{ ...corrected, correctionHistory: [{ ...corrected.correctionHistory[0], sourceUrl: '' }] }]).some((issue) => issue.includes('correction history needs')))
 })
 
 test('environment glossary entries explain Kp, solar wind, and IMF with official references', () => {

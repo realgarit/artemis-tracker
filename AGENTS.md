@@ -30,6 +30,7 @@ Keep the GitHub Pages deployment workflow aligned with the Vite build and preser
 - Mission comparisons accept independent `left` and `right` flown-mission IDs in the query string; profile selection, event/elapsed/UTC alignment, selected offset, and browser history are restored together. Keep samples separate by mission and preserve explicit nulls for missing coverage.
 - Replay acceleration is the magnitude of the finite-difference NASA velocity vector across covered OEM epochs, in km/s²; samples without a neighboring covered epoch remain null. It describes the ephemeris velocity change, not spacecraft thrust.
 - 2D epoch playback and 3D mission-day playback use deterministic `src/lib/replayClock.ts` steps. When a tab becomes hidden, both control surfaces pause instead of integrating suspended wall time into an unexpected jump.
+- Mission-event IDs are stable. If editorial data is corrected, append a dated field/old-value/new-value/reason/source entry to that event; the event validator requires the correction record and the UI exposes it.
 - `npm run prepare:pages` creates the `404.html` SPA fallback and copies the root `CNAME` into `dist`; `npm run verify:pages` asserts those files and the application mount point before Pages uploads the artifact.
 - The sticky metrics bar includes its trajectory provenance badge; a replay epoch must not be announced as an observation time. Keep the three-run mobile performance check isolated from concurrent browser and axe tests so its CPU/network profile stays reproducible.
 
