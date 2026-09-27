@@ -131,6 +131,8 @@ test('a shared UTC moment restores the lightweight view and has a useful 2D repl
   await expect(page.getByRole('heading', { name: /2d trajectory and mission replay/i })).toBeVisible()
   await expect(page.getByText('2026-04-06T23:00:00 UTC', { exact: true }).first()).toBeVisible()
   await expect(page.getByRole('heading', { name: /current earth network view/i })).toBeVisible()
+  await expect(page.getByText('Acceleration · sampled')).toBeVisible()
+  await expect(page.getByText(/km\/s²/).first()).toBeVisible()
   await expect(page.getByRole('button', { name: /replay this moment/i }).first()).toBeVisible()
   await expect(page.getByRole('heading', { name: /explore the key moments/i })).toBeVisible()
   const guide = page.getByRole('region', { name: /explore the key moments/i })

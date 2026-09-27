@@ -46,7 +46,7 @@ export function StatsGrid({ trajectory }: StatsGridProps) {
 
   return (
     <motion.div
-      className="grid grid-cols-2 gap-3 h-full content-center"
+      className="grid grid-cols-2 gap-3 h-full content-center sm:grid-cols-3"
       initial={false}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
@@ -63,6 +63,11 @@ export function StatsGrid({ trajectory }: StatsGridProps) {
         unit="km/s"
         icon={<Zap className="h-3 w-3 text-cyan-glow" />}
         large
+      />
+      <StatCard
+        label="Acceleration · sampled"
+        value={trajectory.acceleration}
+        unit="km/s²"
       />
       <StatCard
         label="Distance · Moon"

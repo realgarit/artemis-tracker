@@ -100,7 +100,7 @@ export function ShareExportPanel({ mission, missionTime, view, camera, onSeek, e
 
       <div className="mt-6 border-t border-slate-700/60 pt-4">
         <h3 className="text-sm font-semibold text-slate-100">Export the replay profile</h3>
-        <p className="mt-1 text-xs leading-relaxed text-slate-400">Exports include source epochs, interpolation quality, units, coordinate frame, target ID, checksum, and explicit nulls outside coverage.</p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-400">Exports include source epochs, interpolation quality, center distances, sampled velocity-vector acceleration, units, coordinate frame, target ID, checksum, and explicit nulls outside coverage.</p>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           <label className="text-sm text-slate-300">Start time · UTC<input value={start} onChange={(event) => setStart(event.target.value)} className="mt-1 min-h-11 w-full rounded border border-slate-600 bg-space-900 px-2 font-mono text-xs text-slate-100" /></label>
           <label className="text-sm text-slate-300">End time · UTC<input value={end} onChange={(event) => setEnd(event.target.value)} className="mt-1 min-h-11 w-full rounded border border-slate-600 bg-space-900 px-2 font-mono text-xs text-slate-100" /></label>

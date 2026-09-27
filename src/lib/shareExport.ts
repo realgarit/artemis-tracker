@@ -8,11 +8,12 @@ export interface MissionExportRow {
   missionId: string
   timestamp: string
   timeScale: string
-  units: { distance: 'km'; velocity: 'km/s'; lightTime: 's' }
+  units: { distance: 'km'; velocity: 'km/s'; acceleration: 'km/s²'; lightTime: 's' }
   distanceFromEarthCenterKm: number | null
   altitudeAboveEarthRadiusKm: number | null
   distanceFromMoonCenterKm: number | null
   velocityKmPerSecond: number | null
+  accelerationKmPerSecondSquared: number | null
   oneWayLightTimeSeconds: number | null
   quality: 'source epoch' | 'interpolated state vectors' | 'outside coverage or data gap'
   lunarQuality: 'source epoch' | 'interpolated JPL ephemeris' | 'unavailable'
@@ -58,11 +59,12 @@ export function buildMissionExportRows(options: {
       missionId: options.missionId,
       timestamp: new Date(timestamp).toISOString(),
       timeScale: source.timeScale || 'UTC',
-      units: { distance: 'km', velocity: 'km/s', lightTime: 's' },
+      units: { distance: 'km', velocity: 'km/s', acceleration: 'km/s²', lightTime: 's' },
       distanceFromEarthCenterKm: state?.distanceFromEarth ?? null,
       altitudeAboveEarthRadiusKm: state?.altitude ?? null,
       distanceFromMoonCenterKm: state?.distanceFromMoon ?? null,
       velocityKmPerSecond: state?.velocity ?? null,
+      accelerationKmPerSecondSquared: state?.acceleration ?? null,
       oneWayLightTimeSeconds: state?.commsDelay ?? null,
       quality: state?.stateQuality || 'outside coverage or data gap',
       lunarQuality: state?.lunarQuality || 'unavailable',
@@ -86,7 +88,7 @@ function csvCell(value: string | number | null): string {
 export function missionRowsToCsv(rows: MissionExportRow[]): string {
   const header: (keyof MissionExportRow)[] = [
     'missionId', 'timestamp', 'timeScale', 'units', 'distanceFromEarthCenterKm', 'altitudeAboveEarthRadiusKm',
-    'distanceFromMoonCenterKm', 'velocityKmPerSecond', 'oneWayLightTimeSeconds', 'quality', 'lunarQuality',
+    'distanceFromMoonCenterKm', 'velocityKmPerSecond', 'accelerationKmPerSecondSquared', 'oneWayLightTimeSeconds', 'quality', 'lunarQuality',
     'stateVectorSource', 'moonEphemerisSource', 'targetObjectId', 'earthCenter', 'referenceFrame', 'sourceChecksum', 'datasetVersion',
   ]
   return [header.map((cell) => csvCell(cell)).join(','), ...rows.map((row) => header.map((key) => csvCell(typeof row[key] === 'object' && row[key] !== null ? JSON.stringify(row[key]) : row[key] as string | number | null)).join(','))].join('\r\n') + '\r\n'
@@ -94,9 +96,9 @@ export function missionRowsToCsv(rows: MissionExportRow[]): string {
 
 export function missionRowsToJson(rows: MissionExportRow[]): string {
   return `${JSON.stringify({
-    schemaVersion: 1,
+    schemaVersion: 2,
     sourceDocumentation: [SOURCE_URLS.horizons],
-    note: 'Rows contain source epochs or explicitly labeled interpolation. Outside-coverage and data-gap samples are null; no extrapolation is performed.',
+    note: 'Rows contain source epochs or explicitly labeled interpolation. Acceleration is the finite-difference magnitude of the NASA velocity vector across covered OEM epochs. Outside-coverage and data-gap samples are null; no extrapolation is performed.',
     missionId: rows[0]?.missionId || null,
     rows,
   }, null, 2)}\n`

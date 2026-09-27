@@ -83,7 +83,7 @@ export function readTrajectorySnapshot(value: unknown, missionId: string): Traje
     || !isFiniteNumber(value.distanceFromEarth)
     || !isNullableNumber(value.distanceFromMoon)
     || !isFiniteNumber(value.velocity)
-    || !isFiniteNumber(value.acceleration)
+    || !isNullableNumber(value.acceleration)
     || !isNullableNumber(value.altitude)
     || !isNullableNumber(value.commsDelay)
     || !isNullableNumber(value.latitude)

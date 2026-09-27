@@ -29,7 +29,7 @@ export function getTrajectoryFallback(missionId: string, at = new Date()): Traje
     distanceFromEarth: sample.distanceFromEarth,
     distanceFromMoon: sample.distanceFromMoon,
     velocity: sample.velocity,
-    acceleration: null,
+    acceleration: sample.acceleration,
     altitude: sample.altitude,
     commsDelay: sample.commsDelay,
     latitude: null,

@@ -169,6 +169,38 @@ function bracketSample(samples: CompactState[], epoch: number): { lower: Compact
   return { lower, upper, fraction: (epoch - lower[0]) / gap }
 }
 
+function finiteDifferenceAcceleration(samples: CompactState[], epoch: number): number | null {
+  let low = 0, high = samples.length
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2)
+    if (samples[middle][0] < epoch) low = middle + 1
+    else high = middle
+  }
+  let left: CompactState | null = null
+  let right: CompactState | null = null
+  if (low < samples.length && samples[low][0] === epoch) {
+    const center = samples[low]
+    const previous = low > 0 ? samples[low - 1] : null
+    const next = low < samples.length - 1 ? samples[low + 1] : null
+    const validPrevious = previous && epoch - previous[0] <= MAX_INTERPOLATION_GAP_MS ? previous : null
+    const validNext = next && next[0] - epoch <= MAX_INTERPOLATION_GAP_MS ? next : null
+    if (validPrevious && validNext) { left = validPrevious; right = validNext }
+    else if (validPrevious) { left = validPrevious; right = center }
+    else if (validNext) { left = center; right = validNext }
+  } else if (low > 0 && low < samples.length) {
+    const previous = samples[low - 1]
+    const next = samples[low]
+    if (next[0] - previous[0] <= MAX_INTERPOLATION_GAP_MS) { left = previous; right = next }
+  }
+  if (!left || !right) return null
+  const seconds = (right[0] - left[0]) / 1000
+  if (seconds <= 0) return null
+  const ax = (right[4] - left[4]) / seconds
+  const ay = (right[5] - left[5]) / seconds
+  const az = (right[6] - left[6]) / seconds
+  return Math.hypot(ax, ay, az)
+}
+
 function interpolateCoordinate(lower: number | null, upper: number | null, fraction: number): number | null {
   if (lower === null || upper === null) return null
   return lower + (upper - lower) * fraction
@@ -192,6 +224,7 @@ export interface MissionEphemerisSample {
   position: Vector3Like
   moonPosition: Vector3Like | null
   velocity: number
+  acceleration: number | null
   distanceFromEarth: number
   distanceFromMoon: number | null
   altitude: number | null
@@ -217,6 +250,7 @@ export function getMissionEphemerisAtTime(missionId: string, epoch: number): Mis
     position,
     moonPosition,
     velocity: magnitude(velocityVector),
+    acceleration: finiteDifferenceAcceleration(config.samples, epoch),
     distanceFromEarth,
     distanceFromMoon: moonPosition ? magnitude(subtract(position, moonPosition)) : null,
     altitude: distanceFromEarth >= EARTH_RADIUS_KM ? distanceFromEarth - EARTH_RADIUS_KM : null,
@@ -282,6 +316,11 @@ export function getVelocity(day: number): number | null {
   const mission = getActiveMission()
   const velocity = getVectorAtTime(mission, mission.launchTime + day * DAY_MS, [4, 5, 6])
   return velocity ? magnitude(velocity) : null
+}
+
+export function getAcceleration(day: number): number | null {
+  const mission = getActiveMission()
+  return finiteDifferenceAcceleration(mission.samples, mission.launchTime + day * DAY_MS)
 }
 
 export interface MissionHistoryPoint { timestamp: number; value: number }

@@ -87,7 +87,7 @@ export function MissionStoryGuide({ missionId, selectedEventId, onSeek }: { miss
       <details className="mt-5 rounded border border-slate-700/60 p-3">
         <summary className="min-h-11 cursor-pointer py-2 font-semibold text-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">Mission glossary</summary>
         <dl className="mt-2 grid gap-3 sm:grid-cols-2">
-          {GLOSSARY.map((item) => <div key={item.term}><dt className="font-semibold text-cyan-glow">{item.term}</dt><dd className="mt-1 text-sm leading-relaxed text-slate-400">{item.explanation}</dd></div>)}
+          {GLOSSARY.map((item) => <div key={item.term}><dt className="font-semibold text-cyan-glow">{item.term}</dt><dd className="mt-1 text-sm leading-relaxed text-slate-400">{item.explanation}{item.sourceUrl && <> <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-glow underline underline-offset-2">Official reference<span className="sr-only"> for {item.term} (opens in a new tab)</span></a>.</>}</dd></div>)}
         </dl>
       </details>
     </section>
