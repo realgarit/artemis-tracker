@@ -64,7 +64,7 @@ export function Header({ missionName, activeMissionId, onMissionChange }: Header
                 aria-controls="mission-selector-menu"
                 aria-label={`Select mission. Current mission: ${missionName || 'Artemis'}`}
                 onClick={() => setShowSelector(!showSelector)}
-                className="flex min-h-11 min-w-0 flex-wrap items-center gap-1 font-display text-sm font-bold tracking-[.05em] text-cyan-glow glow-cyan leading-tight hover:text-cyan-glow/90 transition-colors sm:gap-1.5 sm:text-lg sm:tracking-[.15em]"
+                className="flex min-h-11 min-w-0 flex-wrap items-center gap-1 font-orbitron text-sm font-bold tracking-[.05em] text-cyan-glow glow-cyan leading-tight hover:text-cyan-glow/90 transition-colors sm:gap-1.5 sm:text-lg sm:tracking-[.15em]"
               >
                 {missionName?.toUpperCase() || 'ARTEMIS II'}
                 <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showSelector ? 'rotate-180' : ''}`} />
