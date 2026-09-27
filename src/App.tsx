@@ -125,10 +125,16 @@ function UnknownMissionPage({ missionId }: { missionId: string }) {
   )
 }
 
-function readTimeFromUrl(_missionId: string, launchTime: number, endTime: number): string {
+function readTimeFromUrl(missionId: string, launchTime: number, endTime: number): string {
   const requested = new URL(window.location.href).searchParams.get('t')
   const milliseconds = requested ? Date.parse(requested) : Number.NaN
-  if (!Number.isFinite(milliseconds)) return new Date(launchTime).toISOString()
+  if (!Number.isFinite(milliseconds)) {
+    const firstCoveredEpoch = getMissionTrajectory(missionId)?.samples[0]?.[0]
+    const replayStart = firstCoveredEpoch !== undefined && Number.isFinite(firstCoveredEpoch)
+      ? Math.max(launchTime, firstCoveredEpoch)
+      : launchTime
+    return new Date(replayStart).toISOString()
+  }
   const clamped = Math.min(endTime, Math.max(launchTime, milliseconds))
   return new Date(clamped).toISOString()
 }
