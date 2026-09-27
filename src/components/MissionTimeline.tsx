@@ -141,12 +141,13 @@ function PhaseNode({ phase, index, total, onSeek }: { phase: MissionPhase; index
   const isCompleted = phase.status === 'completed'
   const isActive = phase.status === 'active'
 
+  // This command seeks to a phase; aria-current marks it without presenting the button as a toggle.
   return (
     <motion.button
       type="button"
       onClick={() => onSeek?.(phase.startTime)}
       aria-label={`Replay ${phase.name}, beginning ${new Date(phase.startTime).toISOString()}`}
-      aria-pressed={isActive}
+      aria-current={isActive ? 'step' : undefined}
       className="flex min-h-11 flex-col items-center rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow"
       style={{ width: `${100 / total}%` }}
       initial={false}

@@ -300,6 +300,9 @@ test('media archive filters by mission, event, and type and offers the timed eve
 
 test('keyboard activation switches mission, seeks a cited event, and copies its moment link', async ({ page, context }) => {
   await page.goto('/artemis-ii?view=2d', { waitUntil: 'domcontentloaded' })
+  const currentPhase = page.getByRole('button', { name: /replay LEO, beginning/i })
+  await expect(currentPhase).toHaveAttribute('aria-current', 'step')
+  await expect(currentPhase).not.toHaveAttribute('aria-pressed')
   const missionSelector = page.getByRole('button', { name: /select mission\. current mission: artemis ii/i })
   await tabUntilFocused(page, missionSelector)
   await expect(missionSelector).toBeFocused()
