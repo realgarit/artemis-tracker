@@ -30,5 +30,6 @@ Keep the GitHub Pages deployment workflow aligned with the Vite build and preser
 - Mission comparisons accept independent `left` and `right` flown-mission IDs in the query string; profile selection, event/elapsed/UTC alignment, selected offset, and browser history are restored together. Keep samples separate by mission and preserve explicit nulls for missing coverage.
 - Replay acceleration is the magnitude of the finite-difference NASA velocity vector across covered OEM epochs, in km/s²; samples without a neighboring covered epoch remain null. It describes the ephemeris velocity change, not spacecraft thrust.
 - `npm run prepare:pages` creates the `404.html` SPA fallback and copies the root `CNAME` into `dist`; `npm run verify:pages` asserts those files and the application mount point before Pages uploads the artifact.
+- The sticky metrics bar includes its trajectory provenance badge; a replay epoch must not be announced as an observation time. Keep the three-run mobile performance check isolated from concurrent browser and axe tests so its CPU/network profile stays reproducible.
 
 - 2026-09-16 — Codex-first layout sweep: repository-local shared skills use `.agents/skills/` as the canonical source. Any `.claude/skills/` path is only a compatibility bridge or generated mirror.

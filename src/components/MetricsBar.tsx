@@ -1,4 +1,5 @@
 import type { TrajectoryData, MissionData } from '../lib/types'
+import { DataSourceBadge } from './DataSourceBadge'
 
 interface MetricsBarProps {
   mission?: MissionData
@@ -63,6 +64,7 @@ export function MetricsBar({ mission, trajectory, selectedTime = mission?.launch
           <Cell label="Local · selected" value={formatLocal(selectedTime)} />
         </div>
       </div>
+      {trajectory?.provenance && <div className="mx-auto max-w-[1600px] px-3 pb-2 sm:px-4"><DataSourceBadge provenance={trajectory.provenance}/></div>}
     </div>
   )
 }

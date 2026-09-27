@@ -25,6 +25,7 @@ test('direct mission and crew routes render their matching catalog entry', async
   await page.goto('/artemis-i', { waitUntil: 'commit', timeout: 10_000 })
   await expect(page.getByRole('heading', { name: /mission timeline/i })).toBeVisible()
   await expect(page.getByRole('button', { name: /Select mission. Current mission: Artemis I/i })).toBeVisible()
+  await expect(page.getByText(/Historical replay · NASA\/JSC flight ephemeris/i).first()).toBeVisible()
 
   await page.goto('/artemis-ii/crew', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: /ARTEMIS II CREW/i })).toBeVisible()
@@ -131,6 +132,7 @@ test('a shared UTC moment restores the lightweight view and has a useful 2D repl
   await expect(page.getByRole('heading', { name: /2d trajectory and mission replay/i })).toBeVisible()
   await expect(page.getByText('2026-04-06T23:00:00 UTC', { exact: true }).first()).toBeVisible()
   await expect(page.getByRole('heading', { name: /current earth network view/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Selected mission epoch/i }).first()).toBeVisible()
   await expect(page.getByText('Acceleration · sampled')).toBeVisible()
   await expect(page.getByText(/km\/s²/).first()).toBeVisible()
   await expect(page.getByRole('button', { name: /replay this moment/i }).first()).toBeVisible()
