@@ -147,7 +147,7 @@ function PhaseNode({ phase, index, total, onSeek }: { phase: MissionPhase; index
       onClick={() => onSeek?.(phase.startTime)}
       aria-label={`Replay ${phase.name}, beginning ${new Date(phase.startTime).toISOString()}`}
       aria-pressed={isActive}
-      className="flex flex-col items-center rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow"
+      className="flex min-h-11 flex-col items-center rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow"
       style={{ width: `${100 / total}%` }}
       initial={false}
       animate={{ opacity: 1, y: 0 }}

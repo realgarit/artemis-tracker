@@ -1,7 +1,15 @@
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 const observedAt = '2026-09-26T12:00:00.000Z'
+
+async function tabUntilFocused(page: Page, target: Locator, maxTabs = 120) {
+  for (let index = 0; index < maxTabs; index++) {
+    if (await target.evaluate((element) => element === document.activeElement)) return
+    await page.keyboard.press('Tab')
+  }
+  throw new Error(`Keyboard tab order did not reach ${await target.getAttribute('aria-label') || 'the requested control'}`)
+}
 
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -226,6 +234,22 @@ test('mobile layout avoids document overflow and key actions pass an axe scan', 
   const serious = report.violations.filter((violation) => violation.impact === 'critical' || violation.impact === 'serious')
   const summary = serious.map((violation) => `${violation.id}: ${violation.nodes.map((node) => { const contrast = node.any.find((check) => check.id === 'color-contrast')?.data as { fgColor?: string; bgColor?: string; contrastRatio?: number } | undefined; return `${node.target.join(' ')} (${contrast?.fgColor || ''} on ${contrast?.bgColor || ''} = ${contrast?.contrastRatio || ''})` }).join('; ')}`)
   expect(summary, `Serious accessibility findings: ${summary.join(' | ')}`).toEqual([])
+  await page.setViewportSize({ width: 390, height: 844 })
+  const touchTargets = [
+    ['mission selector', page.getByRole('button', { name: /select mission\. current mission: artemis ii/i })],
+    ['mission phase replay', page.getByRole('button', { name: /replay .* beginning/i }).first()],
+    ['event replay', page.locator('#a2-flyby-window').getByRole('button', { name: /replay this moment/i })],
+    ['NASA event source', page.locator('#a2-flyby-window').getByRole('link', { name: /NASA source/i })],
+    ['provenance source', page.locator('[aria-label^="Data provenance:"] a').first()],
+    ['share moment', page.getByRole('button', { name: /copy moment link/i })],
+    ['media rights guidance', page.getByRole('link', { name: /NASA media-use guidance/i }).first()],
+  ] as const
+  for (const [name, control] of touchTargets) {
+    const box = await control.boundingBox()
+    expect(box, `${name} must be visible`).not.toBeNull()
+    expect(box?.width, `${name} width`).toBeGreaterThanOrEqual(44)
+    expect(box?.height, `${name} height`).toBeGreaterThanOrEqual(44)
+  }
 })
 
 test('WebGL-unavailable browser defaults to the fully usable lightweight view', async ({ page }) => {
@@ -272,6 +296,40 @@ test('media archive filters by mission, event, and type and offers the timed eve
   await expect(archive.getByRole('heading', { name: 'NASA’s Artemis I Moon Mission: Launch to Splashdown Highlights' })).toBeVisible()
   await expect(archive.getByText('Captions or transcript were not listed at the last editorial check.')).toBeVisible()
   await expect(archive.getByText('archive', { exact: true })).toBeVisible()
+})
+
+test('keyboard activation switches mission, seeks a cited event, and copies its moment link', async ({ page, context }) => {
+  await page.goto('/artemis-ii?view=2d', { waitUntil: 'domcontentloaded' })
+  const missionSelector = page.getByRole('button', { name: /select mission\. current mission: artemis ii/i })
+  await tabUntilFocused(page, missionSelector)
+  await expect(missionSelector).toBeFocused()
+  await page.keyboard.press('Enter')
+  const menu = page.getByRole('menu', { name: 'Missions' })
+  await expect(menu).toBeVisible()
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/artemis-i(?:\?|$)/)
+
+  const launch = page.locator('#a1-launch')
+  const replay = launch.getByRole('button', { name: /replay this moment/i })
+  await tabUntilFocused(page, replay)
+  await expect(replay).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/event=a1-launch/)
+  await expect(launch).toHaveAttribute('aria-current', 'location')
+
+  const source = launch.getByRole('link', { name: /NASA source/i })
+  await page.keyboard.press('Tab')
+  await expect(source).toBeFocused()
+  const [sourcePage] = await Promise.all([context.waitForEvent('page'), page.keyboard.press('Enter')])
+  await sourcePage.waitForLoadState('domcontentloaded', { timeout: 10_000 })
+  await expect(sourcePage).toHaveURL(/nasa\.gov/)
+  await sourcePage.close()
+
+  const copyMoment = page.getByRole('button', { name: /copy moment link/i })
+  await tabUntilFocused(page, copyMoment)
+  await expect(copyMoment).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('status').filter({ hasText: /share link copied|link is ready to copy/i })).toBeVisible()
 })
 
 test('a completed mission pack opens a deep route after a cold offline navigation', async ({ page, context }) => {

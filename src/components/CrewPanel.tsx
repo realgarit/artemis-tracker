@@ -58,7 +58,7 @@ export function CrewPanel({ crew, compact = false, missionId = 'artemis-ii' }: C
             Crew — {crew.length} Aboard
           </span>
         </div>
-        <Link href={`/${missionId}/crew`} className="flex items-center gap-1 text-[9px] text-slate-500 hover:text-cyan-glow transition-colors">
+        <Link href={`/${missionId}/crew`} className="inline-flex min-h-11 items-center gap-1 px-1 text-[9px] text-slate-500 hover:text-cyan-glow transition-colors">
           View profiles <ChevronRight className="h-3 w-3" />
         </Link>
       </div>
