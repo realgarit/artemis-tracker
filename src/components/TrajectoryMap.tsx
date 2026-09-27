@@ -62,7 +62,7 @@ function Earth() {
     <group>
       <mesh ref={ref}><sphereGeometry args={[eR, 128, 64]} /><meshStandardMaterial map={texture} roughness={0.8} metalness={0.05} /></mesh>
       <Html position={[0, -(eR + 1), 0]} center style={{ pointerEvents: 'none' }}>
-        <span data-scene-label="earth" style={{ fontFamily: 'Orbitron', fontSize: 10, color: '#4499ff', letterSpacing: 4, userSelect: 'none', opacity: 0.7 }}>EARTH</span>
+        <span data-scene-label="earth" style={{ fontFamily: 'var(--font-orbitron)', fontSize: 10, color: '#4499ff', letterSpacing: 4, userSelect: 'none', opacity: 0.7 }}>EARTH</span>
       </Html>
     </group>
   )
@@ -81,7 +81,7 @@ function MoonBody() {
     <group ref={ref}>
       <mesh><sphereGeometry args={[mR, 64, 32]} /><meshStandardMaterial map={texture} roughness={0.95} /></mesh>
       <Html position={[0, -(mR + 0.8), 0]} center style={{ pointerEvents: 'none' }}>
-        <span data-scene-label="moon" style={{ fontFamily: 'Orbitron', fontSize: 9, color: '#aaaacc', letterSpacing: 3, userSelect: 'none', opacity: 0.6 }}>MOON</span>
+        <span data-scene-label="moon" style={{ fontFamily: 'var(--font-orbitron)', fontSize: 9, color: '#aaaacc', letterSpacing: 3, userSelect: 'none', opacity: 0.6 }}>MOON</span>
       </Html>
     </group>
   )
@@ -121,11 +121,11 @@ function Orion() {
 
       {/* ORION label — ABOVE */}
       <Html position={[0, 1.8, 0]} center style={{ pointerEvents: 'none' }}>
-        <span data-scene-label="orion" style={{ fontFamily: 'Orbitron', fontSize: 11, color: '#ff8844', fontWeight: 700, letterSpacing: 2, userSelect: 'none' }}>ORION</span>
+        <span data-scene-label="orion" style={{ fontFamily: 'var(--font-orbitron)', fontSize: 11, color: '#ff8844', fontWeight: 700, letterSpacing: 2, userSelect: 'none' }}>ORION</span>
       </Html>
       {/* Distance — BELOW */}
       <Html position={[0, -1.4, 0]} center style={{ pointerEvents: 'none' }}>
-        <span ref={labelRef} style={{ fontFamily: 'Space Mono', fontSize: 10, color: '#94a3b8', userSelect: 'none', whiteSpace: 'nowrap' }} />
+        <span ref={labelRef} style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#94a3b8', userSelect: 'none', whiteSpace: 'nowrap' }} />
       </Html>
     </group>
   )

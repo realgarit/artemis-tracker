@@ -1,10 +1,15 @@
+@import "@fontsource-variable/orbitron";
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource/space-mono/latin-400.css";
+@import "@fontsource/space-mono/latin-700.css";
 @import "tailwindcss";
 
 /* === Theme === */
 @theme {
   --font-sans: Arial, system-ui, sans-serif;
-  --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
-  --font-display: system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
+  --font-display: "Space Grotesk Variable", Arial, system-ui, sans-serif;
+  --font-orbitron: "Orbitron Variable", "Space Grotesk Variable", system-ui, sans-serif;
 
   --color-space-950: #020408;
   --color-space-900: #04060b;

@@ -271,8 +271,12 @@ test('WebGL-unavailable browser defaults to the fully usable lightweight view', 
 })
 
 test('3D replay follows the shared mission epoch and keeps Earth focus available outside source coverage', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 1440, height: 900 })
+  const localFonts: string[] = []
+  page.on('response', (response) => {
+    if (/\.woff2(?:\?|$)/i.test(response.url())) localFonts.push(response.url())
+  })
   await page.goto('/artemis-ii?t=2026-04-06T23%3A00%3A00.000Z&view=3d', { waitUntil: 'domcontentloaded' })
 
   const replay = page.getByRole('slider', { name: 'Mission elapsed time' })
@@ -282,6 +286,7 @@ test('3D replay follows the shared mission epoch and keeps Earth focus available
   await expect(page.locator('[data-p]')).toHaveText('TRANS-EARTH')
   const canvas = page.locator('canvas')
   await expect(canvas).toBeVisible()
+  await page.evaluate(async () => { await document.fonts.ready })
   const canvasBox = await canvas.boundingBox()
   expect(canvasBox).not.toBeNull()
   if (!canvasBox) throw new Error('The WebGL canvas has no rendered bounds.')
@@ -296,6 +301,22 @@ test('3D replay follows the shared mission epoch and keeps Earth focus available
     expect(labelBox.x + labelBox.width).toBeLessThanOrEqual(canvasBox.x + canvasBox.width)
     expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(canvasBox.y + canvasBox.height)
   }
+  const loadedFontFamilies = await page.evaluate(() => [...new Set([...document.fonts].filter((font) => font.status === 'loaded').map((font) => font.family))])
+  expect(loadedFontFamilies).toContain('Orbitron Variable')
+  expect(loadedFontFamilies).toContain('Space Grotesk Variable')
+  expect(loadedFontFamilies).toContain('Space Mono')
+  const fontAssignments = await page.evaluate(() => ({
+    body: getComputedStyle(document.body).fontFamily,
+    display: getComputedStyle(document.querySelector('.font-display')!).fontFamily,
+    telemetry: getComputedStyle(document.querySelector('.font-mono')!).fontFamily,
+    sceneLabel: getComputedStyle(document.querySelector('[data-scene-label="earth"]')!).fontFamily,
+  }))
+  expect(fontAssignments.body).toContain('Arial')
+  expect(fontAssignments.display).toContain('Space Grotesk Variable')
+  expect(fontAssignments.telemetry).toContain('Space Mono')
+  expect(fontAssignments.sceneLabel).toContain('Orbitron Variable')
+  expect(localFonts.length).toBeGreaterThanOrEqual(3)
+  expect(localFonts.every((url) => new URL(url).origin === new URL(page.url()).origin)).toBe(true)
 
   await replay.focus()
   await page.keyboard.press('Home')
@@ -394,6 +415,9 @@ test('a completed mission pack opens a deep route after a cold offline navigatio
   expect(pack?.schemaVersion).toBe(2)
   expect(pack?.appVersion).toBeTruthy()
   expect(pack?.resources.length).toBeGreaterThan(5)
+  for (const family of ['orbitron', 'space-grotesk', 'space-mono']) {
+    expect(pack?.resources.some((resource) => resource.toLowerCase().includes(family) && /\.(?:woff2?|ttf|otf)$/.test(resource))).toBe(true)
+  }
   for (const resource of pack?.resources || []) expect(pack?.checksums[resource]).toMatch(/^[a-f0-9]{64}$/)
   const offlineControls = page.getByRole('region', { name: /download this mission for offline use/i })
   await page.evaluate(() => {
