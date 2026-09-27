@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-26T21:38:29.003Z",
+  "records": [
+    {
+      "missionId": "artemis-i",
+      "NASA": {
+        "page": "https://www.nasa.gov/missions/artemis/orion/track-nasas-artemis-i-mission-in-real-time/",
+        "archive": "nasa-artemis-i-ephemeris.zip",
+        "archiveSha256": "00068a4b5e5aebc8fe64b7f0393e08cd21df320de64ac067096182a53bcd05a8",
+        "entry": "Post_TLI_Orion_AsFlown_20221213_EPH_OEM.asc",
+        "entrySha256": "0b89d464d9d26acd1d295c65e3aa591a8ba5758de74187fd11f486b0534a27f6",
+        "header": {
+          "CCSDS_OEM_VERS": "2.0",
+          "CREATION_DATE": "2022-12-13T07:03:33",
+          "ORIGINATOR": "NASA/JSC/FOD/FDO",
+          "OBJECT_NAME": "EM1",
+          "OBJECT_ID": "23",
+          "CENTER_NAME": "EARTH",
+          "REF_FRAME": "EME2000",
+          "TIME_SYSTEM": "UTC",
+          "START_TIME": "2022-11-16T08:44:51.150",
+          "USEABLE_START_TIME": "2022-11-16T08:44:51.150",
+          "USEABLE_STOP_TIME": "2022-12-11T17:19:52.617",
+          "STOP_TIME": "2022-12-11T17:20:44.316"
+        }
+      },
+      "JPLHorizonsMoon": {
+        "url": "https://ssd-api.jpl.nasa.gov/doc/horizons.html",
+        "retrievedAt": "2026-09-26T21:38:28.425Z",
+        "rawResponse": "artemis-i-moon-horizons.json",
+        "rawResponseSha256": "67b96f2ffa118dc4ad6fd281d8fccf9c93e92dfe839b352bd026a5f7b682c846",
+        "request": {
+          "format": "json",
+          "COMMAND": "'301'",
+          "EPHEM_TYPE": "'VECTORS'",
+          "CENTER": "'500@399'",
+          "START_TIME": "'2022-11-16T08:44:51.150'",
+          "STOP_TIME": "'2022-12-11T17:19:52.617'",
+          "STEP_SIZE": "'4 min'",
+          "OUT_UNITS": "'KM-S'",
+          "VEC_TABLE": "'2'",
+          "REF_PLANE": "'FRAME'",
+          "REF_SYSTEM": "'J2000'",
+          "TIME_TYPE": "'UT'",
+          "CSV_FORMAT": "'YES'"
+        }
+      }
+    },
+    {
+      "missionId": "artemis-ii",
+      "NASA": {
+        "page": "https://www.nasa.gov/missions/artemis/artemis-2/track-nasas-artemis-ii-mission-in-real-time/",
+        "archive": "nasa-artemis-ii-ephemerides.zip",
+        "archiveSha256": "93da0cbebea35a40d233cfb48f24abbf096c0e5c3dda4fd07b36293e964497f1",
+        "entry": "Artemis_II_OEM_2026_04_10_Post-ICPS-Sep-to-EI.zip/Artemis_II_OEM_2026_04_10_Post-ICPS-Sep-to-EI.asc",
+        "entrySha256": "9def718e2aefe3205e0ff4e2546db0e06763c07a8fcccad8dc01929b9d9c5859",
+        "header": {
+          "CCSDS_OEM_VERS": "2.0",
+          "CREATION_DATE": "2026-04-10T03:22:19",
+          "ORIGINATOR": "NASA/JSC/FOD/FDO",
+          "OBJECT_NAME": "EM2",
+          "OBJECT_ID": "24",
+          "CENTER_NAME": "EARTH",
+          "REF_FRAME": "EME2000",
+          "TIME_SYSTEM": "UTC",
+          "START_TIME": "2026-04-02T01:57:37.084",
+          "USEABLE_START_TIME": "2026-04-02T01:57:37.084",
+          "USEABLE_STOP_TIME": "2026-04-10T23:53:16.723",
+          "STOP_TIME": "2026-04-10T23:53:16.723"
+        }
+      },
+      "JPLHorizonsMoon": {
+        "url": "https://ssd-api.jpl.nasa.gov/doc/horizons.html",
+        "retrievedAt": "2026-09-26T21:38:28.995Z",
+        "rawResponse": "artemis-ii-moon-horizons.json",
+        "rawResponseSha256": "0031c789bb9eea5b25752e21c269d9b9ccbd7d58db9d75f3188dc243a74960fa",
+        "request": {
+          "format": "json",
+          "COMMAND": "'301'",
+          "EPHEM_TYPE": "'VECTORS'",
+          "CENTER": "'500@399'",
+          "START_TIME": "'2026-04-02T01:57:37.084'",
+          "STOP_TIME": "'2026-04-10T23:53:16.723'",
+          "STEP_SIZE": "'4 min'",
+          "OUT_UNITS": "'KM-S'",
+          "VEC_TABLE": "'2'",
+          "REF_PLANE": "'FRAME'",
+          "REF_SYSTEM": "'J2000'",
+          "TIME_TYPE": "'UT'",
+          "CSV_FORMAT": "'YES'"
+        }
+      }
+    }
+  ]
+}

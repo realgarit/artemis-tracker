@@ -1,10 +1,21 @@
 import type { MissionData } from '../lib/types'
+import { SOURCE_URLS } from '../lib/provenance'
+
+export type MissionLifecycle = 'completed' | 'planned' | 'cancelled'
 
 export interface MissionConfig {
   id: string
   name: string
   spacecraft: string
-  horizonsId: string
+  horizonsId?: string
+  trajectoryDatasetId?: string
+  status: MissionLifecycle
+  objective: string
+  sourceUrl: string
+  sourcePublishedAt?: string | null
+  launchWindow?: string
+  calendarSequence: number
+  verifiedAt: string
   launchDate: string
   splashdownDate: string
   totalDays: number
@@ -17,7 +28,13 @@ export const ARTEMIS_I: MissionConfig = {
   id: 'artemis-i',
   name: 'Artemis I',
   spacecraft: 'Orion (uncrewed)',
-  horizonsId: '-1024',
+  horizonsId: undefined,
+  status: 'completed',
+  trajectoryDatasetId: 'artemis-i',
+  objective: 'Demonstrate Orion and the SLS rocket on an uncrewed lunar mission.',
+  sourceUrl: SOURCE_URLS.nasaArtemisI,
+  verifiedAt: '2026-09-27',
+  calendarSequence: 0,
   launchDate: '2022-11-16T06:47:44Z',
   splashdownDate: '2022-12-11T17:40:00Z',
   totalDays: 26,
@@ -49,10 +66,15 @@ export const ARTEMIS_II: MissionConfig = {
   id: 'artemis-ii',
   name: 'Artemis II',
   spacecraft: 'Orion (Integrity)',
-  horizonsId: '-1024',
+  trajectoryDatasetId: 'artemis-ii',
+  status: 'completed',
+  objective: 'Test crewed Orion and SLS systems on a lunar flyby.',
+  sourceUrl: 'https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth/',
+  verifiedAt: '2026-09-27',
+  calendarSequence: 0,
   launchDate: '2026-04-01T22:35:12Z',
-  splashdownDate: '2026-04-11T00:21:00Z',
-  totalDays: 10,
+  splashdownDate: '2026-04-11T00:07:00Z',
+  totalDays: 9.064,
   crew: [
     { name: 'Reid Wiseman', role: 'Commander', agency: 'NASA' },
     { name: 'Victor Glover', role: 'Pilot', agency: 'NASA' },
@@ -62,46 +84,68 @@ export const ARTEMIS_II: MissionConfig = {
   phases: [
     { name: 'Pre-Launch', startTime: '2026-04-01T00:00:00Z', endTime: '2026-04-01T22:35:12Z' },
     { name: 'LEO', startTime: '2026-04-01T22:35:12Z', endTime: '2026-04-01T23:25:00Z' },
-    { name: 'High Earth Orbit', startTime: '2026-04-01T23:25:00Z', endTime: '2026-04-03T00:06:00Z' },
-    { name: 'Trans-Lunar', startTime: '2026-04-03T00:06:00Z', endTime: '2026-04-06T23:58:00Z' },
-    { name: 'Trans-Earth', startTime: '2026-04-06T23:58:00Z', endTime: '2026-04-10T23:48:00Z' },
-    { name: 'EDL', startTime: '2026-04-10T23:48:00Z', endTime: '2026-04-11T00:21:00Z' },
-    { name: 'Recovery', startTime: '2026-04-11T00:21:00Z', endTime: '2026-04-11T06:00:00Z' },
+    { name: 'High Earth Orbit', startTime: '2026-04-01T23:25:12Z', endTime: '2026-04-02T23:49:00Z' },
+    { name: 'Trans-Lunar', startTime: '2026-04-02T23:49:00Z', endTime: '2026-04-06T23:00:00Z' },
+    { name: 'Trans-Earth', startTime: '2026-04-06T23:00:00Z', endTime: '2026-04-10T23:33:00Z' },
+    { name: 'EDL', startTime: '2026-04-10T23:33:00Z', endTime: '2026-04-11T00:07:00Z' },
+    { name: 'Recovery', startTime: '2026-04-11T00:07:00Z', endTime: '2026-04-11T06:00:00Z' },
   ],
   milestones: [
     { name: 'Launch', time: '2026-04-01T22:35:12Z' },
-    { name: 'Perigee Raise', time: '2026-04-01T23:25:00Z' },
-    { name: 'TLI Burn', time: '2026-04-03T00:06:00Z' },
-    { name: 'OTC-1', time: '2026-04-03T22:42:00Z' },
-    { name: 'OTC-2', time: '2026-04-04T22:47:00Z' },
-    { name: 'Lunar SOI Entry', time: '2026-04-06T05:34:00Z' },
-    { name: 'Lunar Close Approach', time: '2026-04-06T23:58:00Z' },
-    { name: 'Lunar SOI Exit', time: '2026-04-07T18:22:00Z' },
-    { name: 'RTC-1', time: '2026-04-08T02:58:00Z' },
-    { name: 'CM/SM Separation', time: '2026-04-10T23:48:00Z' },
-    { name: 'Entry Interface', time: '2026-04-11T00:08:00Z' },
-    { name: 'Splashdown', time: '2026-04-11T00:21:00Z' },
+    { name: 'Perigee Raise', time: '2026-04-01T23:25:12Z' },
+    { name: 'TLI Burn', time: '2026-04-02T23:49:00Z' },
+    { name: 'Lunar Close Approach', time: '2026-04-06T23:00:00Z' },
+    { name: 'Maximum Distance Record', time: '2026-04-06T23:02:00Z' },
+    { name: 'Lunar SOI Exit', time: '2026-04-07T17:23:00Z' },
+    { name: 'Crew Module Separation', time: '2026-04-10T23:33:00Z' },
+    { name: 'Entry Interface', time: '2026-04-10T23:53:00Z' },
+    { name: 'Splashdown', time: '2026-04-11T00:07:00Z' },
+    { name: 'Crew Recovery', time: '2026-04-11T01:34:00Z' },
   ],
+}
+
+export const ARTEMIS_III: MissionConfig = {
+  id: 'artemis-iii', name: 'Artemis III', spacecraft: 'Orion', status: 'planned',
+  launchDate: '', splashdownDate: '', totalDays: 0,
+  crew: [
+    { name: 'Randy Bresnik', role: 'Commander', agency: 'NASA' },
+    { name: 'Luca Parmitano', role: 'Pilot', agency: 'ESA' },
+    { name: 'Andre Douglas', role: 'Mission Specialist', agency: 'NASA' },
+    { name: 'Frank Rubio', role: 'Mission Specialist', agency: 'NASA' },
+  ], phases: [], milestones: [],
+  objective: 'Demonstrate Orion and commercial lunar lander rendezvous and docking systems in low Earth orbit.',
+  sourceUrl: 'https://www.nasa.gov/news-release/nasa-marches-toward-artemis-iii-mission-in-2027-names-crew-members/', launchWindow: '2027', verifiedAt: '2026-09-27', calendarSequence: 0,
+  sourcePublishedAt: '2026-06-09',
+}
+
+export const ARTEMIS_IV: MissionConfig = {
+  id: 'artemis-iv', name: 'Artemis IV', spacecraft: 'Orion', status: 'planned',
+  launchDate: '', splashdownDate: '', totalDays: 0, crew: [], phases: [], milestones: [],
+  objective: 'NASA targets an early 2028 crewed lunar surface landing near the lunar South Pole.',
+  sourceUrl: SOURCE_URLS.nasaArtemisIV, sourcePublishedAt: null, launchWindow: 'Early 2028', verifiedAt: '2026-09-27', calendarSequence: 0,
 }
 
 export const MISSIONS: Record<string, MissionConfig> = {
   'artemis-i': ARTEMIS_I,
   'artemis-ii': ARTEMIS_II,
+  'artemis-iii': ARTEMIS_III,
+  'artemis-iv': ARTEMIS_IV,
 }
 
-export function getMission(missionId: string): MissionConfig {
-  return MISSIONS[missionId] || ARTEMIS_II
+export function getMission(missionId: string): MissionConfig | null {
+  return MISSIONS[missionId] || null
 }
 
 export function getMissionStatus(config: MissionConfig, now = new Date()): MissionData {
+  if (config.status !== 'completed' || !config.launchDate || !config.splashdownDate) {
+    throw new Error(`${config.name} has no flown-mission timeline yet`)
+  }
   const launch = new Date(config.launchDate)
   const splashdown = new Date(config.splashdownDate)
   const elapsed = now.getTime() - launch.getTime()
   const total = splashdown.getTime() - launch.getTime()
   const isComplete = now >= splashdown
-  const missionDay = isComplete
-    ? config.totalDays
-    : Math.max(0, Math.round((elapsed / 86400000) * 10) / 10)
+  const missionDay = Math.min(config.totalDays, Math.max(0, Math.round((elapsed / 86400000) * 10) / 10))
   const progress = isComplete ? 100 : Math.min(100, Math.max(0, (elapsed / total) * 100))
 
   let currentPhase = config.phases[0].name
@@ -119,7 +163,7 @@ export function getMissionStatus(config: MissionConfig, now = new Date()): Missi
 
   if (isComplete) currentPhase = config.phases[config.phases.length - 1].name
 
-  let nextMilestone = config.milestones[config.milestones.length - 1]
+  let nextMilestone = { name: 'Mission complete', time: config.splashdownDate }
   for (const milestone of config.milestones) {
     if (new Date(milestone.time) > now) {
       nextMilestone = milestone
@@ -129,6 +173,8 @@ export function getMissionStatus(config: MissionConfig, now = new Date()): Missi
 
   return {
     name: config.name,
+    sourceUrl: config.sourceUrl,
+    verifiedAt: config.verifiedAt,
     launchDate: config.launchDate,
     currentPhase,
     missionDay,

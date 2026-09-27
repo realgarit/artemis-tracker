@@ -34,6 +34,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Preserve last published data snapshots
+        shell: bash
+        env:
+          ARTEMIS_SNAPSHOT_BASE_URL: https://artemis.realgar.ch/data
+        run: |
+          for snapshot in spaceweather.json dsn.json trajectory-artemis-ii.json status.json; do
+            temporary="public/data/.${snapshot}.tmp"
+            if curl --fail --silent --show-error --location --max-time 12 --max-filesize 1048576 "${ARTEMIS_SNAPSHOT_BASE_URL}/${snapshot}" --output "${temporary}"; then
+              mv "${temporary}" "public/data/${snapshot}"
+            else
+              rm -f "${temporary}"
+              echo "No previous published ${snapshot}; the generator will use a validated seed or unavailable state."
+            fi
+          done
+
+      - name: Validate mission catalog
+        run: npm run validate:catalog
+
+      - name: Regenerate pinned flight ephemeris datasets
+        run: npm run prepare:ephemeris
+
       - name: Refresh public data snapshots
         run: npm run generate-data
 
@@ -64,3 +85,8 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Verify deployed routes and public data
+        env:
+          DEPLOYMENT_URL: ${{ steps.deployment.outputs.page_url }}
+        run: node scripts/verify-live-site.mjs

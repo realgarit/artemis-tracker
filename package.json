@@ -9,7 +9,15 @@
     "build": "vite build",
     "preview": "vite preview",
     "generate-data": "tsx scripts/generate-data.ts",
-    "test": "node --import tsx --test"
+    "generate:calendar": "tsx scripts/generate-calendar.ts",
+    "prepare:ephemeris": "tsx scripts/prepare-ephemeris.ts",
+    "validate:catalog": "tsx scripts/validate-catalog.ts",
+    "validate:media": "tsx scripts/validate-media.ts",
+    "test": "node --import tsx --test",
+    "test:e2e": "playwright test",
+    "pretest:e2e": "npm run build",
+    "check": "npm run validate:catalog && npm run validate:media && npm run prepare:ephemeris && npm run generate:calendar && npm audit --audit-level=high && npx tsc --noEmit && npm test && npm run test:e2e",
+    "fetch:ephemeris": "tsx scripts/fetch-ephemeris-sources.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -29,15 +37,23 @@
     "wouter": "^3.9.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.1.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^4.4.0",
+    "fake-indexeddb": "^6.2.5",
+    "fflate": "^0.8.3",
+    "ical.js": "^2.2.1",
     "tailwindcss": "^4.1.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vite": "^6.2.0"
+  },
+  "overrides": {
+    "qs": "^6.16.0"
   }
 }

@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert'
 import test from 'node:test'
-import { computeTrajectoryPoints, parseHorizonsVectors } from '../horizons'
+import { computeTrajectoryPoints, parseHorizonsVectors, vectorAtTime } from '../horizons'
 
 const horizonsResult = `
  $$SOE
@@ -30,15 +30,26 @@ test('Horizons parser ignores malformed responses', () => {
   assert.deepEqual(parseHorizonsVectors('$$SOE\ninvalid\n$$EOE'), [])
 })
 
-test('trajectory points calculate distances, velocity, acceleration, and coordinates', () => {
+test('trajectory points do not invent Moon distances or geographic coordinates', () => {
   const points = computeTrajectoryPoints(parseHorizonsVectors(horizonsResult), [])
 
   assert.equal(points.length, 2)
   assert.equal(points[0].distanceFromEarth, 3741.66)
-  assert.equal(points[0].distanceFromMoon, 384400)
+  assert.equal(points[0].distanceFromMoon, null)
   assert.equal(points[0].velocity, 3)
   assert.equal(points[0].commsDelay, 0.01)
   assert.equal(points[1].acceleration, -0.0002)
-  assert.ok(points[1].latitude > 50 && points[1].latitude < 55)
-  assert.ok(points[1].longitude > 110 && points[1].longitude < 120)
+  assert.equal(points[1].latitude, null)
+  assert.equal(points[1].longitude, null)
+})
+
+test('spacecraft and Moon states interpolate by epoch, not array index, and reject gaps', () => {
+  const base = Date.parse('2026-04-10T00:00:00Z')
+  const first = { timestamp: new Date(base).toISOString(), x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 }
+  const last = { timestamp: new Date(base + 60_000).toISOString(), x: 60, y: 120, z: 180, vx: 6, vy: 12, vz: 18 }
+  const result = vectorAtTime([last, first], base + 30_000)
+  assert.equal(result?.x, 30)
+  assert.equal(result?.y, 60)
+  assert.equal(vectorAtTime([first], base - 1), null)
+  assert.equal(vectorAtTime([first, { ...last, timestamp: new Date(base + 3_600_000).toISOString() }], base + 1_800_000), null)
 })

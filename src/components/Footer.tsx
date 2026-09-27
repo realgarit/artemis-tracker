@@ -1,4 +1,5 @@
 import type { TrajectoryData } from '../lib/types'
+import { DataSourceBadge } from './DataSourceBadge'
 
 const APP_VERSION = __APP_VERSION__
 
@@ -14,9 +15,7 @@ export function Footer({ trajectory }: FooterProps) {
           <div className="flex flex-wrap gap-x-5 gap-y-1">
             <span>
               Position & velocity:{' '}
-              <span className="text-slate-500">
-                {trajectory?.source || 'JPL Horizons (SPKID -1024 · Orion)'}
-              </span>
+              <DataSourceBadge provenance={trajectory?.provenance} />
             </span>
             <span>
               Space weather: <span className="text-slate-500">NOAA SWPC</span>

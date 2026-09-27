@@ -1,81 +1,64 @@
 # Artemis Mission Tracker
 
-3D mission dashboard for NASA’s Artemis lunar program, published at [artemis.realgar.ch](https://artemis.realgar.ch). It runs as a static Vite site on GitHub Pages and does not require Azure, a server, or an active hosting account.
+An offline-friendly mission companion for NASA's Artemis program, published at [artemis.realgar.ch](https://artemis.realgar.ch). It runs as a static Vite site on GitHub Pages and does not need Azure, a backend, an account, or an API key.
 
-## Features
+## What it does
 
-- **3D trajectory visualization** — Orion, Earth, Moon, and the mission flight path rendered with WebGL
-- **Multi-mission support** — Artemis I and Artemis II historical replay data
-- **JPL Horizons adapter** — browser-side ephemeris queries when a current vector is available, with a deterministic local replay fallback
-- **Mission timeline and crew** — mission phases, milestones, and Artemis II crew data are bundled in the frontend
-- **Space weather** — Kp, solar-wind, and IMF data from [NOAA SWPC](https://services.swpc.noaa.gov/products/summary/)
-- **Deep Space Network** — normalized dish status from [NASA DSN Now](https://eyes.nasa.gov/dsn/dsn.html)
-- **Graceful offline behavior** — same-origin Pages snapshots and local fallback data keep the dashboard renderable when upstream feeds are unavailable
+- Replays the NASA/JSC flight ephemerides for Artemis I and Artemis II with a Three.js view and a lightweight 2D/text view.
+- Synchronizes mission time across the map, metrics, event timeline, profile charts, shared links, and exports.
+- Explains cited mission events and scientific terms; filters official NASA media archives without implying archived material is live.
+- Compares both missions using an explicitly chosen UTC, time-since-launch, or shared-event alignment.
+- Shows current NOAA space-weather and NASA Deep Space Network readings as present-day Earth context, not historical mission telemetry.
+- Labels source, coordinate frame, time scale, observation time, cached age, and coverage gaps. Position is unavailable outside the source-vector interval; the app does not extrapolate.
+- Offers date-free calendar follow-ups for planned missions and user-managed offline packs, with the 3D model and textures as an optional download.
 
-## Data flow
+## Data and provenance
 
-The frontend adapters use this order:
+Orion position and velocity come from NASA/JSC flight ephemeris OEM files distributed on NASA’s [Artemis I tracker page](https://www.nasa.gov/missions/artemis/orion/track-nasas-artemis-i-mission-in-real-time/) and [Artemis II tracker page](https://www.nasa.gov/missions/artemis/artemis-2/track-nasas-artemis-ii-mission-in-real-time/). The corresponding source archives, source links, and SHA-256 checksums are in data/sources/. The derived bundle records spacecraft object IDs, the Earth-centered EME2000 frame, UTC time system, units, coverage, source archive hashes, and generation inputs. The combined validation fixture is data/generated/missionEphemerides.generated.json; the published UI loads one smaller flight file per mission from public/data/missionEphemerides-artemis-i.json or public/data/missionEphemerides-artemis-ii.json.
 
-1. Direct browser fetch from JPL Horizons, NOAA SWPC, or NASA DSN Now.
-2. Same-origin JSON snapshots in `public/data/` when direct access fails.
-3. Deterministic local mission, trajectory, weather, or empty-DSN fallback data.
+Moon positions are queried from the [JPL Horizons API](https://ssd-api.jpl.nasa.gov/doc/horizons.html) for the exact mission coverage and stored with the query parameters, retrieval time, and response checksum. The app interpolates the Moon state by epoch, never by array index, and marks values unavailable across gaps larger than 30 minutes. Geographic latitude and longitude are left unavailable because EME2000 is an inertial frame rather than an Earth-fixed frame. Displayed Earth altitude subtracts a documented 6,371 km reference radius from Earth-center distance.
 
-GitHub Pages runs `npm run generate-data` during every deployment and on a 15-minute schedule. The generator refreshes the snapshots without committing generated files or needing a second host. JPL Horizons normally has no current ephemeris after a mission has ended; that is expected, so completed missions use the bundled replay trajectory.
+The generated NASA/JPL dataset is checked against published NASA mission reference values. Charts and exports use the same source vectors as the map, with direct source epochs or interpolation within documented coverage. NASA source pages and ephemeris files are linked in the interface and retained as separate references.
 
-## Local development
+NOAA and DSN adapters fetch current public feeds in the browser. The Pages workflow first retrieves the last published, versioned snapshots, then refreshes them. If a provider fails, the previous validated observation is retained with its original timestamp and a preserved status. An unavailable fallback stays visibly unavailable; it is never presented as a quiet-weather reading, live trajectory, or current spacecraft position. Artemis I's bundled example weather values are illustrative only and are not used as historical mission observations.
 
-```bash
-npm install
-npm run dev
-```
+## Local development and verification
 
-This starts Vite at `http://localhost:5173`. No Azure Functions Core Tools, Azure account, API key, or local backend is required.
+Requirements: Node.js 20 or later and npm.
 
-To refresh the local snapshot files from the public feeds:
+    npm ci
+    npm run dev
 
-```bash
-npm run generate-data
-```
+Validate the data catalog, rebuild the ephemeris from pinned NASA/JPL sources, run unit tests, create a production build, and run Chromium browser and accessibility checks with:
 
-Run the parser tests with:
+    npm run check
 
-```bash
-npm test
-```
+Useful focused commands:
 
-## Tech stack
+    npm test
+    npm run test:e2e
+    npm run validate:catalog
+    npm run validate:media
+    npm run generate:calendar
+    npm run generate-data
+
+The command npm run fetch:ephemeris re-queries JPL lunar vectors for the pinned NASA OEM files and updates the retrieval manifest. Run npm run prepare:ephemeris afterward to deterministically regenerate the combined validation bundle and per-mission public data files from the pinned source archives and JPL responses. The command npm run generate-data refreshes NOAA and DSN snapshots; it needs network access and preserves the previous snapshot if no deployed snapshot is available.
+
+## Architecture
 
 | Layer | Technology |
-|-------|-----------|
+|---|---|
 | Frontend | React 19, TypeScript, Vite |
-| 3D engine | Three.js, React Three Fiber, Drei |
-| Styling | Tailwind CSS 4 |
+| 3D engine | Three.js, React Three Fiber, Drei, lazy-loaded on request |
 | Charts | Recharts |
-| Public data | JPL Horizons, NOAA SWPC, NASA DSN Now |
-| Hosting | GitHub Pages with the `artemis.realgar.ch` custom domain |
+| Flight data | NASA/JSC OEM ephemeris and JPL Horizons lunar vectors |
+| Current Earth context | NOAA SWPC and NASA DSN Now |
+| Hosting | GitHub Pages, artemis.realgar.ch, root CNAME |
 
-## Project structure
+src/data/missionData.ts is the mission catalog. src/data/trajectoryData.ts is the shared epoch-based sampling and profile layer. src/components/MissionStoryGuide.tsx and src/data/missionEvents.ts hold cited mission moments. src/lib/offline.ts and public/service-worker.js manage optional offline packs. scripts/generate-data.ts creates versioned feed snapshots; scripts/fetch-ephemeris-sources.ts and scripts/prepare-ephemeris.ts retrieve and validate the pinned flight-data inputs.
 
-```
-src/
-├── components/       # Dashboard, trajectory, charts, weather, and DSN panels
-├── data/
-│   ├── missionData.ts     # Browser-safe mission configuration and status
-│   ├── fallbackData.ts    # Stable offline weather and DSN values
-│   ├── trajectoryData.ts  # Multi-mission replay/visualization engine
-│   └── artemisIData.ts    # Artemis I ephemeris points
-├── lib/
-│   ├── horizons.ts        # JPL browser adapter and vector parser
-│   ├── spaceWeather.ts    # NOAA browser adapter and feed normalizer
-│   ├── dsn.ts             # NASA DSN XML adapter
-│   └── api.ts             # React Query hooks and fallback order
-└── App.tsx
-scripts/
-└── generate-data.ts   # Scheduled same-origin snapshot generator
-public/data/           # Seed snapshots copied into the Pages artifact
-api/                   # Legacy Azure Functions source; not used by Pages
-```
+The legacy api/ directory is not part of the published runtime. Do not add runtime /api/artemis/* requests or a server dependency to the Pages build. The deploy workflow preserves CNAME, copies dist/index.html to dist/404.html, refreshes validated snapshots, and verifies the deployed routes and public data.
 
 ## License
 
-MIT — except the Orion 3D model (`public/models/orion.glb`) which is GPL-3.0, created by [Mikius538](https://www.printables.com/model/1665038-esa-orion-capsule-arremis).
+The application is MIT. The Orion model at public/models/orion.glb is GPL-3.0 and is credited in its asset directory. Source photos, videos, and media remain on NASA pages with their original per-item credits.

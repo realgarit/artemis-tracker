@@ -1,17 +1,20 @@
 // === API Response Types ===
+import type { DataProvenance } from './provenance'
 
 export interface TrajectoryData {
-  distanceFromEarth: number
-  distanceFromMoon: number
-  velocity: number
-  acceleration: number
-  altitude: number
-  commsDelay: number
-  latitude: number
-  longitude: number
+  distanceFromEarth: number | null
+  distanceFromMoon: number | null
+  velocity: number | null
+  acceleration: number | null
+  altitude: number | null
+  commsDelay: number | null
+  latitude: number | null
+  longitude: number | null
   phase: string
   source: string
   timestamp: string
+  missionId?: string
+  provenance?: DataProvenance
 }
 
 export interface MissionPhase {
@@ -29,6 +32,8 @@ export interface CrewMember {
 
 export interface MissionData {
   name: string
+  sourceUrl: string
+  verifiedAt: string
   launchDate: string
   currentPhase: string
   missionDay: number
@@ -43,14 +48,16 @@ export interface MissionData {
 }
 
 export interface SpaceWeatherData {
-  kpIndex: number
+  kpIndex: number | null
   kpCategory: string
-  solarWindSpeed: number
-  solarWindDensity: number
-  imfBz: number
-  imfBt: number
+  solarWindSpeed: number | null
+  solarWindDensity: number | null
+  imfBz: number | null
+  imfBt: number | null
   source: string
   timestamp: string
+  fieldTimestamps?: Partial<Record<'kpIndex' | 'solarWindSpeed' | 'solarWindDensity' | 'imfBz' | 'imfBt', string | null>>
+  provenance?: DataProvenance
 }
 
 export interface HistoryPoint {
@@ -61,6 +68,7 @@ export interface HistoryPoint {
 export interface HistoryData {
   data: HistoryPoint[]
   source: string
+  provenance?: DataProvenance
 }
 
 // === DSN ===
@@ -83,4 +91,5 @@ export interface DSNData {
   dishes: DSNDish[]
   timestamp: string
   source: string
+  provenance?: DataProvenance
 }

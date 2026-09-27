@@ -1,4 +1,5 @@
 import type { SpaceWeatherData } from './types'
+import { createProvenance, hasValidProvenance, SOURCE_URLS } from './provenance'
 
 export const NOAA_ENDPOINTS = {
   kp: 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json',
@@ -15,12 +16,12 @@ export interface SpaceWeatherFeeds {
 }
 
 const ZERO_WEATHER: SpaceWeatherData = {
-  kpIndex: 0,
-  kpCategory: 'Quiet',
-  solarWindSpeed: 0,
-  solarWindDensity: 0,
-  imfBz: 0,
-  imfBt: 0,
+  kpIndex: null,
+  kpCategory: 'Unavailable',
+  solarWindSpeed: null,
+  solarWindDensity: null,
+  imfBz: null,
+  imfBt: null,
   source: 'NOAA SWPC',
   timestamp: '',
 }
@@ -132,21 +133,39 @@ export function parseSpaceWeatherFeeds(feeds: SpaceWeatherFeeds, fallback: Space
   const density = latestValue(feeds.wind, ['proton_density', 'density'], 1)
   const bt = latestValue(feeds.mag, ['bt', 'imf_bt', 'total_field'], 6)
   const bz = latestValue(feeds.mag, ['bz_gsm', 'bz_gse', 'bz', 'imf_bz'], 3)
-  const timestamps = [kp?.timestamp, speed?.timestamp, windSpeed?.timestamp, density?.timestamp, bt?.timestamp, bz?.timestamp]
+  const fieldTimestamps = {
+    kpIndex: kp?.timestamp || null,
+    solarWindSpeed: (windSpeed || speed)?.timestamp || null,
+    solarWindDensity: density?.timestamp || null,
+    imfBz: bz?.timestamp || null,
+    imfBt: bt?.timestamp || null,
+  }
+  const timestamps = Object.values(fieldTimestamps)
     .filter((value): value is string => Boolean(value))
     .sort()
-  const timestamp = timestamps[timestamps.length - 1] || fallback.timestamp
+  const timestamp = timestamps[0] || fallback.timestamp
 
   const kpIndex = kp?.value ?? fallback.kpIndex
+  const anyCurrentValue = Boolean(kp || speed || windSpeed || density || bt || bz)
   return {
-    kpIndex: Math.round(kpIndex * 100) / 100,
-    kpCategory: getKpCategory(kpIndex),
-    solarWindSpeed: Math.round((windSpeed?.value ?? speed?.value ?? fallback.solarWindSpeed) * 10) / 10,
-    solarWindDensity: Math.round((density?.value ?? fallback.solarWindDensity) * 10) / 10,
-    imfBz: Math.round((bz?.value ?? fallback.imfBz) * 10) / 10,
-    imfBt: Math.round((bt?.value ?? fallback.imfBt) * 10) / 10,
+    kpIndex: kpIndex === null ? null : Math.round(kpIndex * 100) / 100,
+    kpCategory: kpIndex === null ? 'Unavailable' : getKpCategory(kpIndex),
+    solarWindSpeed: (windSpeed?.value ?? speed?.value ?? fallback.solarWindSpeed) === null ? null : Math.round((windSpeed?.value ?? speed?.value ?? fallback.solarWindSpeed)! * 10) / 10,
+    solarWindDensity: density?.value === null || density?.value === undefined ? fallback.solarWindDensity : Math.round(density.value * 10) / 10,
+    imfBz: bz?.value === null || bz?.value === undefined ? fallback.imfBz : Math.round(bz.value * 10) / 10,
+    imfBt: bt?.value === null || bt?.value === undefined ? fallback.imfBt : Math.round(bt.value * 10) / 10,
     source: fallback.source || 'NOAA SWPC',
     timestamp,
+    fieldTimestamps,
+    provenance: anyCurrentValue
+      ? createProvenance('observed', 'NOAA SWPC', 'Current Earth space-weather feeds; not mission telemetry', {
+        url: SOURCE_URLS.noaa,
+        observedAt: timestamp || undefined,
+        maxAgeSeconds: 4 * 60 * 60,
+      })
+      : hasValidProvenance(fallback.provenance)
+        ? fallback.provenance
+        : createProvenance('unavailable', 'NOAA SWPC', 'No valid observations are available', { url: SOURCE_URLS.noaa }),
   }
 }
 
@@ -170,7 +189,7 @@ export async function fetchSpaceWeather(fallback?: SpaceWeatherData): Promise<Sp
   const entries = await Promise.allSettled(Object.values(NOAA_ENDPOINTS).map(fetchFeed))
   const [kp, speed, wind, mag] = entries.map((entry) => entry.status === 'fulfilled' ? entry.value : [])
   const result = parseSpaceWeatherFeeds({ kp, speed, wind, mag }, fallback)
-  const hasFeedValue = [latestKp(kp), latestValue(speed, ['proton_speed', 'speed'], 2), latestValue(wind, ['proton_speed', 'speed'], 2), latestValue(mag, ['bt', 'imf_bt', 'total_field'], 6)].some(Boolean)
+  const hasFeedValue = [latestKp(kp), latestValue(speed, ['proton_speed', 'speed'], 2), latestValue(wind, ['proton_speed', 'speed'], 2), latestValue(wind, ['proton_density', 'density'], 1), latestValue(mag, ['bt', 'imf_bt', 'total_field'], 6), latestValue(mag, ['bz_gsm', 'bz_gse', 'bz', 'imf_bz'], 3)].some(Boolean)
   if (!hasFeedValue && !fallback) throw new Error('NOAA feeds did not contain usable data')
   return result
 }

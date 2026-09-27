@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
 import { useLocation, useParams } from 'wouter'
+import { SOURCE_URLS } from '../lib/provenance'
 
 const CREW = [
   {
@@ -79,7 +80,7 @@ export function CrewPage() {
             <motion.div
               key={member.name}
               className="glass-panel border-glow p-6 flex flex-col sm:flex-row gap-6"
-              initial={{ opacity: 0, y: 20 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1, duration: 0.4 }}
             >
@@ -134,6 +135,7 @@ export function CrewPage() {
             </motion.div>
           ))}
         </div>
+        <a href={SOURCE_URLS.nasaArtemisII} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-11 items-center text-sm text-cyan-glow underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">NASA crew and mission source</a>
       </div>
     </div>
   )
