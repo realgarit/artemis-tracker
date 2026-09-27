@@ -19,6 +19,19 @@ export interface PackProgress { loaded: number; total: number; resource: string 
 
 const verifiedPacks = new Map<string, OfflinePackManifest | null>()
 
+export function explainOfflinePackFailure(error: unknown): string {
+  const name = error instanceof Error ? error.name : ''
+  const message = error instanceof Error ? error.message : ''
+  if (name === 'QuotaExceededError' || /quota exceeded|storage quota|storage is full/i.test(message)) {
+    return 'Browser storage is full. Remove another offline pack, clear this site’s stored data, or retry without optional 3D files. Any previous complete pack is kept.'
+  }
+  if (name === 'SecurityError' || name === 'NotAllowedError') {
+    return 'This browser profile blocks service workers or local storage, which can happen in private browsing. Use a normal browsing window with site storage enabled; the online tracker still works.'
+  }
+  if (message) return `${message} Check the connection and available site storage, or retry without optional 3D files. Any previous complete pack is kept.`
+  return 'The offline pack could not be created. Check the connection and available site storage, or retry without optional 3D files. Any previous complete pack is kept.'
+}
+
 export async function sha256Hex(bytes: BufferSource): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', bytes)
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')

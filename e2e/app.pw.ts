@@ -322,6 +322,37 @@ test('a completed mission pack opens a deep route after a cold offline navigatio
   await expect(reopened.getByRole('status').filter({ hasText: /Offline mode · verified mission pack/i })).toBeVisible()
 })
 
+test('offline pack quota errors explain how to recover storage', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { register: async () => ({}) } })
+    Object.defineProperty(window, 'caches', { configurable: true, value: {
+      keys: async () => [],
+      open: async () => { throw new DOMException('quota reached', 'QuotaExceededError') },
+      delete: async () => true,
+    } })
+  })
+  await page.goto('/artemis-ii?view=2d', { waitUntil: 'domcontentloaded' })
+  const offlinePanel = page.getByRole('region', { name: /download this mission for offline use/i })
+  await offlinePanel.getByRole('button', { name: /download offline pack/i }).click()
+  await expect(offlinePanel.getByRole('status')).toContainText(/browser storage is full/i)
+  await expect(offlinePanel.getByRole('status')).toContainText(/remove another offline pack/i)
+  await expect(offlinePanel.getByRole('status')).toContainText(/previous complete pack is kept/i)
+})
+
+test('offline pack private-profile errors explain a normal-browser recovery path', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: {
+      register: async () => { throw new DOMException('storage denied', 'SecurityError') },
+    } })
+  })
+  await page.goto('/artemis-ii?view=2d', { waitUntil: 'domcontentloaded' })
+  const offlinePanel = page.getByRole('region', { name: /download this mission for offline use/i })
+  await offlinePanel.getByRole('button', { name: /download offline pack/i }).click()
+  await expect(offlinePanel.getByRole('status')).toContainText(/private browsing/i)
+  await expect(offlinePanel.getByRole('status')).toContainText(/normal browsing window/i)
+  await expect(offlinePanel.getByRole('status')).toContainText(/online tracker still works/i)
+})
+
 test('three cold mobile replay runs have median LCP under 2.5 seconds on a fixed throttled profile', async ({ browser }) => {
   test.setTimeout(90_000)
   const runs: { lcp: number; cls: number; element: string }[] = []

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Download, HardDrive, Trash2 } from 'lucide-react'
 import type { MissionConfig } from '../data/missionData'
-import { downloadMissionPack, estimateMissionPackBytes, getOfflinePack, hasOfflinePackData, removeOfflinePack, type OfflinePackManifest } from '../lib/offline'
+import { downloadMissionPack, estimateMissionPackBytes, explainOfflinePackFailure, getOfflinePack, hasOfflinePackData, removeOfflinePack, type OfflinePackManifest } from '../lib/offline'
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.ceil(bytes / 1024)} KB`
@@ -56,7 +56,7 @@ export function OfflinePackPanel({ mission, onPackChange }: { mission: MissionCo
       onPackChange?.(result)
       setStatus(`Offline pack ready: ${formatBytes(result.bytes)} across ${result.resources.length} resources.`)
       void navigator.storage?.estimate?.().then((value) => setStorage(value.quota ? `${formatBytes(value.usage || 0)} used of about ${formatBytes(value.quota)}` : 'Storage quota is not reported by this browser.'))
-    } catch (error) { setStatus(error instanceof Error ? error.message : 'The pack could not be downloaded; the previous complete pack is kept if one exists.') }
+    } catch (error) { setStatus(explainOfflinePackFailure(error)) }
     finally { setBusy(false) }
   }
 
