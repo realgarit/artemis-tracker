@@ -8,6 +8,16 @@ export interface MissionEvent {
   explanation: string
   whyItMatters: string
   sourceUrl: string
+  correctionHistory?: MissionEventCorrection[]
+}
+
+export interface MissionEventCorrection {
+  correctedAt: string
+  field: string
+  previousValue: string
+  correctedValue: string
+  reason: string
+  sourceUrl: string
 }
 
 const ARTEMIS_I = 'https://www.nasa.gov/reference/artemis-i-mission-timeline/'
@@ -47,3 +57,19 @@ export const GLOSSARY: { term: string; explanation: string; sourceUrl?: string }
   { term: 'Sphere of influence', explanation: 'A convenient region where one body’s gravitational influence is used as the main frame for describing a trajectory.' },
   { term: 'Line of sight', explanation: 'An unobstructed geometric path between a spacecraft and a ground antenna.' },
 ]
+
+export function validateMissionEvents(events: MissionEvent[] = MISSION_EVENTS): string[] {
+  const issues: string[] = []
+  const ids = new Set<string>()
+  for (const event of events) {
+    if (ids.has(event.id)) issues.push(`${event.id}: duplicate event ID`)
+    ids.add(event.id)
+    if (!/^https:\/\//.test(event.sourceUrl) || !Number.isFinite(Date.parse(event.occurredAt))) issues.push(`${event.id}: invalid source metadata`)
+    for (const correction of event.correctionHistory || []) {
+      if (!Number.isFinite(Date.parse(correction.correctedAt)) || !correction.field.trim() || !correction.previousValue.trim() || !correction.correctedValue.trim() || !correction.reason.trim() || !/^https:\/\//.test(correction.sourceUrl)) {
+        issues.push(`${event.id}: correction history needs a date, field, previous and corrected values, reason, and source URL`)
+      }
+    }
+  }
+  return issues
+}
