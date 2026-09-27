@@ -270,6 +270,50 @@ test('WebGL-unavailable browser defaults to the fully usable lightweight view', 
   expect(webglChunks).toEqual([])
 })
 
+test('3D replay follows the shared mission epoch and keeps Earth focus available outside source coverage', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/artemis-ii?t=2026-04-06T23%3A00%3A00.000Z&view=3d', { waitUntil: 'domcontentloaded' })
+
+  const replay = page.getByRole('slider', { name: 'Mission elapsed time' })
+  await expect(replay).toHaveAttribute('aria-valuetext', '5.017 days after launch')
+  await expect(page.locator('[data-de]')).toHaveText('413,142 km')
+  await expect(page.locator('[data-dm]')).toHaveText('8,282 km')
+  await expect(page.locator('[data-p]')).toHaveText('TRANS-EARTH')
+  const canvas = page.locator('canvas')
+  await expect(canvas).toBeVisible()
+  const canvasBox = await canvas.boundingBox()
+  expect(canvasBox).not.toBeNull()
+  if (!canvasBox) throw new Error('The WebGL canvas has no rendered bounds.')
+  for (const body of ['earth', 'moon', 'orion']) {
+    const label = page.locator(`[data-scene-label="${body}"]`)
+    await expect(label).toBeVisible()
+    const labelBox = await label.boundingBox()
+    expect(labelBox, `${body} must be placed inside the scaled Three.js scene`).not.toBeNull()
+    if (!labelBox) throw new Error(`The ${body} scene label has no rendered bounds.`)
+    expect(labelBox.x).toBeGreaterThanOrEqual(canvasBox.x)
+    expect(labelBox.y).toBeGreaterThanOrEqual(canvasBox.y)
+    expect(labelBox.x + labelBox.width).toBeLessThanOrEqual(canvasBox.x + canvasBox.width)
+    expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(canvasBox.y + canvasBox.height)
+  }
+
+  await replay.focus()
+  await page.keyboard.press('Home')
+  await expect(replay).toHaveAttribute('aria-valuetext', '0.000 days after launch')
+  await expect(page.locator('[data-de]')).toHaveText('Unavailable')
+  await expect(page.locator('[data-dm]')).toHaveText('Unavailable')
+
+  const earthCamera = page.getByRole('button', { name: 'Earth', exact: true })
+  await expect(earthCamera).toBeEnabled()
+  await expect(page.getByRole('button', { name: /^Moon; position unavailable at the selected mission time$/ })).toHaveAttribute('aria-disabled', 'true')
+  await expect(page.getByRole('button', { name: /^Orion; position unavailable at the selected mission time$/ })).toHaveAttribute('aria-disabled', 'true')
+  await earthCamera.click()
+  await expect(earthCamera).toHaveAttribute('aria-pressed', 'true')
+  const overviewCamera = page.getByRole('button', { name: 'Overview', exact: true })
+  await overviewCamera.click()
+  await expect(overviewCamera).toHaveAttribute('aria-pressed', 'true')
+})
+
 test('reduced-motion preference keeps the lightweight view and does not request the 3D engine', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   const webglChunks: string[] = []
