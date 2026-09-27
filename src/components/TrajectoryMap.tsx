@@ -6,10 +6,10 @@ import { useReducedMotion } from 'framer-motion'
 import * as THREE from 'three'
 import { Globe, Moon as MoonIcon, Rocket, Maximize2, Minimize2, RotateCcw, FastForward, Play, Pause } from 'lucide-react'
 import {
-  eR, mR, SCALE,
+  eR, mR,
   getCurrentMissionDay, getTrajectoryPos, getMoonPos, getVelocity, getAcceleration,
   getMissionPhase, getActiveMission, setActiveMission,
-  fullTrajPts, moonArcPts, lunarOrbitPts,
+  fullTrajPts, moonArcPts, lunarOrbitPts, horizonsToThree,
 } from '../data/trajectoryData'
 import type { Vector3Like } from '../data/trajectoryData'
 import type { MissionData } from '../lib/types'
@@ -31,7 +31,9 @@ function getSimDay(): number {
 }
 
 function toThree(point: Vector3Like): THREE.Vector3 {
-  return new THREE.Vector3(point.x, point.y, point.z)
+  // Mission samples are EME2000 kilometers; scene geometry uses scaled Y-up coordinates.
+  const position = horizonsToThree([point.x, point.y, point.z])
+  return new THREE.Vector3(position.x, position.y, position.z)
 }
 
 function pointDistance(a: Vector3Like, b: Vector3Like): number {
@@ -60,7 +62,7 @@ function Earth() {
     <group>
       <mesh ref={ref}><sphereGeometry args={[eR, 128, 64]} /><meshStandardMaterial map={texture} roughness={0.8} metalness={0.05} /></mesh>
       <Html position={[0, -(eR + 1), 0]} center style={{ pointerEvents: 'none' }}>
-        <span style={{ fontFamily: 'Orbitron', fontSize: 10, color: '#4499ff', letterSpacing: 4, userSelect: 'none', opacity: 0.7 }}>EARTH</span>
+        <span data-scene-label="earth" style={{ fontFamily: 'Orbitron', fontSize: 10, color: '#4499ff', letterSpacing: 4, userSelect: 'none', opacity: 0.7 }}>EARTH</span>
       </Html>
     </group>
   )
@@ -79,7 +81,7 @@ function MoonBody() {
     <group ref={ref}>
       <mesh><sphereGeometry args={[mR, 64, 32]} /><meshStandardMaterial map={texture} roughness={0.95} /></mesh>
       <Html position={[0, -(mR + 0.8), 0]} center style={{ pointerEvents: 'none' }}>
-        <span style={{ fontFamily: 'Orbitron', fontSize: 9, color: '#aaaacc', letterSpacing: 3, userSelect: 'none', opacity: 0.6 }}>MOON</span>
+        <span data-scene-label="moon" style={{ fontFamily: 'Orbitron', fontSize: 9, color: '#aaaacc', letterSpacing: 3, userSelect: 'none', opacity: 0.6 }}>MOON</span>
       </Html>
     </group>
   )
@@ -105,7 +107,7 @@ function Orion() {
     const next = getTrajectoryPos(day + 0.002)
     if (next && pointDistance(next, pos) > 0.001) ref.current.lookAt(toThree(next))
     if (labelRef.current) {
-      const centerDistance = Math.round(Math.hypot(pos.x, pos.y, pos.z) / SCALE)
+      const centerDistance = Math.round(Math.hypot(pos.x, pos.y, pos.z))
       labelRef.current.textContent = `${centerDistance.toLocaleString()} km from Earth center`
     }
   })
@@ -119,7 +121,7 @@ function Orion() {
 
       {/* ORION label — ABOVE */}
       <Html position={[0, 1.8, 0]} center style={{ pointerEvents: 'none' }}>
-        <span style={{ fontFamily: 'Orbitron', fontSize: 11, color: '#ff8844', fontWeight: 700, letterSpacing: 2, userSelect: 'none' }}>ORION</span>
+        <span data-scene-label="orion" style={{ fontFamily: 'Orbitron', fontSize: 11, color: '#ff8844', fontWeight: 700, letterSpacing: 2, userSelect: 'none' }}>ORION</span>
       </Html>
       {/* Distance — BELOW */}
       <Html position={[0, -1.4, 0]} center style={{ pointerEvents: 'none' }}>
@@ -142,8 +144,9 @@ function TrajectoryLines() {
       return
     }
     traveledRef.current.visible = true
+    const scenePosition = toThree(orionPos)
     let closest = 0, best = Infinity
-    for (let i = 0; i < fullTrajPts.length; i++) { const d = pointDistance(fullTrajPts[i], orionPos); if (d < best) { best = d; closest = i } }
+    for (let i = 0; i < fullTrajPts.length; i++) { const d = pointDistance(fullTrajPts[i], scenePosition); if (d < best) { best = d; closest = i } }
     const traveled = fullTrajPts.slice(0, closest + 1).map(p => [p.x, p.y, p.z] as [number, number, number])
     if (traveled.length > 1) traveledRef.current.geometry.setPositions(traveled.flat())
   })
@@ -160,7 +163,15 @@ function TrajectoryLines() {
 
 function ConnectionLine() {
   const ref = useRef<any>(null)
-  useFrame(() => { if (ref.current) { const m = getMoonPos(getSimDay()); ref.current.visible = m !== null; if (m) ref.current.geometry.setPositions([0,0,0,m.x,m.y,m.z]) } })
+  useFrame(() => {
+    if (!ref.current) return
+    const moonPosition = getMoonPos(getSimDay())
+    ref.current.visible = moonPosition !== null
+    if (moonPosition) {
+      const position = toThree(moonPosition)
+      ref.current.geometry.setPositions([0, 0, 0, position.x, position.y, position.z])
+    }
+  })
   return <Line ref={ref} points={[[0,0,0],[1,0,0]]} color="#ffffff" lineWidth={0.5} transparent opacity={0.06} />
 }
 
@@ -178,27 +189,31 @@ function CameraController() {
     if (!controlsRef.current) return
     const day = getSimDay(), op = getTrajectoryPos(day), mp = getMoonPos(day)
     let tp: THREE.Vector3, cd: number
-    if (!op) {
-      controlsRef.current.target.lerp(new THREE.Vector3(0, 0, 0), 0.03)
-      controlsRef.current.update()
-      return
-    }
     switch (cameraMode) {
       case 'earth': tp = new THREE.Vector3(0,0,0); cd = 8; break
       case 'moon': tp = mp ? toThree(mp) : new THREE.Vector3(0, 0, 0); cd = 5; break
-      case 'orion': tp = toThree(op); cd = 5; break
-      default: tp = new THREE.Vector3(op.x*0.4, op.y*0.3, op.z*0.3); cd = 120
+      case 'orion': tp = op ? toThree(op) : new THREE.Vector3(0, 0, 0); cd = 5; break
+      default: tp = op ? toThree(op).multiply(new THREE.Vector3(0.4, 0.3, 0.3)) : new THREE.Vector3(0, 0, 0); cd = 120
     }
     // Detect mode change → start transition animation
     if (cameraMode !== lastCameraMode) {
       transitionFrames = reducedMotion ? 0 : 90 // ~1.5s at 60fps
       lastCameraMode = cameraMode
+      if (reducedMotion) {
+        const direction = camera.position.clone().sub(tp)
+        if (direction.lengthSq() === 0) direction.set(1, 1, 1)
+        direction.normalize()
+        controlsRef.current.target.copy(tp)
+        camera.position.copy(tp.clone().add(direction.multiplyScalar(cd)))
+        controlsRef.current.update()
+        return
+      }
     }
     if (transitionFrames > 0) transitionFrames--
     // Always track the orbit center (so user orbits around the focused object)
     controlsRef.current.target.lerp(tp, 0.03)
     // Only animate camera distance during initial transition — then let user freely zoom/rotate
-    if (cameraMode !== 'overview' && transitionFrames > 0) {
+    if (transitionFrames > 0) {
       const dir = camera.position.clone().sub(controlsRef.current.target).normalize()
       camera.position.lerp(controlsRef.current.target.clone().add(dir.multiplyScalar(cd)), 0.03)
     }
@@ -245,8 +260,8 @@ function HUDOverlay() {
   const update = useCallback(() => {
     if (!ref.current) { requestAnimationFrame(update); return }
     const day = getSimDay(); const pos = getTrajectoryPos(day); const mp = getMoonPos(day); const velocity = getVelocity(day); const acceleration = getAcceleration(day)
-    const de = pos ? Math.round(Math.hypot(pos.x, pos.y, pos.z)/SCALE) : null
-    const dm = pos && mp ? Math.round(pointDistance(pos, mp)/SCALE) : null
+    const de = pos ? Math.round(Math.hypot(pos.x, pos.y, pos.z)) : null
+    const dm = pos && mp ? Math.round(pointDistance(pos, mp)) : null
     ref.current.querySelector('[data-de]')!.textContent = de === null ? 'Unavailable' : de.toLocaleString()+' km'
     ref.current.querySelector('[data-dm]')!.textContent = dm === null ? 'Unavailable' : dm.toLocaleString()+' km'
     ref.current.querySelector('[data-v]')!.textContent = velocity === null ? 'Unavailable' : velocity.toFixed(3)+' km/s'
@@ -294,14 +309,15 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii', initialDay = 
   // Reset sim state on mission switch
   useEffect(() => {
     cameraMode = initialCamera
-    lastCameraMode = initialCamera
+    lastCameraMode = 'overview'
     transitionFrames = 0
     setActiveCam(initialCamera)
     setSpeed(0)
     simSpeed = 0
     if (getActiveMission().status === 'completed') {
-      simOverride = 0
-      setSimDay(0)
+      const nextDay = Math.max(0, Math.min(activeMission.missionDays, initialDay))
+      simOverride = nextDay
+      setSimDay(nextDay)
     } else {
       simOverride = null
       setSimDay(null)
@@ -400,6 +416,15 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii', initialDay = 
   const md = getActiveMission().missionDays
   const tsd = getActiveMission().trajStartDay
   const currentDay = simDay !== null ? simDay : (isCompleted ? 0 : getCurrentMissionDay())
+  const orionPositionAvailable = getTrajectoryPos(currentDay) !== null
+  const moonPositionAvailable = getMoonPos(currentDay) !== null
+  const unavailableCamera = (mode: CameraMode) => (mode === 'moon' && !moonPositionAvailable) || (mode === 'orion' && !orionPositionAvailable)
+
+  useEffect(() => {
+    if (unavailableCamera(activeCam)) {
+      setCam('overview')
+    }
+  }, [activeCam, moonPositionAvailable, orionPositionAvailable, setCam])
 
   return (
     <div ref={containerRef} className={`glass-panel border-glow h-full flex flex-col relative overflow-hidden ${isFullscreen ? 'p-0 rounded-none bg-space-950' : 'p-2'}`}>
@@ -427,11 +452,23 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii', initialDay = 
         </button>
       </div>
       <div className="absolute top-14 right-3 z-10 flex flex-col gap-1">
-        {([['overview','Overview',null],['earth','Earth',Globe],['moon','Moon',MoonIcon],['orion','Orion',Rocket]] as const).map(([mode,label,Icon])=>(
-          <button type="button" aria-pressed={activeCam===mode} key={mode} onClick={()=>setCam(mode as CameraMode)} className={`min-h-11 px-3 rounded text-[10px] font-semibold tracking-wider uppercase flex items-center gap-1.5 transition-all ${activeCam===mode?'bg-cyan-glow/10 text-cyan-glow border border-cyan-glow/25':'bg-space-950/80 text-slate-300 border border-slate-700/40 hover:text-cyan-glow'}`}>
-            {Icon&&<Icon className="h-3 w-3"/>}{label}
-          </button>
-        ))}
+        {([['overview','Overview',null],['earth','Earth',Globe],['moon','Moon',MoonIcon],['orion','Orion',Rocket]] as const).map(([mode,label,Icon])=>{
+          const unavailable = unavailableCamera(mode)
+          return (
+            <button
+              type="button"
+              aria-pressed={activeCam===mode}
+              aria-disabled={unavailable || undefined}
+              aria-label={unavailable ? `${label}; position unavailable at the selected mission time` : undefined}
+              title={unavailable ? `${label} position is unavailable at the selected mission time` : undefined}
+              key={mode}
+              onClick={()=>{ if (!unavailable) setCam(mode) }}
+              className={`min-h-11 px-3 rounded text-[10px] font-semibold tracking-wider uppercase flex items-center gap-1.5 transition-all aria-disabled:cursor-not-allowed aria-disabled:opacity-40 ${activeCam===mode?'bg-cyan-glow/10 text-cyan-glow border border-cyan-glow/25':'bg-space-950/80 text-slate-300 border border-slate-700/40 hover:text-cyan-glow'}`}
+            >
+              {Icon&&<Icon className="h-3 w-3"/>}{label}
+            </button>
+          )
+        })}
       </div>
 
       <HUDOverlay />
