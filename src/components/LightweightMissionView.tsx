@@ -3,6 +3,7 @@ import { FastForward, Pause, Play } from 'lucide-react'
 import type { MissionData, TrajectoryData } from '../lib/types'
 import { getMoonPos, getTrajectoryPos, getActiveMission, fullTrajPts, moonArcPts, SCALE, EARTH_RADIUS_KM } from '../data/trajectoryData'
 import { getTrajectoryFallback } from '../lib/trajectoryFallback'
+import { advanceMissionEpoch } from '../lib/replayClock'
 import { DataSourceBadge } from './DataSourceBadge'
 
 interface Props {
@@ -65,14 +66,14 @@ export function LightweightMissionView({ mission, missionId, missionTime, trajec
     if (!playing) return
     const timer = window.setInterval(() => {
       const current = Date.parse(timeRef.current)
-      const next = Math.min(stop, current + 250 * speed)
+      const next = advanceMissionEpoch(current, 250, speed, launch, stop)
       const epoch = new Date(next).toISOString()
       timeRef.current = epoch
       onSeek(epoch)
       if (next >= stop) setPlaying(false)
     }, 250)
     return () => window.clearInterval(timer)
-  }, [playing, speed, stop, onSeek])
+  }, [playing, speed, launch, stop, onSeek])
 
   const setDay = (value: number) => {
     setPlaying(false)
