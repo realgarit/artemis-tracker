@@ -37,6 +37,15 @@ Use two independent calendar clients (suggested: Outlook and Apple Calendar). Su
 | Outlook · pending version | Artemis III / IV | Pending | Pending | — |
 | Apple Calendar · pending version | Artemis III / IV | Pending | Pending | — |
 
+## Desktop and mobile browser check for issue #18
+
+CI verifies a cold offline mission route and that an interrupted update preserves the last complete pack. It also injects `QuotaExceededError` and `SecurityError` responses and checks the recovery guidance. These deterministic checks do not establish actual browser quota or private-browsing behavior on installed products. On one documented desktop browser and one actual iOS/Android browser, download a pack, close the browser, disable networking, and reopen a direct mission route. Confirm the 2D/story journey works, check the storage estimate, remove one pack and then all packs, and attempt an update with network interruption. Verify that the prior complete pack remains usable. Test the browser's private or restricted-storage mode and one quota-limited condition; record the message and recovery action. Confirm compatible updates preserve existing history/bookmarks.
+
+| Target | Browser/version and device | Cold offline route | Remove one / clear all | Quota/private recovery | Interrupted update and bookmark migration |
+|---|---|---|---|---|---|
+| Desktop | Pending | Pending | Pending | Pending | Pending |
+| Mobile | Pending OS/device/browser | Pending | Pending | Pending | Pending |
+
 ## NASA item-level media review for issue #19
 
 `npm run validate:media -- --links` checks the allowlisted NASA pages and source-linked caption files. The editorial check below reviewed the current page content and a representative named asset for every stable media ID on 2026-09-27. NASA's [media-use guidance](https://www.nasa.gov/nasa-brand-center/images-and-media/) says NASA material is generally not subject to U.S. copyright for factual educational/informational use, but third-party copyright, identifiable-person rights, NASA identifiers, and promotional/commercial use have separate restrictions; NASA's publication does not pass third-party rights to others. The app links to the NASA source, does not reproduce thumbnails or video, and records no blanket license. Recheck an asset's notice before any future reuse or export.
