@@ -120,7 +120,7 @@ test('unknown mission route offers a known destination', async ({ page }) => {
 test('malformed shared timestamps and event IDs recover without executing markup', async ({ page }) => {
   await page.goto('/artemis-ii?view=invalid&t=not-a-time&event=%3Cscript%3Ealert(1)%3C%2Fscript%3E', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: /2d trajectory and mission replay/i })).toBeVisible()
-  await expect(page.getByText('2026-04-01T22:35:12 UTC', { exact: true }).first()).toBeVisible()
+  await expect(page.getByRole('slider', { name: 'Mission elapsed time' })).toHaveAttribute('aria-valuetext', 'Mission day 0.141')
   await expect(page.locator('script')).toHaveCount(1)
   await expect(page.getByRole('alert')).toHaveCount(0)
 })
@@ -333,6 +333,29 @@ test('3D replay follows the shared mission epoch and keeps Earth focus available
   const overviewCamera = page.getByRole('button', { name: 'Overview', exact: true })
   await overviewCamera.click()
   await expect(overviewCamera).toHaveAttribute('aria-pressed', 'true')
+
+  await page.getByRole('button', { name: 'Jump to first covered source epoch' }).click()
+  await expect(replay).toHaveAttribute('aria-valuetext', '0.141 days after launch')
+  await expect(page.locator('[data-de]')).not.toHaveText('Unavailable')
+})
+
+test('a fresh 3D replay starts at the first covered Orion position', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/artemis-ii?view=3d', { waitUntil: 'domcontentloaded' })
+
+  const replay = page.getByRole('slider', { name: 'Mission elapsed time' })
+  await expect(replay).toHaveAttribute('aria-valuetext', '0.141 days after launch')
+  await expect(page.getByRole('region', { name: 'Current mission metrics' })).toContainText('T+0d 03:22:25')
+  await expect(page.locator('[data-de]')).not.toHaveText('Unavailable')
+  await expect(page.locator('[data-v]')).not.toHaveText('Unavailable')
+
+  const orionCamera = page.getByRole('button', { name: 'Orion', exact: true })
+  await expect(orionCamera).toBeEnabled()
+  await orionCamera.click()
+  const orionLabel = page.locator('[data-scene-label="orion"]')
+  await expect(orionLabel).toBeVisible()
+  const labelBounds = await orionLabel.boundingBox()
+  expect(labelBounds).not.toBeNull()
 })
 
 test('reduced-motion preference keeps the lightweight view and does not request the 3D engine', async ({ page }) => {
@@ -365,7 +388,7 @@ test('media archive filters by mission, event, and type and offers the timed eve
 
 test('keyboard activation switches mission, seeks a cited event, and copies its moment link', async ({ page, context }) => {
   await page.goto('/artemis-ii?view=2d', { waitUntil: 'domcontentloaded' })
-  const currentPhase = page.getByRole('button', { name: /replay LEO, beginning/i })
+  const currentPhase = page.getByRole('button', { name: /replay high earth orbit, beginning/i })
   await expect(currentPhase).toHaveAttribute('aria-current', 'step')
   await expect(currentPhase).toHaveAccessibleName(/current phase/i)
   await expect(currentPhase).not.toHaveAttribute('aria-pressed')

@@ -377,11 +377,13 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii', initialDay = 
   }, [onReplayDayChange])
   const resetToLive = useCallback(() => {
     if (isCompleted) {
-      simOverride = 0; simSpeed = 0; setSimDay(0); setSpeed(0)
+      const firstCoveredDay = activeMission.trajStartDay
+      simOverride = firstCoveredDay; simSpeed = 0; setSimDay(firstCoveredDay); setSpeed(0)
+      onReplayDayChange?.(firstCoveredDay)
     } else {
       simOverride = null; simSpeed = 0; setSimDay(null); setSpeed(0)
     }
-  }, [isCompleted])
+  }, [activeMission.trajStartDay, isCompleted, onReplayDayChange])
   const togglePlay = useCallback(() => {
     if (speed > 0) {
       // Pause — remember current speed for resume
@@ -487,8 +489,8 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii', initialDay = 
       <div className={`flex flex-wrap items-center gap-2 mt-1 px-1 ${isFullscreen?'px-4 pb-3':''}`}>
         <div className="flex items-center gap-2 flex-1">
           {isCompleted ? (
-            <button type="button" onClick={resetToLive} className="min-h-11 px-3 rounded bg-amber-glow/10 border border-amber-glow/25 text-[10px] font-bold text-amber-glow tracking-wider flex items-center gap-1 shrink-0" title="Reset to start">
-              <RotateCcw className="h-3 w-3"/> RESET
+            <button type="button" onClick={resetToLive} aria-label="Jump to first covered source epoch" className="min-h-11 px-3 rounded bg-amber-glow/10 border border-amber-glow/25 text-[10px] font-bold text-amber-glow tracking-wider flex items-center gap-1 shrink-0" title="Jump to the first covered NASA source epoch">
+              <RotateCcw className="h-3 w-3"/> FIRST DATA
             </button>
           ) : simDay !== null ? (
             <button type="button" onClick={resetToLive} className="min-h-11 px-3 rounded bg-red-glow/10 border border-red-glow/25 text-[10px] font-bold text-red-glow tracking-wider flex items-center gap-1 shrink-0">
