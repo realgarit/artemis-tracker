@@ -43,7 +43,7 @@ CI verifies a cold offline mission route and that an interrupted update preserve
 
 | Target | Browser/version and device | Cold offline route | Remove one / clear all | Quota/private recovery | Interrupted update and bookmark migration |
 |---|---|---|---|---|---|
-| Desktop | Pending | Pending | Pending | Pending | Pending |
+| Desktop | Microsoft Edge 154.0.4258.37 on Windows; Playwright-controlled persistent temporary profile | Passed: installed 1.72 MB / 28-resource Artemis II pack, closed Edge, relaunched the same profile offline, and opened a direct 2D mission route. All three bundled font families loaded from the pack. | Passed: removed the Artemis II pack, installed Artemis I and II, then cleared both packs. | Passed: Edge InPrivate (`--inprivate`) installed a pack successfully; no recovery message was needed. A 1-byte Edge DevTools origin-quota override triggered the full-storage guidance. | Passed: an HTTP 503 injected for the compressed ephemeris during update preserved the single prior complete pack. Cross-version history/bookmark migration remains pending. |
 | Mobile | Pending OS/device/browser | Pending | Pending | Pending | Pending |
 
 ## NASA item-level media review for issue #19
