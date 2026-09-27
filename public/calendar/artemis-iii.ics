@@ -1,0 +1,19 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Artemis Mission Tracker//Schedule Follow-up//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VTODO
+UID:follow-artemis-iii@artemis.realgar.ch
+DTSTAMP:20260927T000000Z
+LAST-MODIFIED:20260927T000000Z
+SEQUENCE:0
+SUMMARY:Check the Artemis III schedule
+DESCRIPTION:2027 · Demonstrate Orion and commercial lunar lander rendezv
+ ous and docking systems in low Earth orbit.\nFollow the official schedul
+ e at NASA. No event time is confirmed.
+URL:https://www.nasa.gov/news-release/nasa-marches-toward-artemis-iii-mis
+ sion-in-2027-names-crew-members/
+STATUS:NEEDS-ACTION
+END:VTODO
+END:VCALENDAR

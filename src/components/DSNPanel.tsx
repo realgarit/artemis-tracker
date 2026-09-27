@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Radio } from 'lucide-react'
 import type { DSNData } from '../lib/types'
+import { DataSourceBadge } from './DataSourceBadge'
 
 interface DSNPanelProps {
   data?: DSNData
@@ -31,44 +32,49 @@ export function DSNPanel({ data }: DSNPanelProps) {
     bySite[dish.site].push(dish)
   }
 
-  const activeDishes = data.dishes.length
+  const listedDishes = data.dishes.length
   const orionDishes = data.dishes.filter((d) =>
     d.targets.some((t) => /orion|artemis|integrity/i.test(t.name))
   )
+  const emptyFeedMessage = data.provenance?.mode === 'unavailable'
+    ? 'The DSN feed is unavailable; this site’s antenna status cannot be inferred.'
+    : data.provenance?.mode === 'snapshot'
+      ? 'No dishes for this site were listed in the saved DSN response.'
+      : 'No dishes for this site were listed in the current DSN response.'
 
   return (
     <motion.div
       className="glass-panel border-glow p-4"
-      initial={{ opacity: 0 }}
+      initial={false}
       animate={{ opacity: 1 }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+      <div className="mb-4 flex min-w-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2">
           <Radio className="h-3.5 w-3.5 text-cyan-glow" strokeWidth={2} />
           <span className="text-[10px] text-slate-400 uppercase tracking-[.2em] font-semibold">
             Deep Space Network
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-[9px] text-slate-500">
-            {activeDishes} dishes active
+        <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+          <span className="min-w-0 break-words font-mono text-[9px] text-slate-500">
+            {listedDishes} dishes listed
             {orionDishes.length > 0 && (
-              <span className="text-cyan-glow ml-2">{orionDishes.length} tracking Orion</span>
+              <span className="text-cyan-glow ml-2">{orionDishes.length} Orion-like target names</span>
             )}
           </span>
-          <span className="text-[8px] text-slate-600 font-mono">{data.source}</span>
+          <DataSourceBadge provenance={data.provenance} />
         </div>
       </div>
 
       {/* Sites grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-3">
         {Object.entries(SITES).map(([siteKey, siteInfo]) => {
           const dishes = bySite[siteKey] || []
           return (
             <div
               key={siteKey}
-              className="bg-space-800/50 rounded p-3 border border-slate-800/60"
+              className="min-w-0 rounded border border-slate-800/60 bg-space-800/50 p-3"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">
@@ -81,7 +87,7 @@ export function DSNPanel({ data }: DSNPanelProps) {
               </div>
 
               {dishes.length === 0 ? (
-                <div className="text-[9px] text-slate-600 py-2">No active dishes</div>
+                <div className="text-[9px] text-slate-400 py-2">{emptyFeedMessage}</div>
               ) : (
                 <div className="space-y-1.5">
                   {dishes.map((dish) => (

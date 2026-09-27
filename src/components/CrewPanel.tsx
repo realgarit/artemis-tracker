@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { Users, ChevronRight } from 'lucide-react'
 import { Link } from 'wouter'
 import type { CrewMember } from '../lib/types'
+import { SOURCE_URLS } from '../lib/provenance'
 
 interface CrewPanelProps {
   crew?: CrewMember[]
@@ -47,7 +48,7 @@ export function CrewPanel({ crew, compact = false, missionId = 'artemis-ii' }: C
   return (
     <motion.div
       className="glass-panel border-glow p-4"
-      initial={{ opacity: 0 }}
+      initial={false}
       animate={{ opacity: 1 }}
     >
       <div className="flex items-center justify-between mb-4">
@@ -71,7 +72,7 @@ export function CrewPanel({ crew, compact = false, missionId = 'artemis-ii' }: C
             <motion.div
               key={member.name}
               className="bg-space-800/40 rounded p-3 border border-slate-800/50"
-              initial={{ opacity: 0, y: 10 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08, duration: 0.3 }}
             >
@@ -91,8 +92,8 @@ export function CrewPanel({ crew, compact = false, missionId = 'artemis-ii' }: C
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span className="text-[8px] text-slate-400">{member.role}</span>
                     <span
-                      className="text-[7px] font-bold px-1 py-px rounded tracking-wider"
-                      style={{ backgroundColor: `${agencyColor}20`, color: agencyColor }}
+                      className="rounded px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-slate-100"
+                      style={{ backgroundColor: `${agencyColor}28` }}
                     >
                       {member.agency}
                     </span>
@@ -117,6 +118,7 @@ export function CrewPanel({ crew, compact = false, missionId = 'artemis-ii' }: C
           )
         })}
       </div>
+      <a href={SOURCE_URLS.nasaArtemisII} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center gap-1 text-xs text-cyan-glow underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">NASA crew source <ChevronRight className="h-3.5 w-3.5" /></a>
     </motion.div>
   )
 }

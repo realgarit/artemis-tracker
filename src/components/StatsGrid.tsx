@@ -9,7 +9,7 @@ interface StatsGridProps {
 function StatCard({
   label, value, unit, color = 'cyan', icon, large = false,
 }: {
-  label: string; value: number | string; unit: string
+  label: string; value: number | string | null; unit: string
   color?: 'cyan' | 'amber'; icon?: React.ReactNode; large?: boolean
 }) {
   const tc = color === 'cyan' ? 'text-cyan-glow' : 'text-amber-glow'
@@ -23,7 +23,7 @@ function StatCard({
         {icon}
       </div>
       <div className={`font-mono ${large ? 'text-3xl xl:text-4xl' : 'text-2xl'} font-bold ${tc} ${gc}`}>
-        {typeof value === 'number' ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : value}
+        {value === null ? '—' : typeof value === 'number' ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : value}
         <span className={`${large ? 'text-base' : 'text-sm'} text-slate-500 font-normal ml-1`}>{unit}</span>
       </div>
     </div>
@@ -47,26 +47,26 @@ export function StatsGrid({ trajectory }: StatsGridProps) {
   return (
     <motion.div
       className="grid grid-cols-2 gap-3 h-full content-center"
-      initial={{ opacity: 0 }}
+      initial={false}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
     >
       <StatCard
-        label="Distance · Earth"
-        value={Math.round(trajectory.distanceFromEarth)}
+        label="Distance · Earth center"
+        value={trajectory.distanceFromEarth === null ? null : Math.round(trajectory.distanceFromEarth)}
         unit="km"
         large
       />
       <StatCard
         label="Speed"
-        value={trajectory.velocity}
+        value={trajectory.velocity === null ? null : trajectory.velocity}
         unit="km/s"
         icon={<Zap className="h-3 w-3 text-cyan-glow" />}
         large
       />
       <StatCard
         label="Distance · Moon"
-        value={Math.round(trajectory.distanceFromMoon)}
+        value={trajectory.distanceFromMoon === null ? null : Math.round(trajectory.distanceFromMoon)}
         unit="km"
       />
       <StatCard

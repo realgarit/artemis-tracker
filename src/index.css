@@ -2,9 +2,9 @@
 
 /* === Theme === */
 @theme {
-  --font-sans: "Barlow", system-ui, sans-serif;
-  --font-mono: "Space Mono", ui-monospace, monospace;
-  --font-display: "Orbitron", system-ui, sans-serif;
+  --font-sans: Arial, system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
+  --font-display: system-ui, sans-serif;
 
   --color-space-950: #020408;
   --color-space-900: #04060b;
@@ -19,6 +19,9 @@
   --color-amber-dim: #b45309;
   --color-red-glow: #ef4444;
   --color-green-glow: #22c55e;
+  --color-slate-500: #9aaec4;
+  --color-slate-600: #8da2ba;
+  --color-slate-700: #7f94ad;
 }
 
 /* === Base === */
@@ -32,6 +35,22 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+/* Keep the subdued dashboard labels readable on the near-black panels. */
+.text-slate-500 { color: #a8b8cb !important; }
+.text-slate-600,
+.text-slate-700 { color: #94a9c0 !important; }
+.text-red-glow { color: #ff8b8b !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .live-pulse { animation: none !important; }
 }
 
 /* === Space Background === */

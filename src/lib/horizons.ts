@@ -1,4 +1,5 @@
 import type { TrajectoryData } from './types'
+import { createProvenance, SOURCE_URLS } from './provenance'
 
 export const HORIZONS_API = 'https://ssd.jpl.nasa.gov/api/horizons.api'
 export const SPEED_OF_LIGHT_KM_S = 299792.458
@@ -16,12 +17,12 @@ export interface StateVector {
 export interface TrajectoryPoint {
   timestamp: string
   distanceFromEarth: number
-  distanceFromMoon: number
+  distanceFromMoon: number | null
   velocity: number
   acceleration: number
   commsDelay: number
-  latitude: number
-  longitude: number
+  latitude: number | null
+  longitude: number | null
 }
 
 const CACHE_TTL_MS = 60_000
@@ -75,13 +76,16 @@ export function parseHorizonsVectors(result: string): StateVector[] {
 }
 
 export function computeTrajectoryPoints(scVectors: StateVector[], moonVectors: StateVector[]): TrajectoryPoint[] {
+  const moonByTime = moonVectors
+    .filter((vector) => Number.isFinite(Date.parse(vector.timestamp)))
+    .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
   return scVectors.map((state, index) => {
     const distanceFromEarth = Math.hypot(state.x, state.y, state.z)
     const velocity = Math.hypot(state.vx, state.vy, state.vz)
-    const moon = moonVectors[index] || moonVectors[moonVectors.length - 1]
+    const moon = vectorAtSortedTime(moonByTime, Date.parse(state.timestamp))
     const distanceFromMoon = moon
       ? Math.hypot(state.x - moon.x, state.y - moon.y, state.z - moon.z)
-      : 384400
+      : null
 
     let acceleration = 0
     if (index > 0) {
@@ -94,19 +98,57 @@ export function computeTrajectoryPoints(scVectors: StateVector[], moonVectors: S
     return {
       timestamp: state.timestamp,
       distanceFromEarth: round(distanceFromEarth, 2),
-      distanceFromMoon: round(distanceFromMoon, 2),
+      distanceFromMoon: distanceFromMoon === null ? null : round(distanceFromMoon, 2),
       velocity: round(velocity, 3),
       acceleration: round(acceleration, 4),
       commsDelay: round(distanceFromEarth / SPEED_OF_LIGHT_KM_S, 2),
-      latitude: round(Math.atan2(state.z, Math.hypot(state.x, state.y)) * (180 / Math.PI), 2),
-      longitude: round(Math.atan2(state.y, state.x) * (180 / Math.PI), 2),
+      // An inertial J2000 direction is not a geographic latitude/longitude.
+      latitude: null,
+      longitude: null,
     }
   })
 }
 
+const MAX_VECTOR_GAP_MS = 30 * 60_000
+
+export function vectorAtSortedTime(ordered: StateVector[], timestamp: number): StateVector | null {
+  if (!Number.isFinite(timestamp) || ordered.length === 0) return null
+  const first = ordered[0]
+  const last = ordered[ordered.length - 1]
+  if (!first || timestamp < Date.parse(first.timestamp) || timestamp > Date.parse(last.timestamp)) return null
+  let lowerBound = 0
+  let upperBound = ordered.length - 1
+  while (lowerBound < upperBound) {
+    const middle = Math.floor((lowerBound + upperBound) / 2)
+    if (Date.parse(ordered[middle].timestamp) < timestamp) lowerBound = middle + 1
+    else upperBound = middle
+  }
+  const upperIndex = lowerBound
+  const upper = ordered[upperIndex]
+  const lower = ordered[Math.max(0, upperIndex - 1)]
+  const lowerTime = Date.parse(lower.timestamp)
+  const upperTime = Date.parse(upper.timestamp)
+  if (timestamp === upperTime) return { ...upper, timestamp: new Date(timestamp).toISOString() }
+  if (upperTime - lowerTime <= 0 || upperTime - lowerTime > MAX_VECTOR_GAP_MS) return null
+  const fraction = (timestamp - lowerTime) / (upperTime - lowerTime)
+  const interpolate = (a: number, b: number) => a + (b - a) * fraction
+  return {
+    timestamp: new Date(timestamp).toISOString(),
+    x: interpolate(lower.x, upper.x), y: interpolate(lower.y, upper.y), z: interpolate(lower.z, upper.z),
+    vx: interpolate(lower.vx, upper.vx), vy: interpolate(lower.vy, upper.vy), vz: interpolate(lower.vz, upper.vz),
+  }
+}
+
+export function vectorAtTime(vectors: StateVector[], timestamp: number): StateVector | null {
+  const ordered = vectors
+    .filter((vector) => Number.isFinite(Date.parse(vector.timestamp)))
+    .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
+  return vectorAtSortedTime(ordered, timestamp)
+}
+
 function interpolatePoint(points: TrajectoryPoint[], targetTime: Date): TrajectoryPoint | null {
   if (points.length === 0) return null
-  if (points.length === 1) return { ...points[0], timestamp: targetTime.toISOString() }
+  if (points.length === 1) return null
 
   const target = targetTime.getTime()
   for (let index = 0; index < points.length - 1; index++) {
@@ -121,18 +163,18 @@ function interpolatePoint(points: TrajectoryPoint[], targetTime: Date): Trajecto
     return {
       timestamp: targetTime.toISOString(),
       distanceFromEarth: interpolate(first.distanceFromEarth, second.distanceFromEarth),
-      distanceFromMoon: interpolate(first.distanceFromMoon, second.distanceFromMoon),
+      distanceFromMoon: first.distanceFromMoon === null || second.distanceFromMoon === null
+        ? null
+        : interpolate(first.distanceFromMoon, second.distanceFromMoon),
       velocity: interpolate(first.velocity, second.velocity),
       acceleration: interpolate(first.acceleration, second.acceleration),
       commsDelay: interpolate(first.commsDelay, second.commsDelay),
-      latitude: interpolate(first.latitude, second.latitude),
-      longitude: interpolate(first.longitude, second.longitude),
+      latitude: null,
+      longitude: null,
     }
   }
 
-  const firstTime = new Date(points[0].timestamp).getTime()
-  const point = target < firstTime ? points[0] : points[points.length - 1]
-  return { ...point, timestamp: targetTime.toISOString() }
+  return null
 }
 
 function formatForHorizons(date: Date): string {
@@ -161,8 +203,9 @@ async function queryHorizons(command: string, startTime: string, stopTime: strin
     STEP_SIZE: `'${stepSize}'`,
     OUT_UNITS: "'KM-S'",
     VEC_TABLE: "'2'",
-    REF_PLANE: "'ECLIPTIC'",
+    REF_PLANE: "'FRAME'",
     REF_SYSTEM: "'J2000'",
+    TIME_TYPE: "'UT'",
     CSV_FORMAT: "'YES'",
   })
   const response = await fetchWithTimeout(`${HORIZONS_API}?${params.toString()}`)
@@ -194,5 +237,17 @@ export async function fetchCurrentTrajectory(horizonsId: string, now = new Date(
 }
 
 export function toTrajectoryData(point: TrajectoryPoint, source: string, phase = 'In flight'): TrajectoryData {
-  return { ...point, altitude: point.distanceFromEarth, phase, source }
+  return {
+    ...point,
+    altitude: point.distanceFromEarth === null ? null : round(point.distanceFromEarth - 6371, 2),
+    phase,
+    source,
+    provenance: createProvenance('ephemeris', 'JPL Horizons', 'Published ephemeris estimate; not spacecraft telemetry', {
+      url: SOURCE_URLS.horizons,
+      observedAt: point.timestamp,
+      frame: 'Earth-centered J2000 inertial',
+      timeScale: 'UT',
+      units: 'km, km/s',
+    }),
+  }
 }

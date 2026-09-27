@@ -1,0 +1,18 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Artemis Mission Tracker//Schedule Follow-up//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VTODO
+UID:follow-artemis-iv@artemis.realgar.ch
+DTSTAMP:20260927T000000Z
+LAST-MODIFIED:20260927T000000Z
+SEQUENCE:0
+SUMMARY:Check the Artemis IV schedule
+DESCRIPTION:Early 2028 · NASA targets an early 2028 crewed lunar surface
+  landing near the lunar South Pole.\nFollow the official schedule at NAS
+ A. No event time is confirmed.
+URL:https://www.nasa.gov/mission/artemis-iv/
+STATUS:NEEDS-ACTION
+END:VTODO
+END:VCALENDAR

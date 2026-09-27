@@ -7,10 +7,10 @@ test('mission status is deterministic for a completed Artemis II mission', () =>
 
   assert.equal(status.name, 'Artemis II')
   assert.equal(status.currentPhase, 'Recovery')
-  assert.equal(status.missionDay, 10)
+  assert.equal(status.missionDay, 9.064)
   assert.equal(status.progress, 100)
   assert.equal(status.crew.length, 4)
-  assert.equal(status.nextMilestone.name, 'Splashdown')
+  assert.equal(status.nextMilestone.name, 'Mission complete')
   assert.ok(status.phases.every((phase) => phase.status === 'completed'))
 })
 

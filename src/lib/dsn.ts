@@ -1,4 +1,5 @@
 import type { DSNData, DSNDish } from './types'
+import { createProvenance, SOURCE_URLS } from './provenance'
 
 export const DSN_ENDPOINT = 'https://eyes.nasa.gov/dsn/data/dsn.xml'
 
@@ -68,9 +69,15 @@ async function fetchWithTimeout(url: string, timeoutMs = 15_000): Promise<Respon
 
 export async function fetchDSN(): Promise<DSNData> {
   const xml = await (await fetchWithTimeout(DSN_ENDPOINT)).text()
+  const timestamp = new Date().toISOString()
   return {
     dishes: parseDSNXml(xml),
-    timestamp: new Date().toISOString(),
+    timestamp,
     source: 'NASA DSN Now',
+    provenance: createProvenance('observed', 'NASA DSN Now', 'Current Earth network view; per-dish observation times are not exposed by this feed', {
+      url: SOURCE_URLS.dsn,
+      retrievedAt: timestamp,
+      maxAgeSeconds: 15 * 60,
+    }),
   }
 }
