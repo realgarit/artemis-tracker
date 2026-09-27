@@ -302,6 +302,7 @@ test('keyboard activation switches mission, seeks a cited event, and copies its 
   await page.goto('/artemis-ii?view=2d', { waitUntil: 'domcontentloaded' })
   const currentPhase = page.getByRole('button', { name: /replay LEO, beginning/i })
   await expect(currentPhase).toHaveAttribute('aria-current', 'step')
+  await expect(currentPhase).toHaveAccessibleName(/current phase/i)
   await expect(currentPhase).not.toHaveAttribute('aria-pressed')
   const missionSelector = page.getByRole('button', { name: /select mission\. current mission: artemis ii/i })
   await tabUntilFocused(page, missionSelector)
