@@ -25,9 +25,9 @@ async function fetchWithRetry(url, { isAcceptable = (response) => response.ok, a
     } catch (error) {
       lastError = error
     }
-    if (attempt < attempts) await sleep(delayMs)
+    if (attempt < attempts) await sleep(delayMs * 2 ** (attempt - 1))
   }
-  throw lastError
+  throw new Error(`${label} failed after ${attempts} attempts.`, { cause: lastError })
 }
 
 async function fetchPublic(path) {
@@ -73,5 +73,6 @@ async function main() {
 
 main().catch((error) => {
   console.error(error instanceof Error ? error.message : 'Live Pages verification failed.')
+  if (error instanceof Error && error.cause instanceof Error) console.error(`Caused by: ${error.cause.message}`)
   process.exitCode = 1
 })
