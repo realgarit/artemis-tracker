@@ -21,7 +21,7 @@ async function fetchWithRetry(url, { isAcceptable = (response) => response.ok, a
         return response
       }
       lastError = new Error(`${label} returned HTTP ${response.status}`)
-      await response.body?.cancel()
+      await response.body?.cancel().catch(() => {})
     } catch (error) {
       lastError = error
     }
