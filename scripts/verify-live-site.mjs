@@ -2,11 +2,36 @@ import { readFile } from 'node:fs/promises'
 
 const base = process.env.DEPLOYMENT_URL || 'https://artemis.realgar.ch/'
 const timeout = (ms = 12_000) => AbortSignal.timeout(ms)
+const RETRY_ATTEMPTS = 3
+const RETRY_DELAY_MS = 2_000
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// Retries only the network/HTTP-status layer of a request so a transient post-deploy
+// propagation blip (e.g. a 503 or timeout in the seconds after `deploy-pages` publishes)
+// doesn't fail the whole run. Content/schema assertions are made by the caller on the
+// returned response and are never retried here.
+async function fetchWithRetry(url, { isAcceptable = (response) => response.ok, attempts = RETRY_ATTEMPTS, delayMs = RETRY_DELAY_MS, label = url.toString() } = {}) {
+  let lastError
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetch(url, { signal: timeout() })
+      if (isAcceptable(response)) {
+        if (attempt > 1) console.warn(`Warning: ${label} succeeded after ${attempt} attempts (transient failure recovered).`)
+        return response
+      }
+      lastError = new Error(`${label} returned HTTP ${response.status}`)
+      await response.body?.cancel()
+    } catch (error) {
+      lastError = error
+    }
+    if (attempt < attempts) await sleep(delayMs)
+  }
+  throw lastError
+}
 
 async function fetchPublic(path) {
-  const response = await fetch(new URL(path, base), { signal: timeout() })
-  if (!response.ok) throw new Error(`${path} returned HTTP ${response.status}`)
-  return response
+  return fetchWithRetry(new URL(path, base), { label: path })
 }
 
 async function main() {
@@ -18,8 +43,10 @@ async function main() {
   if (!homeHtml.includes('<div id="root">')) throw new Error('The production root is missing the application mount point.')
 
   for (const route of ['artemis-i', 'artemis-ii', 'artemis-ii/crew']) {
-    const response = await fetch(new URL(route, base), { signal: timeout() })
-    if (!response.ok && response.status !== 404) throw new Error(`Direct route ${route} returned HTTP ${response.status}.`)
+    const response = await fetchWithRetry(new URL(route, base), {
+      isAcceptable: (candidate) => candidate.ok || candidate.status === 404,
+      label: `Direct route ${route}`,
+    })
     if (!(await response.text()).includes('<div id="root">')) throw new Error(`Direct route ${route} did not return the application shell.`)
   }
 
