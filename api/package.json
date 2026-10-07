@@ -9,7 +9,7 @@
     "start": "func start"
   },
   "dependencies": {
-    "@azure/functions": "^4.6.0"
+    "@azure/functions": "^4.16.5"
   },
   "devDependencies": {
     "typescript": "^5.7.0",
