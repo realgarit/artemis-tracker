@@ -12,6 +12,7 @@ Keep the GitHub Pages deployment workflow aligned with the Vite build and preser
 - 2026-10-08: Dependabot alerts/security updates are enabled. Version updates run
   weekly on Monday at 06:00 Europe/Zurich for the manifests in .github/dependabot.yml.
   Minor/patch updates are grouped, majors stay separate, and merging remains review-driven.
+  Routine versions have a seven-day cooldown; security updates are not delayed.
 
 
 - GitHub Pages is configured for the `main` branch and deploys the compiled `dist` artifact through `.github/workflows/deploy-pages.yml`.
