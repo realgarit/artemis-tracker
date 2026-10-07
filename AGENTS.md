@@ -9,6 +9,11 @@ Keep the GitHub Pages deployment workflow aligned with the Vite build and preser
 
 ## Working notes
 
+- 2026-10-08: Dependabot alerts/security updates are enabled. Version updates run
+  weekly on Monday at 06:00 Europe/Zurich for the manifests in .github/dependabot.yml.
+  Minor/patch updates are grouped, majors stay separate, and merging remains review-driven.
+
+
 - GitHub Pages is configured for the `main` branch and deploys the compiled `dist` artifact through `.github/workflows/deploy-pages.yml`.
 - The workflow copies `dist/index.html` to `dist/404.html` so the client-side mission routes work on direct navigation.
 - The former Azure Static Web Apps origin is no longer serving the API; the published frontend must not reintroduce `/api/artemis/*` runtime calls.
