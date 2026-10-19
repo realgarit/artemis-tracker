@@ -9,6 +9,18 @@ Keep the GitHub Pages deployment workflow aligned with the Vite build and preser
 
 ## Working notes
 
+- 2026-10-19: TypeScript 7.0.2 (native Go compiler) is used for the site and the
+  legacy api/. Nothing here uses the TypeScript JS API: there is no ESLint or
+  typescript-eslint, and Vite, tsx and Playwright transpile without the
+  `typescript` package. TS 7 no longer auto-includes every `@types/*` package,
+  so both tsconfig.json files list `"types": ["node"]` (needed for the
+  `node:` test imports and the api's fetch/console globals). CI does not build
+  api/; check it locally with `cd api && npx tsc` on Node 22. TS 7 ships no
+  tsserver.js, so editors cannot select it as the workspace TypeScript; the
+  editor's bundled version or the TS native preview extension is used instead.
+  lucide-react 1.x adds `aria-hidden` to icons by default; every icon here is
+  decorative or sits in a labelled control, and no removed brand icon is used.
+
 - 2026-10-19: Node 20 reached end of life on 2026-04-30. CI and the Pages build now run
   Node 24 (Active LTS), with @types/node 24 pinned as a direct dev dependency; Dependabot
   ignores @types/node majors so types follow the runtime. The unused legacy SWA config
