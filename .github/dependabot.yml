@@ -35,6 +35,14 @@ updates:
     time: "06:00"
     timezone: Europe/Zurich
   open-pull-requests-limit: 3
+  # @types/node follows the Node major each manifest runs on, not the newest
+  # Node release: the site builds on Node 24 (CI and Pages) and the legacy
+  # api/ targets the Functions node:22 runtime. Change its major together with
+  # the runtime, not through a routine Dependabot PR.
+  ignore:
+  - dependency-name: '@types/node'
+    update-types:
+    - version-update:semver-major
   groups:
     minor-and-patch:
       patterns:

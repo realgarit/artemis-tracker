@@ -24,7 +24,7 @@ NOAA and DSN adapters fetch current public feeds in the browser. The Pages workf
 
 ## Local development and verification
 
-Requirements: Node.js 20 or later and npm.
+Requirements: Node.js 24 (the version CI and the Pages build use) and npm.
 
     npm ci
     npm run dev
