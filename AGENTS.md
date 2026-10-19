@@ -9,6 +9,11 @@ Keep the GitHub Pages deployment workflow aligned with the Vite build and preser
 
 ## Working notes
 
+- 2026-10-19: Node 20 reached end of life on 2026-04-30. CI and the Pages build now run
+  Node 24 (Active LTS), with @types/node 24 pinned as a direct dev dependency; Dependabot
+  ignores @types/node majors so types follow the runtime. The unused legacy SWA config
+  names `node:22`, the newest Node runtime Azure Static Web Apps lists for APIs.
+
 - 2026-10-08: Dependabot alerts/security updates are enabled. Version updates run
   weekly on Monday at 06:00 Europe/Zurich for the manifests in .github/dependabot.yml.
   Minor/patch updates are grouped, majors stay separate, and merging remains review-driven.

@@ -24,6 +24,6 @@
     "X-XSS-Protection": "1; mode=block"
   },
   "platform": {
-    "apiRuntime": "node:20"
+    "apiRuntime": "node:22"
   }
 }
