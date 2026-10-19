@@ -32,7 +32,7 @@
     "@types/three": "^0.186.0",
     "cors": "^2.8.5",
     "express": "^5.3.0",
-    "framer-motion": "^11.15.0",
+    "framer-motion": "^14.1.0",
     "lucide-react": "^0.468.0",
     "postprocessing": "^6.39.5",
     "react": "^19.3.0",
