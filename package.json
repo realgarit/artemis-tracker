@@ -37,7 +37,7 @@
     "postprocessing": "^6.39.5",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "recharts": "^2.15.0",
+    "recharts": "^3.10.1",
     "three": "^0.186.1",
     "wouter": "^3.13.0"
   },
