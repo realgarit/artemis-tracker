@@ -27,13 +27,13 @@
     "@fontsource/space-mono": "^5.3.0",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
-    "@react-three/postprocessing": "^3.2.1",
+    "@react-three/postprocessing": "^3.2.2",
     "@tanstack/react-query": "^5.104.5",
     "@types/three": "^0.186.0",
     "cors": "^2.8.5",
     "express": "^5.3.0",
-    "framer-motion": "^14.4.0",
-    "lucide-react": "^1.59.0",
+    "framer-motion": "^14.6.0",
+    "lucide-react": "^1.61.0",
     "postprocessing": "^6.39.5",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
@@ -57,7 +57,7 @@
     "tailwindcss": "^4.1.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "vite": "^8.3.4"
+    "vite": "^8.3.5"
   },
   "overrides": {
     "qs": "^6.16.0"
