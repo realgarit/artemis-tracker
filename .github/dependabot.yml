@@ -44,6 +44,19 @@ updates:
     update-types:
     - version-update:semver-major
   groups:
+    # Dev tooling gets its own group so CI-proven updates merge on their own
+    # (dependabot-automerge). Runtime packages stay in minor-and-patch.
+    dev-minor-and-patch:
+      dependency-type: development
+      patterns:
+      - '*'
+      exclude-patterns:
+      - 'playwright'
+      - '@playwright/test'
+      - '@types/node'
+      update-types:
+      - minor
+      - patch
     minor-and-patch:
       patterns:
       - '*'
