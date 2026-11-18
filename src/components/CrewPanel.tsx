@@ -1,5 +1,4 @@
-import { motion } from 'framer-motion'
-import { Users, ChevronRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { Link } from 'wouter'
 import type { CrewMember } from '../lib/types'
 import { SOURCE_URLS } from '../lib/provenance'
@@ -33,92 +32,57 @@ const CREW_DATA: Record<string, { photo: string; flights: number; bio: string }>
   },
 }
 
-const AGENCY_COLORS: Record<string, string> = {
-  NASA: '#2563eb',
-  CSA: '#dc2626',
-}
-
 export function CrewPanel({ crew, compact = false, missionId = 'artemis-ii' }: CrewPanelProps) {
   if (!crew || crew.length === 0) return (
-    <div className="glass-panel border-glow p-4 text-center">
-      <span className="text-[10px] text-slate-500 tracking-[.2em] uppercase font-semibold">Uncrewed Test Flight</span>
+    <div className="sheet p-4 text-center">
+      <span className="eyebrow">Uncrewed Test Flight</span>
     </div>
   )
 
   return (
-    <motion.div
-      className="glass-panel border-glow p-4"
-      initial={false}
-      animate={{ opacity: 1 }}
-    >
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Users className="h-3.5 w-3.5 text-cyan-glow" strokeWidth={2} />
-          <span className="text-[10px] text-slate-400 uppercase tracking-[.2em] font-semibold">
-            Crew — {crew.length} Aboard
-          </span>
+    <section className="sheet min-w-0 p-3 sm:p-5" aria-labelledby="crew-panel-title">
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <div>
+          <p className="eyebrow">Flight crew</p>
+          <h2 id="crew-panel-title" className="font-display text-lg font-semibold text-ink">Crew — {crew.length} Aboard</h2>
         </div>
-        <Link href={`/${missionId}/crew`} className="inline-flex min-h-11 items-center gap-1 px-1 text-[9px] text-slate-500 hover:text-cyan-glow transition-colors">
-          View profiles <ChevronRight className="h-3 w-3" />
+        <Link href={`/${missionId}/crew`} className="inline-flex min-h-11 items-center gap-1 text-sm text-blue underline underline-offset-4 hover:text-signal">
+          View profiles <ChevronRight className="h-4 w-4" />
         </Link>
       </div>
 
-      <div className={`grid gap-3 ${compact ? 'grid-cols-2 xl:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-4'}`}>
-        {crew.map((member, i) => {
+      <ul className={`grid border-l border-t border-ink ${compact ? 'grid-cols-2 xl:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-4'}`}>
+        {crew.map((member) => {
           const data = CREW_DATA[member.name]
-          const agencyColor = AGENCY_COLORS[member.agency] || '#64748b'
-
           return (
-            <motion.div
-              key={member.name}
-              className="bg-space-800/40 rounded p-3 border border-slate-800/50"
-              initial={false}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08, duration: 0.3 }}
-            >
-              <div className="flex items-center gap-3 mb-2">
-                {/* Photo */}
-                <div className="h-11 w-11 rounded-full overflow-hidden border border-slate-700/60 shrink-0 bg-space-700">
+            <li key={member.name} className="border-b border-r border-ink bg-paper p-3 sm:p-4">
+              <div className="flex items-center gap-3">
+                <div className="h-14 w-14 shrink-0 overflow-hidden border border-ink bg-paper-2">
                   {data?.photo ? (
                     <img src={data.photo} alt={member.name} className="h-full w-full object-cover" loading="lazy" />
                   ) : (
-                    <div className="h-full w-full flex items-center justify-center text-[13px] font-bold text-cyan-glow/60 font-mono">
+                    <div className="flex h-full w-full items-center justify-center font-mono text-sm font-bold text-ink-3">
                       {member.name.split(' ').map((n) => n[0]).join('')}
                     </div>
                   )}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[11px] text-slate-200 font-semibold truncate">{member.name}</div>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[8px] text-slate-400">{member.role}</span>
-                    <span
-                      className="rounded px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-slate-100"
-                      style={{ backgroundColor: `${agencyColor}28` }}
-                    >
-                      {member.agency}
-                    </span>
-                  </div>
+                  <div className="font-display text-base font-semibold leading-tight text-ink">{member.name}</div>
+                  <div className="mt-1 font-mono text-[11px] uppercase tracking-wider text-ink-3">{member.role} · {member.agency}</div>
                 </div>
               </div>
 
               {!compact && data && (
                 <>
-                  <div className="text-[8px] text-slate-500 leading-relaxed mt-1">{data.bio}</div>
-                  <div className="mt-2 flex items-center gap-1">
-                    <span className="text-[7px] text-slate-600 uppercase tracking-wider">Flights:</span>
-                    <div className="flex gap-0.5">
-                      {Array.from({ length: data.flights }, (_, j) => (
-                        <div key={j} className="h-1 w-3 rounded-full bg-cyan-glow/30" />
-                      ))}
-                    </div>
-                  </div>
+                  <p className="mt-3 text-[13px] leading-relaxed text-ink-2">{data.bio}</p>
+                  <p className="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-3">Spaceflights: {data.flights}</p>
                 </>
               )}
-            </motion.div>
+            </li>
           )
         })}
-      </div>
-      <a href={SOURCE_URLS.nasaArtemisII} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center gap-1 text-xs text-cyan-glow underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">NASA crew source <ChevronRight className="h-3.5 w-3.5" /></a>
-    </motion.div>
+      </ul>
+      <a href={SOURCE_URLS.nasaArtemisII} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center gap-1 text-sm text-blue underline underline-offset-4 hover:text-signal">NASA crew source <ChevronRight className="h-3.5 w-3.5" /></a>
+    </section>
   )
 }

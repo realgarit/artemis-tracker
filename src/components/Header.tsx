@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'wouter'
-import { Satellite, Radio, ChevronDown } from 'lucide-react'
+import { Radio, ChevronDown } from 'lucide-react'
 import { MISSIONS, type MissionConfig } from '../data/missionData'
 import { getMissionTrajectory } from '../data/trajectoryData'
 
@@ -46,15 +46,21 @@ export function Header({ missionName, activeMissionId, onMissionChange }: Header
     } else if (event.key === 'Tab') setShowSelector(false)
   }
 
+  const stampLabel = selectedMission
+    ? hasReplay ? 'REPLAY' : isCompleted ? 'ARCHIVE' : selectedMission.status === 'cancelled' ? 'CANCELLED' : selectedMission.status === 'planned' ? 'PLANNED' : 'STATUS UNVERIFIED'
+    : 'STATUS UNVERIFIED'
+
   return (
-    <header className="sticky top-0 z-40 glass-panel-solid border-b border-cyan-mid/8">
-      <div className="mx-auto flex min-w-0 max-w-[1600px] flex-col gap-2 px-2 py-2 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-2.5">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="relative">
-            <Satellite className="h-5 w-5 text-cyan-glow" strokeWidth={1.5} />
-          </div>
+    <header className="relative z-40 border-b-2 border-ink bg-paper">
+      <div className="mx-auto flex min-w-0 max-w-[1600px] flex-wrap items-center justify-between gap-x-4 gap-y-1 px-3 py-2 sm:px-4">
+        <div className="flex min-w-0 items-center gap-3">
+          {/* Mission mark: Earth, the outbound track, the Moon. */}
+          <svg aria-hidden="true" viewBox="0 0 40 40" className="h-9 w-9 shrink-0">
+            <circle cx="12" cy="27" r="7" fill="var(--color-blue)" />
+            <path d="M12 27C14 6 30 4 32 11" fill="none" stroke="var(--color-signal-hot)" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="32" cy="12" r="3.5" fill="var(--color-ink)" />
+          </svg>
           <div className="min-w-0">
-            {/* Mission name + selector */}
             <div className="relative">
               <button
                 type="button"
@@ -64,17 +70,16 @@ export function Header({ missionName, activeMissionId, onMissionChange }: Header
                 aria-controls="mission-selector-menu"
                 aria-label={`Select mission. Current mission: ${missionName || 'Artemis'}`}
                 onClick={() => setShowSelector(!showSelector)}
-                className="flex min-h-11 min-w-0 flex-wrap items-center gap-1 font-orbitron text-sm font-bold tracking-[.05em] text-cyan-glow glow-cyan leading-tight hover:text-cyan-glow/90 transition-colors sm:gap-1.5 sm:text-lg sm:tracking-[.15em]"
+                className="flex min-h-11 min-w-0 flex-wrap items-center gap-1.5 text-left font-display text-xl font-bold uppercase leading-none tracking-tight text-ink hover:text-signal sm:text-2xl"
               >
-                {missionName?.toUpperCase() || 'ARTEMIS II'}
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showSelector ? 'rotate-180' : ''}`} />
+                {missionName || 'Artemis II'}
+                <ChevronDown className={`h-4 w-4 transition-transform ${showSelector ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* Mission dropdown */}
               {showSelector && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowSelector(false)} />
-                  <div id="mission-selector-menu" ref={selectorMenuRef} role="menu" aria-label="Missions" onKeyDown={handleMenuKeyDown} className="absolute top-7 left-0 z-50 w-60 glass-panel-solid border border-cyan-mid/15 rounded-lg p-1.5 shadow-xl">
+                  <div id="mission-selector-menu" ref={selectorMenuRef} role="menu" aria-label="Missions" onKeyDown={handleMenuKeyDown} className="absolute left-0 top-full z-50 w-72 max-w-[calc(100vw-1.5rem)] border-2 border-ink bg-card shadow-[6px_6px_0_rgba(21,24,29,0.15)]">
                     {Object.values(MISSIONS).map((m) => (
                       <button
                         type="button"
@@ -85,51 +90,29 @@ export function Header({ missionName, activeMissionId, onMissionChange }: Header
                           onMissionChange?.(m.id)
                           setShowSelector(false)
                         }}
-                        className={`min-h-11 w-full text-left px-3 py-2 rounded flex items-center justify-between transition-colors ${
-                          'hover:bg-cyan-glow/5 text-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow'
-                        } ${m.id === activeMissionId ? 'bg-cyan-glow/8' : ''}`}
+                        className={`flex min-h-11 w-full items-center justify-between gap-3 border-b border-rule px-3 py-2 text-left last:border-b-0 hover:bg-paper-2 ${m.id === activeMissionId ? 'bg-paper-2' : ''}`}
                       >
-                        <div>
-                          <div className="text-[11px] font-semibold font-display tracking-wider">
-                            {m.name.toUpperCase()}
-                          </div>
-                          <div className="text-[8px] text-slate-500 mt-0.5">{launchLabel(m)}</div>
-                        </div>
-                        {m.status === 'completed' && (
-                          <span className="text-[7px] text-amber-glow font-mono tracking-wider bg-amber-glow/10 px-1.5 py-0.5 rounded">
-                            {getMissionTrajectory(m.id) ? 'REPLAY' : 'ARCHIVE'}
-                          </span>
-                        )}
-                        {m.status === 'planned' && <span className="text-[7px] text-slate-400 font-mono tracking-wider">PLANNED</span>}
-                        {m.status === 'cancelled' && <span className="text-[7px] text-slate-400 font-mono tracking-wider">CANCELLED</span>}
+                        <span>
+                          <span className="block font-display text-sm font-bold uppercase tracking-tight text-ink">{m.name}</span>
+                          <span className="mt-0.5 block font-mono text-[11px] text-ink-3">{launchLabel(m)}</span>
+                        </span>
+                        <span className={`font-mono text-[11px] tracking-wider ${m.status === 'completed' ? 'font-bold text-signal' : 'text-ink-3'}`}>
+                          {m.status === 'completed' ? (getMissionTrajectory(m.id) ? 'REPLAY' : 'ARCHIVE') : m.status === 'planned' ? 'PLANNED' : m.status === 'cancelled' ? 'CANCELLED' : ''}
+                        </span>
                       </button>
                     ))}
                   </div>
                 </>
               )}
             </div>
-            <p className="mt-0.5 break-words text-[8px] font-medium uppercase tracking-[.12em] text-slate-500 sm:text-[9px] sm:tracking-[.25em]">
-              Mission Control — MCC-Houston
-            </p>
+            <p className="eyebrow -mt-1.5 break-words">Flight data file · NASA sources</p>
           </div>
         </div>
 
-        {isCompleted || selectedMission?.status === 'planned' || selectedMission?.status === 'cancelled' ? (
-          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:justify-end">
-            <a href="/compare" className="inline-flex min-h-11 max-w-full items-center rounded border border-slate-700/60 px-2 text-[11px] text-slate-300 hover:border-cyan-glow/50 hover:text-cyan-glow focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow sm:px-3 sm:text-xs">Compare missions</a>
-            <div className="flex min-w-0 max-w-full flex-wrap items-center gap-1.5 rounded border border-amber-glow/25 bg-amber-glow/8 px-2.5 py-1">
-              <Radio className="h-3 w-3 text-amber-glow" strokeWidth={2} />
-              <span className="text-[10px] font-bold text-amber-glow tracking-[.15em]">{hasReplay ? 'REPLAY' : isCompleted ? 'ARCHIVE' : selectedMission?.status === 'cancelled' ? 'CANCELLED' : 'PLANNED'}</span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:justify-end">
-            <a href="/compare" className="inline-flex min-h-11 max-w-full items-center rounded border border-slate-700/60 px-2 text-[11px] text-slate-300 hover:border-cyan-glow/50 hover:text-cyan-glow focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow sm:px-3 sm:text-xs">Compare missions</a>
-            <div className="flex min-w-0 max-w-full flex-wrap items-center gap-1.5 rounded border border-slate-700/50 bg-slate-800/70 px-2.5 py-1">
-              <span className="text-[10px] font-bold text-slate-300 tracking-[.15em]">STATUS UNVERIFIED</span>
-            </div>
-          </div>
-        )}
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <a href="/compare" className="inline-flex min-h-11 items-center text-sm text-ink underline decoration-rule decoration-2 underline-offset-4 hover:decoration-signal-hot">Compare missions</a>
+          <span className="stamp -rotate-2"><Radio className="h-3 w-3" strokeWidth={2.5} />{stampLabel}</span>
+        </div>
       </div>
     </header>
   )

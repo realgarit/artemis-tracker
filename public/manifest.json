@@ -4,8 +4,8 @@
   "description": "Explore sourced Artemis mission history with an offline-friendly illustrative trajectory replay",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#020408",
-  "theme_color": "#22d3ee",
+  "background_color": "#f2eee5",
+  "theme_color": "#15181d",
   "icons": [
     { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
   ]

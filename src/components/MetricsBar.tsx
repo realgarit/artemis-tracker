@@ -32,11 +32,11 @@ function formatLocal(selectedTime: string): string {
   return new Date(selectedTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
 }
 
-function Cell({ label, value, accent }: { label: string; value: string; accent?: string }) {
+function Cell({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="flex flex-col items-center gap-0.5 px-3 py-1.5">
-      <span className="text-[8px] text-slate-600 uppercase tracking-[.15em] font-medium">{label}</span>
-      <span className={`font-mono text-[13px] font-semibold tracking-wide ${accent || 'text-slate-300'}`}>{value}</span>
+    <div className="flex shrink-0 flex-col justify-center gap-0.5 border-l border-rule px-3 py-1.5 sm:px-4">
+      <span className="eyebrow whitespace-nowrap">{label}</span>
+      <span className={`whitespace-nowrap font-mono text-sm ${tone || 'text-ink'}`}>{value}</span>
     </div>
   )
 }
@@ -46,25 +46,20 @@ export function MetricsBar({ mission, trajectory, selectedTime = mission?.launch
   if (!mission) return null
 
   return (
-    <div className="glass-panel-solid border-b border-cyan-mid/6 sticky top-[49px] z-30">
-      <div role="region" aria-label="Current mission metrics" tabIndex={0} className="mx-auto max-w-[1600px] px-2 flex items-center justify-between overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">
-        <div className="flex items-center gap-1 px-3 py-1.5 border-r border-slate-800/60">
-          <span className="text-[8px] text-slate-600 uppercase tracking-wider mr-1.5">Phase</span>
-          <span className="font-mono text-[11px] font-bold text-cyan-glow uppercase tracking-wider">
-            {mission.currentPhase}
-          </span>
+    <div className="plate sticky top-0 z-30 border-b border-rule">
+      <div role="region" aria-label="Current mission metrics" tabIndex={0} className="relative mx-auto flex max-w-[1600px] items-stretch overflow-x-auto px-3 sm:px-4">
+        <div className="flex shrink-0 flex-col justify-center gap-0.5 py-1.5 pr-4">
+          <span className="eyebrow whitespace-nowrap">Mission elapsed time</span>
+          <span className="whitespace-nowrap font-mono text-xl font-bold leading-none text-ink sm:text-2xl">{formatMET(mission.launchDate, selectedTime)}</span>
         </div>
-
-        <div className="flex items-center divide-x divide-slate-800/40">
-          <Cell label="MET" value={formatMET(mission.launchDate, selectedTime)} accent="text-green-glow" />
-          <Cell label="Day" value={`${(Math.round(((Date.parse(selectedTime) - Date.parse(mission.launchDate)) / 86400000) * 10) / 10).toFixed(1)} / ${mission.totalDays.toFixed(1)}`} />
-          <Cell label="Speed" value={trajectory?.velocity === null || trajectory?.velocity === undefined ? '—' : `${trajectory.velocity.toFixed(3)} km/s`} accent="text-cyan-glow" />
-          <Cell label="Next" value={`${mission.nextMilestone.name} ${formatCountdown(mission.nextMilestone.eta, selectedTime)}`} accent="text-amber-glow" />
-          <Cell label="UTC · selected" value={formatUTC(selectedTime)} />
-          <Cell label="Local · selected" value={formatLocal(selectedTime)} />
-        </div>
+        <Cell label="Phase" value={mission.currentPhase} tone="font-bold uppercase text-signal" />
+        <Cell label="Day" value={`${(Math.round(((Date.parse(selectedTime) - Date.parse(mission.launchDate)) / 86400000) * 10) / 10).toFixed(1)} / ${mission.totalDays.toFixed(1)}`} />
+        <Cell label="Speed" value={trajectory?.velocity === null || trajectory?.velocity === undefined ? '—' : `${trajectory.velocity.toFixed(3)} km/s`} />
+        <Cell label="Next" value={`${mission.nextMilestone.name} ${formatCountdown(mission.nextMilestone.eta, selectedTime)}`} />
+        <Cell label="UTC · selected" value={formatUTC(selectedTime)} />
+        <Cell label="Local · selected" value={formatLocal(selectedTime)} />
+        {trajectory?.provenance && <div className="ml-auto flex min-w-[14rem] flex-1 items-center justify-end border-l border-rule pl-3 sm:pl-4 [&_span]:truncate"><DataSourceBadge provenance={trajectory.provenance}/></div>}
       </div>
-      {trajectory?.provenance && <div className="mx-auto max-w-[1600px] px-3 pb-2 sm:px-4"><DataSourceBadge provenance={trajectory.provenance}/></div>}
     </div>
   )
 }

@@ -1,52 +1,95 @@
-@import "@fontsource-variable/orbitron";
 @import "@fontsource-variable/space-grotesk";
 @import "@fontsource/space-mono/latin-400.css";
 @import "@fontsource/space-mono/latin-700.css";
 @import "tailwindcss";
 
-/* === Theme === */
+/*
+ * Flight data file.
+ * The page is a printed mission document: warm paper, ink, hairline rules,
+ * one signal colour (international orange) and NASA blue for links and data.
+ * Anything that looks out into space — the 3D scene, the mission clock —
+ * sits on a dark "plate" that re-declares the same tokens.
+ */
 @theme {
   --font-sans: Arial, system-ui, sans-serif;
   --font-mono: "Space Mono", ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
   --font-display: "Space Grotesk Variable", Arial, system-ui, sans-serif;
-  --font-orbitron: "Orbitron Variable", "Space Grotesk Variable", system-ui, sans-serif;
 
-  --color-space-950: #020408;
-  --color-space-900: #04060b;
-  --color-space-800: #0a0f1a;
-  --color-space-700: #111827;
-  --color-space-600: #1a2332;
+  --color-paper: #f2eee5;
+  --color-paper-2: #e9e4d8;
+  --color-card: #f9f6ef;
+  --color-ink: #15181d;
+  --color-ink-2: #3b4048;
+  --color-ink-3: #5b5f67;
+  --color-rule: #cbc4b4;
+  --color-signal: #ad3608;
+  --color-signal-hot: #e8490f;
+  --color-blue: #0b3d91;
+  --color-ok: #1c6437;
+  --color-bad: #a01c1c;
+}
 
-  --color-cyan-glow: #22d3ee;
-  --color-cyan-mid: #06b6d4;
-  --color-cyan-dim: #0891b2;
-  --color-amber-glow: #f59e0b;
-  --color-amber-dim: #b45309;
-  --color-red-glow: #ef4444;
-  --color-green-glow: #22c55e;
-  --color-slate-500: #9aaec4;
-  --color-slate-600: #8da2ba;
-  --color-slate-700: #7f94ad;
+.plate {
+  --color-paper: #0c0e12;
+  --color-paper-2: #06070a;
+  --color-card: #15181d;
+  --color-ink: #f2eee5;
+  --color-ink-2: #d3cec3;
+  --color-ink-3: #a8a49a;
+  --color-rule: #3d4047;
+  --color-signal: #ff8a57;
+  --color-signal-hot: #ff5a1f;
+  --color-blue: #abc3ff;
+  --color-ok: #7ad596;
+  --color-bad: #ff9a9a;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
 }
 
 /* === Base === */
+html { background: var(--color-paper); }
+
 body {
   margin: 0;
-  background: var(--color-space-950);
-  color: #cbd5e1;
+  background-color: var(--color-paper);
+  /* Plotting-chart grid, faint enough to stay behind the text. */
+  background-image:
+    linear-gradient(rgba(21, 24, 29, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(21, 24, 29, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  color: var(--color-ink-2);
   font-family: var(--font-sans);
   font-weight: 400;
-  letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
-/* Keep the subdued dashboard labels readable on the near-black panels. */
-.text-slate-500 { color: #a8b8cb !important; }
-.text-slate-600,
-.text-slate-700 { color: #94a9c0 !important; }
-.text-red-glow { color: #ff8b8b !important; }
+::selection { background: var(--color-signal-hot); color: #fff; }
+
+:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+}
+
+h1, h2, h3 { color: var(--color-ink); }
+
+.font-display { letter-spacing: -0.01em; }
+.font-mono { font-variant-numeric: tabular-nums; }
+
+input[type="range"] { accent-color: var(--color-signal-hot); }
+
+table { border-collapse: collapse; }
+thead th {
+  border-bottom: 1px solid var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+tbody tr + tr { border-top: 1px solid var(--color-rule); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -55,119 +98,92 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .live-pulse { animation: none !important; }
 }
 
-/* === Space Background === */
-.space-bg {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(ellipse at 15% 50%, rgba(6, 182, 212, 0.04) 0%, transparent 55%),
-    radial-gradient(ellipse at 85% 20%, rgba(99, 102, 241, 0.03) 0%, transparent 45%),
-    radial-gradient(ellipse at 50% 100%, rgba(6, 182, 212, 0.02) 0%, transparent 40%),
-    var(--color-space-950);
-}
+/* === Document parts === */
+@layer components {
+  /* A section of the file: ruled across the top like a form block. */
+  .sheet {
+    background: var(--color-card);
+    border: 1px solid var(--color-rule);
+    border-top: 2px solid var(--color-ink);
+  }
 
-.space-bg::before,
-.space-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.35) 0%, transparent 100%),
-    radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,0.25) 0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 60% 30%, rgba(255,255,255,0.45) 0%, transparent 100%),
-    radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.2) 0%, transparent 100%),
-    radial-gradient(1px 1px at 50% 90%, rgba(255,255,255,0.3) 0%, transparent 100%);
-}
+  /* Small typewritten label above a heading or value. */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.4;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink-3);
+  }
 
-.space-bg::before { animation: twinkle1 5s ease-in-out infinite alternate; }
-.space-bg::after {
-  animation: twinkle2 7s ease-in-out infinite alternate-reverse;
-  opacity: 0.5;
-  background-image:
-    radial-gradient(1px 1px at 15% 45%, rgba(255,255,255,0.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 45% 15%, rgba(255,255,255,0.2) 0%, transparent 100%),
-    radial-gradient(1.2px 1.2px at 75% 55%, rgba(255,255,255,0.35) 0%, transparent 100%),
-    radial-gradient(1px 1px at 25% 85%, rgba(255,255,255,0.15) 0%, transparent 100%),
-    radial-gradient(0.8px 0.8px at 85% 35%, rgba(255,255,255,0.25) 0%, transparent 100%);
-}
+  .btn {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0 0.875rem;
+    border: 1px solid var(--color-ink);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--color-ink);
+    font-size: 0.875rem;
+    line-height: 1.2;
+    transition: background-color 120ms, color 120ms;
+  }
+  .btn:hover:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .btn:disabled, .btn[aria-disabled="true"] { cursor: not-allowed; opacity: 0.5; }
 
-@keyframes twinkle1 { 0% { opacity: 0.4; } 100% { opacity: 1; } }
-@keyframes twinkle2 { 0% { opacity: 0.25; } 100% { opacity: 0.7; } }
+  .btn-solid {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .btn-solid:hover:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--color-signal);
+    border-color: var(--color-signal);
+    color: #fff;
+  }
+  .plate .btn-solid:hover:not(:disabled):not([aria-disabled="true"]) { color: #15181d; }
 
-/* === Scan Line (CRT effect — very subtle) === */
-.scan-line {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  pointer-events: none;
-  background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.02) 50%);
-  background-size: 100% 3px;
-}
+  .field {
+    min-height: 2.75rem;
+    border: 1px solid var(--color-ink-3);
+    border-radius: 2px;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    padding: 0 0.75rem;
+    font-size: 0.875rem;
+  }
 
-/* === Glass Panels === */
-.glass-panel {
-  background: rgba(8, 12, 22, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(6, 182, 212, 0.08);
-  border-radius: 6px;
-  box-shadow:
-    0 0 0 1px rgba(6, 182, 212, 0.03),
-    0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.glass-panel-solid {
-  background: rgba(6, 10, 18, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(6, 182, 212, 0.1);
-  border-radius: 6px;
-}
-
-/* === Glow Effects === */
-.border-glow {
-  box-shadow:
-    0 0 12px rgba(6, 182, 212, 0.06),
-    0 0 0 1px rgba(6, 182, 212, 0.05),
-    inset 0 1px 0 rgba(6, 182, 212, 0.04);
-}
-
-.border-glow-amber {
-  box-shadow:
-    0 0 12px rgba(245, 158, 11, 0.06),
-    inset 0 1px 0 rgba(245, 158, 11, 0.04);
-}
-
-.glow-cyan {
-  text-shadow: 0 0 8px rgba(6, 182, 212, 0.5), 0 0 24px rgba(6, 182, 212, 0.15);
-}
-
-.glow-amber {
-  text-shadow: 0 0 8px rgba(245, 158, 11, 0.5), 0 0 24px rgba(245, 158, 11, 0.15);
-}
-
-/* === Live Badge Pulse === */
-.live-pulse {
-  animation: pulse-glow 2.5s ease-in-out infinite;
-}
-
-@keyframes pulse-glow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  /* Rubber-stamp status mark. */
+  .stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border: 1.5px solid var(--color-signal);
+    border-radius: 2px;
+    padding: 0.2rem 0.5rem;
+    color: var(--color-signal);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
 }
 
 /* === Scrollbar === */
-::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.15); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(6, 182, 212, 0.3); }
+::-webkit-scrollbar-thumb { background: var(--color-rule); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ink-3); }
 
 /* === Recharts === */
-.recharts-cartesian-grid-horizontal line,
-.recharts-cartesian-grid-vertical line {
-  stroke: rgba(6, 182, 212, 0.04) !important;
-}
+.recharts-wrapper :focus { outline: none; }
+.recharts-wrapper :focus-visible { outline: 2px solid var(--color-blue); }

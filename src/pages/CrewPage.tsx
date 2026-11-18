@@ -52,13 +52,11 @@ export function CrewPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="space-bg" />
-
       <div className="relative z-10 mx-auto max-w-[1200px] px-4 py-8">
         {/* Back button */}
         <button
           onClick={() => setLocation(`/${missionId || 'artemis-ii'}`)}
-          className="flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-glow transition-colors mb-8"
+          className="mb-6 flex min-h-11 items-center gap-2 text-sm text-ink underline decoration-rule decoration-2 underline-offset-4 hover:decoration-signal-hot"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
@@ -66,10 +64,10 @@ export function CrewPage() {
 
         {/* Header */}
         <div className="mb-10">
-          <h1 className="font-display text-2xl sm:text-3xl text-cyan-glow font-bold tracking-wider glow-cyan">
+          <h1 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-5xl">
             ARTEMIS II CREW
           </h1>
-          <p className="text-slate-400 mt-2 text-sm">
+          <p className="text-ink-3 mt-2 text-sm">
             The first humans to fly to the Moon since Apollo 17 in December 1972
           </p>
         </div>
@@ -79,14 +77,14 @@ export function CrewPage() {
           {CREW.map((member, i) => (
             <motion.div
               key={member.name}
-              className="glass-panel border-glow p-6 flex flex-col sm:flex-row gap-6"
+              className="sheet p-6 flex flex-col sm:flex-row gap-6"
               initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1, duration: 0.4 }}
             >
               {/* Photo */}
               <div className="shrink-0">
-                <div className="h-32 w-32 sm:h-40 sm:w-40 rounded-lg overflow-hidden border border-slate-700/50 bg-space-800">
+                <div className="h-32 w-32 sm:h-40 sm:w-40 overflow-hidden border border-ink bg-paper-2">
                   <img
                     src={member.photo}
                     alt={member.name}
@@ -98,44 +96,40 @@ export function CrewPage() {
               {/* Info */}
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1">
-                  <h2 className="text-lg font-semibold text-white">{member.name}</h2>
-                  <span className="font-mono text-[10px] text-slate-500 bg-slate-800/60 px-1.5 py-0.5 rounded">
+                  <h2 className="text-lg font-semibold text-ink">{member.name}</h2>
+                  <span className="font-mono text-[11px] text-ink-3 bg-paper-2 px-1.5 py-0.5 rounded-xs">
                     {member.callsign}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-sm text-slate-400">{member.role}</span>
+                  <span className="text-sm text-ink-3">{member.role}</span>
                   <span
-                    className="text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider"
-                    style={{
-                      backgroundColor: member.agency === 'NASA' ? '#2563eb20' : '#dc262620',
-                      color: member.agency === 'NASA' ? '#2563eb' : '#dc2626',
-                    }}
+                    className="border border-ink px-1.5 py-0.5 font-mono text-[11px] font-bold tracking-wider text-ink"
                   >
                     {member.agency}
                   </span>
                 </div>
 
-                <p className="text-[12px] text-slate-400 leading-relaxed mb-4">{member.bio}</p>
+                <p className="mb-4 max-w-prose text-sm leading-relaxed text-ink-2">{member.bio}</p>
 
                 {/* Flight history */}
                 <div>
-                  <div className="text-[9px] text-slate-600 uppercase tracking-wider mb-1.5">Spaceflight History</div>
+                  <div className="text-[11px] text-ink-3 uppercase tracking-wider mb-1.5">Spaceflight History</div>
                   {member.flights.map((flight, j) => (
                     <div key={j} className="flex items-center gap-2 mb-1">
-                      <div className="h-1.5 w-1.5 rounded-full bg-cyan-glow/40" />
-                      <span className="text-[10px] text-slate-300 font-mono">{flight}</span>
+                      <div className="h-1.5 w-1.5 bg-signal-hot" />
+                      <span className="text-[11px] text-ink-2 font-mono">{flight}</span>
                     </div>
                   ))}
                 </div>
 
-                <div className="text-[9px] text-slate-600 mt-3">Born: {member.born}</div>
+                <div className="text-[11px] text-ink-3 mt-3">Born: {member.born}</div>
               </div>
             </motion.div>
           ))}
         </div>
-        <a href={SOURCE_URLS.nasaArtemisII} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-11 items-center text-sm text-cyan-glow underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">NASA crew and mission source</a>
+        <a href={SOURCE_URLS.nasaArtemisII} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-11 items-center text-sm text-blue underline underline-offset-4">NASA crew and mission source</a>
       </div>
     </div>
   )
