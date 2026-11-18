@@ -31,7 +31,7 @@ test.beforeEach(async ({ page }) => {
 
 test('direct mission and crew routes render their matching catalog entry', async ({ page }) => {
   await page.goto('/artemis-i', { waitUntil: 'commit', timeout: 10_000 })
-  await expect(page.getByRole('heading', { name: /mission timeline/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Mission Timeline', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: /Select mission. Current mission: Artemis I/i })).toBeVisible()
   await expect(page.getByText(/Historical replay · NASA\/JSC flight ephemeris/i).first()).toBeVisible()
 
@@ -302,7 +302,6 @@ test('3D replay follows the shared mission epoch and keeps Earth focus available
     expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(canvasBox.y + canvasBox.height)
   }
   const loadedFontFamilies = await page.evaluate(() => [...new Set([...document.fonts].filter((font) => font.status === 'loaded').map((font) => font.family))])
-  expect(loadedFontFamilies).toContain('Orbitron Variable')
   expect(loadedFontFamilies).toContain('Space Grotesk Variable')
   expect(loadedFontFamilies).toContain('Space Mono')
   const fontAssignments = await page.evaluate(() => ({
@@ -314,8 +313,8 @@ test('3D replay follows the shared mission epoch and keeps Earth focus available
   expect(fontAssignments.body).toContain('Arial')
   expect(fontAssignments.display).toContain('Space Grotesk Variable')
   expect(fontAssignments.telemetry).toContain('Space Mono')
-  expect(fontAssignments.sceneLabel).toContain('Orbitron Variable')
-  expect(localFonts.length).toBeGreaterThanOrEqual(3)
+  expect(fontAssignments.sceneLabel).toContain('Space Mono')
+  expect(localFonts.length).toBeGreaterThanOrEqual(2)
   expect(localFonts.every((url) => new URL(url).origin === new URL(page.url()).origin)).toBe(true)
 
   await replay.focus()
@@ -438,7 +437,7 @@ test('a completed mission pack opens a deep route after a cold offline navigatio
   expect(pack?.schemaVersion).toBe(2)
   expect(pack?.appVersion).toBeTruthy()
   expect(pack?.resources.length).toBeGreaterThan(5)
-  for (const family of ['orbitron', 'space-grotesk', 'space-mono']) {
+  for (const family of ['space-grotesk', 'space-mono']) {
     expect(pack?.resources.some((resource) => resource.toLowerCase().includes(family) && /\.(?:woff2?|ttf|otf)$/.test(resource))).toBe(true)
   }
   for (const resource of pack?.resources || []) expect(pack?.checksums[resource]).toMatch(/^[a-f0-9]{64}$/)

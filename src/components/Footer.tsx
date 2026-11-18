@@ -9,23 +9,15 @@ interface FooterProps {
 
 export function Footer({ trajectory }: FooterProps) {
   return (
-    <footer className="border-t border-cyan-mid/6 mt-6">
-      <div className="mx-auto max-w-[1600px] px-4 py-3">
-        <div className="flex flex-wrap items-center justify-between gap-4 text-[9px] text-slate-600">
-          <div className="flex flex-wrap gap-x-5 gap-y-1">
-            <span>
-              Position & velocity:{' '}
-              <DataSourceBadge provenance={trajectory?.provenance} />
-            </span>
-            <span>
-              Space weather: <span className="text-slate-500">NOAA SWPC</span>
-            </span>
-          </div>
-          <div className="flex gap-x-5 gap-y-1 font-mono">
-            <span>All times UTC</span>
-
-            <span className="text-slate-700">v{APP_VERSION}</span>
-          </div>
+    <footer className="mt-8 border-t-2 border-ink">
+      <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-x-6 gap-y-1 px-3 py-3 font-mono text-[11px] text-ink-3 sm:px-4">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+          <span className="flex flex-wrap items-center gap-x-2">Position &amp; velocity: <DataSourceBadge provenance={trajectory?.provenance} /></span>
+          <span>Space weather: NOAA SWPC</span>
+        </div>
+        <div className="flex gap-x-6">
+          <span>All times UTC</span>
+          <span>v{APP_VERSION}</span>
         </div>
       </div>
     </footer>

@@ -46,10 +46,10 @@ function supportsWebGL(): boolean {
 
 function TrajectoryFallback() {
   return (
-    <div className="glass-panel border-glow p-3 min-h-[450px] flex items-center justify-center">
+    <div className="plate p-3 min-h-[450px] flex items-center justify-center">
       <div className="text-center">
-        <div className="inline-block h-6 w-6 border-2 border-cyan-glow/30 border-t-cyan-glow rounded-full animate-spin mb-3" />
-        <div className="text-[10px] text-slate-500 tracking-widest uppercase">Loading 3D Visualization</div>
+        <div className="inline-block h-6 w-6 border-2 border-rule border-t-signal-hot rounded-full animate-spin mb-3" />
+        <div className="eyebrow">Loading 3D Visualization</div>
       </div>
     </div>
   )
@@ -84,8 +84,8 @@ function DeferredMissionCharts({ velocity, distance, selectedTime, onSeek }: {
   return (
     <section ref={container} aria-label="Source-linked mission charts">
       {shouldLoad
-        ? <Suspense fallback={<div className="glass-panel min-h-48 p-4 text-sm text-slate-300" aria-live="polite">Loading source-linked mission charts…</div>}><MissionCharts velocity={velocity} distance={distance} selectedTime={selectedTime} onSeek={onSeek}/></Suspense>
-        : <div className="glass-panel min-h-48 p-4 text-sm text-slate-300">Mission charts load as you scroll to this section.</div>}
+        ? <Suspense fallback={<div className="sheet min-h-48 p-4 text-sm text-ink-2" aria-live="polite">Loading source-linked mission charts…</div>}><MissionCharts velocity={velocity} distance={distance} selectedTime={selectedTime} onSeek={onSeek}/></Suspense>
+        : <div className="sheet min-h-48 p-4 text-sm text-ink-2">Mission charts load as you scroll to this section.</div>}
     </section>
   )
 }
@@ -104,23 +104,23 @@ function CrewRoute() {
   if (!mission) return <UnknownMissionPage missionId={missionId} />
   if (mission.status !== 'completed') return <MissionBriefingPage mission={mission} />
   if (!mission.trajectoryDatasetId) return <MissionCrewDirectoryPage mission={mission} />
-  if (mission.id === 'artemis-ii') return <Suspense fallback={<main className="p-8 text-center text-slate-300">Loading crew profiles…</main>}><CrewPage /></Suspense>
+  if (mission.id === 'artemis-ii') return <Suspense fallback={<main className="p-8 text-center text-ink-2">Loading crew profiles…</main>}><CrewPage /></Suspense>
   return <MissionCrewDirectoryPage mission={mission} />
 }
 
 function MissionCrewDirectoryPage({ mission }: { mission: MissionConfig }) {
-  return <><Header missionName={mission.name} activeMissionId={mission.id}/><main className="mx-auto max-w-3xl space-y-4 px-4 py-8"><h1 className="font-display text-2xl font-bold text-cyan-glow">{mission.name} crew</h1>{mission.crew.length
-    ? <><p className="text-sm text-slate-300">NASA’s published prime crew.</p><ul className="grid gap-3 sm:grid-cols-2">{mission.crew.map((member) => <li key={member.name} className="glass-panel p-4"><h2 className="font-semibold text-slate-100">{member.name}</h2><p className="mt-1 text-sm text-slate-300">{member.role} · {member.agency}</p></li>)}</ul><a className="inline-flex min-h-11 items-center text-sm text-cyan-glow underline underline-offset-4" href={mission.sourceUrl} target="_blank" rel="noopener noreferrer">Verify crew at NASA</a></>
-    : <p className="glass-panel p-4 text-sm text-slate-300">{mission.name} was uncrewed. No flight crew was assigned.</p>}</main></>
+  return <><Header missionName={mission.name} activeMissionId={mission.id}/><main className="mx-auto max-w-3xl space-y-4 px-4 py-8"><h1 className="font-display text-2xl font-bold text-ink">{mission.name} crew</h1>{mission.crew.length
+    ? <><p className="text-sm text-ink-2">NASA’s published prime crew.</p><ul className="grid gap-3 sm:grid-cols-2">{mission.crew.map((member) => <li key={member.name} className="sheet p-4"><h2 className="font-semibold text-ink">{member.name}</h2><p className="mt-1 text-sm text-ink-2">{member.role} · {member.agency}</p></li>)}</ul><a className="inline-flex min-h-11 items-center text-sm text-blue underline underline-offset-4" href={mission.sourceUrl} target="_blank" rel="noopener noreferrer">Verify crew at NASA</a></>
+    : <p className="sheet p-4 text-sm text-ink-2">{mission.name} was uncrewed. No flight crew was assigned.</p>}</main></>
 }
 
 function UnknownMissionPage({ missionId }: { missionId: string }) {
   return (
     <main className="mx-auto max-w-3xl px-4 py-16 text-center">
-      <p className="text-xs uppercase tracking-[.22em] text-amber-glow">Mission not found</p>
-      <h1 className="mt-2 font-display text-3xl font-bold text-cyan-glow">{missionId || 'Unknown mission'}</h1>
-      <p className="mt-4 text-slate-300">This mission is not in the verified mission catalog.</p>
-      <a className="mt-6 inline-flex min-h-11 items-center rounded border border-cyan-mid/30 px-4 text-cyan-glow underline underline-offset-4" href="/artemis-ii">Open Artemis II replay</a>
+      <p className="eyebrow">Mission not found</p>
+      <h1 className="mt-2 font-display text-3xl font-bold text-ink">{missionId || 'Unknown mission'}</h1>
+      <p className="mt-4 text-ink-2">This mission is not in the verified mission catalog.</p>
+      <a className="mt-6 btn btn-solid" href="/artemis-ii">Open Artemis II replay</a>
     </main>
   )
 }
@@ -176,9 +176,9 @@ function Dashboard({ missionId }: { missionId: string }) {
   if (flight.isError) {
     const selectedTime = readTimeFromUrl(missionId, Date.parse(config.launchDate), Date.parse(config.splashdownDate!))
     const mission = getMissionStatus(config, new Date(selectedTime))
-    return <><Header missionName={config.name} activeMissionId={missionId}/><main className="mx-auto max-w-4xl space-y-4 px-4 py-8"><section className="glass-panel border-glow p-5"><p className="text-xs uppercase tracking-[.2em] text-amber-glow">Source-data bundle unavailable</p><h1 className="mt-1 font-display text-2xl text-slate-100">The mission record is still available</h1><p className="mt-2 text-sm leading-relaxed text-slate-300">The NASA/JPL flight-data bundle failed schema or network validation. Event dates and source links remain available, and the app shows no substituted trajectory or chart measurements.</p><button type="button" onClick={() => void flight.refetch()} className="mt-3 min-h-11 rounded border border-amber-glow/50 px-3 text-sm text-amber-glow focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">Retry source-data download</button><a href={config.sourceUrl} target="_blank" rel="noopener noreferrer" className="ml-3 inline-flex min-h-11 items-center text-sm text-cyan-glow underline underline-offset-4">Open NASA source</a></section><MissionTimeline mission={mission} crewed={config.crew.length > 0} selectedTime={selectedTime}/><MissionStoryGuide missionId={missionId}/></main></>
+    return <><Header missionName={config.name} activeMissionId={missionId}/><main className="mx-auto max-w-4xl space-y-4 px-4 py-8"><section className="sheet p-5"><p className="eyebrow">Source-data bundle unavailable</p><h1 className="mt-1 font-display text-2xl text-ink">The mission record is still available</h1><p className="mt-2 text-sm leading-relaxed text-ink-2">The NASA/JPL flight-data bundle failed schema or network validation. Event dates and source links remain available, and the app shows no substituted trajectory or chart measurements.</p><button type="button" onClick={() => void flight.refetch()} className="mt-3 btn">Retry source-data download</button><a href={config.sourceUrl} target="_blank" rel="noopener noreferrer" className="ml-3 inline-flex min-h-11 items-center text-sm text-blue underline underline-offset-4">Open NASA source</a></section><MissionTimeline mission={mission} crewed={config.crew.length > 0} selectedTime={selectedTime}/><MissionStoryGuide missionId={missionId}/></main></>
   }
-  if (!flight.data) return <><Header missionName={config.name} activeMissionId={missionId}/><main className="mx-auto max-w-3xl px-4 py-16"><div className="glass-panel border-glow p-6" aria-live="polite"><p className="text-xs uppercase tracking-[.2em] text-cyan-glow">Loading verified source data</p><h1 className="mt-2 font-display text-2xl font-semibold text-slate-100">Preparing the mission replay</h1><p className="mt-3 text-sm leading-relaxed text-slate-300">NASA flight-state vectors and their matching JPL Moon ephemeris are loaded before map or chart measurements are shown.</p></div></main></>
+  if (!flight.data) return <><Header missionName={config.name} activeMissionId={missionId}/><main className="mx-auto max-w-3xl px-4 py-16"><div className="sheet p-6" aria-live="polite"><p className="eyebrow">Loading verified source data</p><h1 className="mt-2 font-display text-4xl font-bold leading-tight tracking-tight text-ink sm:text-5xl">Preparing the mission replay</h1><p className="mt-3 text-sm leading-relaxed text-ink-2">NASA flight-state vectors and their matching JPL Moon ephemeris are loaded before map or chart measurements are shown.</p></div></main></>
   return <DashboardWorkspace key={missionId} missionId={missionId}/>
 }
 
@@ -186,7 +186,7 @@ function EphemerisUnavailablePage({ missionId, retry }: { missionId: string; ret
   const config = getMission(missionId)!
   const time = readTimeFromUrl(missionId, Date.parse(config.launchDate), Date.parse(config.splashdownDate!))
   const mission = getMissionStatus(config, new Date(time))
-  return <><Header missionName={config.name} activeMissionId={missionId}/><main className="mx-auto max-w-4xl space-y-4 px-4 py-8"><div className="rounded border border-amber-glow/30 bg-space-900 p-4"><h1 className="font-display text-xl text-amber-glow">Trajectory data unavailable</h1><p className="mt-2 text-sm leading-relaxed text-slate-300">The source ephemeris bundle could not be loaded or validated. Mission dates and cited event notes remain available; no current or modelled position is substituted.</p><button type="button" onClick={retry} className="mt-3 min-h-11 rounded border border-amber-glow/40 px-3 text-sm text-amber-glow focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">Retry loading flight data</button></div><MissionTimeline mission={mission} crewed={config.crew.length > 0} selectedTime={time}/><MissionStoryGuide missionId={missionId} selectedEventId={readEventFromUrl(missionId)} onSeek={() => undefined}/></main></>
+  return <><Header missionName={config.name} activeMissionId={missionId}/><main className="mx-auto max-w-4xl space-y-4 px-4 py-8"><div className="rounded-xs border border-signal bg-paper p-4"><h1 className="font-display text-xl text-ink">Trajectory data unavailable</h1><p className="mt-2 text-sm leading-relaxed text-ink-2">The source ephemeris bundle could not be loaded or validated. Mission dates and cited event notes remain available; no current or modelled position is substituted.</p><button type="button" onClick={retry} className="mt-3 btn">Retry loading flight data</button></div><MissionTimeline mission={mission} crewed={config.crew.length > 0} selectedTime={time}/><MissionStoryGuide missionId={missionId} selectedEventId={readEventFromUrl(missionId)} onSeek={() => undefined}/></main></>
 }
 
 function DashboardWorkspace({ missionId }: { missionId: string }) {
@@ -290,8 +290,8 @@ function DashboardWorkspace({ missionId }: { missionId: string }) {
     <>
       <Header missionName={activeMission.name} activeMissionId={missionId} />
       <MetricsBar mission={mission} trajectory={trajectory} selectedTime={missionTime} />
-      {!webglAvailable && <div role="status" className="mx-auto mt-2 max-w-[1600px] px-3 text-sm text-slate-300 sm:px-4">WebGL is unavailable in this browser. The 2D and text replay is active; spacecraft position remains tied to covered NASA source epochs.</div>}
-      {!isOnline && <div role="status" className="mx-auto mt-2 max-w-[1600px] px-3 text-sm text-amber-glow sm:px-4">Offline mode · {offlinePack ? `verified mission pack v${offlinePack.appVersion}, installed ${formatCacheAge(offlinePack.installedAt)}` : 'no verified mission pack is installed'}. Live weather and DSN are unavailable or cached with their original observation times.</div>}
+      {!webglAvailable && <div role="status" className="mx-auto mt-2 max-w-[1600px] px-3 text-sm text-ink-2 sm:px-4">WebGL is unavailable in this browser. The 2D and text replay is active; spacecraft position remains tied to covered NASA source epochs.</div>}
+      {!isOnline && <div role="status" className="mx-auto mt-2 max-w-[1600px] px-3 text-sm text-signal sm:px-4">Offline mode · {offlinePack ? `verified mission pack v${offlinePack.appVersion}, installed ${formatCacheAge(offlinePack.installedAt)}` : 'no verified mission pack is installed'}. Live weather and DSN are unavailable or cached with their original observation times.</div>}
 
       <main className="mx-auto max-w-[1600px] px-3 sm:px-4 pt-3 sm:pt-4 pb-6 space-y-3 sm:space-y-4">
         <MissionTimeline mission={mission} crewed={isCrewed} selectedTime={missionTime} onSeek={seek} />
@@ -301,7 +301,7 @@ function DashboardWorkspace({ missionId }: { missionId: string }) {
           {!lightweightView && <TrajectoryMap mission={mission} missionId={missionId} initialDay={dayFromTime(missionTime)} onReplayDayChange={notifyReplayDay} provenance={trajectory.provenance} initialCamera={cameraPreset} onCameraModeChange={updateCamera} />}
         </Suspense>
         {lightweightView && <LightweightMissionView mission={mission} missionId={missionId} missionTime={missionTime} trajectory={trajectory} onSeek={updateMissionTime} onShow3D={() => updateView(false)} canLoad3D={webglAvailable && (isOnline || Boolean(offlinePack?.optional3D))} />}
-        {!lightweightView && <button type="button" onClick={() => updateView(true)} className="min-h-11 self-start rounded border border-slate-700/70 px-3 text-sm text-slate-300 hover:border-cyan-glow/50 hover:text-cyan-glow focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">Use the lightweight 2D and text view</button>}
+        {!lightweightView && <button type="button" onClick={() => updateView(true)} className="btn self-start">Use the lightweight 2D and text view</button>}
 
         {/* Crew — only for crewed missions */}
         {isCrewed && <CrewPanel crew={mission.crew} missionId={missionId} />}
@@ -331,11 +331,9 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <>
-        <div className="space-bg" />
-        <div className="scan-line" />
         <div className="relative z-10 min-h-screen">
           <Switch>
-            <Route path="/compare"><Suspense fallback={<main className="p-8 text-center text-slate-300">Loading comparison tools…</main>}><MissionComparisonPage /></Suspense></Route>
+            <Route path="/compare"><Suspense fallback={<main className="p-8 text-center text-ink-2">Loading comparison tools…</main>}><MissionComparisonPage /></Suspense></Route>
             <Route path="/:missionId/crew" component={CrewRoute} />
             <Route path="/:missionId" component={MissionRoute} />
             <Route path="/">

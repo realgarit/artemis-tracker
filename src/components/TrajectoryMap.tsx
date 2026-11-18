@@ -62,7 +62,7 @@ function Earth() {
     <group>
       <mesh ref={ref}><sphereGeometry args={[eR, 128, 64]} /><meshStandardMaterial map={texture} roughness={0.8} metalness={0.05} /></mesh>
       <Html position={[0, -(eR + 1), 0]} center style={{ pointerEvents: 'none' }}>
-        <span data-scene-label="earth" style={{ fontFamily: 'var(--font-orbitron)', fontSize: 10, color: '#4499ff', letterSpacing: 4, userSelect: 'none', opacity: 0.7 }}>EARTH</span>
+        <span data-scene-label="earth" style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#abc3ff', letterSpacing: 3, userSelect: 'none' }}>EARTH</span>
       </Html>
     </group>
   )
@@ -81,7 +81,7 @@ function MoonBody() {
     <group ref={ref}>
       <mesh><sphereGeometry args={[mR, 64, 32]} /><meshStandardMaterial map={texture} roughness={0.95} /></mesh>
       <Html position={[0, -(mR + 0.8), 0]} center style={{ pointerEvents: 'none' }}>
-        <span data-scene-label="moon" style={{ fontFamily: 'var(--font-orbitron)', fontSize: 9, color: '#aaaacc', letterSpacing: 3, userSelect: 'none', opacity: 0.6 }}>MOON</span>
+        <span data-scene-label="moon" style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#d3cec3', letterSpacing: 3, userSelect: 'none' }}>MOON</span>
       </Html>
     </group>
   )
@@ -121,11 +121,11 @@ function Orion() {
 
       {/* ORION label — ABOVE */}
       <Html position={[0, 1.8, 0]} center style={{ pointerEvents: 'none' }}>
-        <span data-scene-label="orion" style={{ fontFamily: 'var(--font-orbitron)', fontSize: 11, color: '#ff8844', fontWeight: 700, letterSpacing: 2, userSelect: 'none' }}>ORION</span>
+        <span data-scene-label="orion" style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#ff8a57', fontWeight: 700, letterSpacing: 3, userSelect: 'none' }}>ORION</span>
       </Html>
       {/* Distance — BELOW */}
       <Html position={[0, -1.4, 0]} center style={{ pointerEvents: 'none' }}>
-        <span ref={labelRef} style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#94a3b8', userSelect: 'none', whiteSpace: 'nowrap' }} />
+        <span ref={labelRef} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#d3cec3', userSelect: 'none', whiteSpace: 'nowrap' }} />
       </Html>
     </group>
   )
@@ -154,7 +154,7 @@ function TrajectoryLines() {
   return (
     <>
       <Line points={moonPts} color="#ffffff" lineWidth={1} transparent opacity={0.25} />
-      <Line points={fullPts} color="#ff8855" lineWidth={1} transparent opacity={0.15} dashed dashSize={0.4} gapSize={0.3} />
+      <Line points={fullPts} color="#ff8855" lineWidth={1} transparent opacity={0.35} dashed dashSize={0.4} gapSize={0.3} />
       <Line points={fullPts} color="#ff6b35" lineWidth={2} transparent opacity={0.03} />
       <Line ref={traveledRef} points={fullPts.slice(0, 2)} color="#ff6b35" lineWidth={2} transparent opacity={0.85} />
     </>
@@ -252,7 +252,7 @@ function Scene() {
 
 class WebGLBoundary extends Component<{children:ReactNode},{err:boolean}> {
   state={err:false}; static getDerivedStateFromError(){return{err:true}}
-  render(){return this.state.err?<div className="flex-1 flex items-center justify-center p-8"><div className="font-display text-lg text-cyan-glow">3D Unavailable — WebGL required</div></div>:this.props.children}
+  render(){return this.state.err?<div className="flex-1 flex items-center justify-center p-8"><div className="font-display text-lg text-ink">3D Unavailable — WebGL required</div></div>:this.props.children}
 }
 
 function HUDOverlay() {
@@ -272,13 +272,13 @@ function HUDOverlay() {
   useMemo(() => { requestAnimationFrame(update) }, [update])
   return (
     <div ref={ref} className="absolute bottom-12 left-2 z-10">
-      <div className="bg-space-950/85 backdrop-blur-sm border border-cyan-mid/10 rounded px-2.5 py-2 space-y-0.5 text-[10px]">
-        <div className="flex gap-2"><span className="text-slate-400 w-14">Earth center</span><span data-de className="font-mono text-cyan-glow font-semibold">—</span></div>
-        <div className="flex gap-2"><span className="text-slate-400 w-14">Moon center</span><span data-dm className="font-mono text-slate-300 font-semibold">—</span></div>
-        <div className="flex gap-2"><span className="text-slate-600 w-10">Speed</span><span data-v className="font-mono text-amber-glow font-semibold">—</span></div>
-        <div className="flex gap-2"><span className="text-slate-600 w-10">Accel.</span><span data-a className="font-mono text-amber-glow font-semibold">—</span></div>
-        <div className="flex gap-2"><span className="text-slate-600 w-10">Phase</span><span data-p className="font-mono text-cyan-glow/70 text-[8px]">—</span></div>
-      </div>
+      <dl className="grid grid-cols-[auto_auto] gap-x-3 gap-y-0.5 border border-rule bg-paper/90 px-3 py-2 font-mono text-[11px]">
+        <dt className="text-ink-3">Earth center</dt><dd data-de className="text-right font-bold text-ink">—</dd>
+        <dt className="text-ink-3">Moon center</dt><dd data-dm className="text-right font-bold text-ink">—</dd>
+        <dt className="text-ink-3">Speed</dt><dd data-v className="text-right font-bold text-ink">—</dd>
+        <dt className="text-ink-3">Accel.</dt><dd data-a className="text-right font-bold text-ink">—</dd>
+        <dt className="text-ink-3">Phase</dt><dd data-p className="text-right font-bold text-signal">—</dd>
+      </dl>
     </div>
   )
 }
@@ -429,27 +429,27 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii', initialDay = 
   }, [activeCam, moonPositionAvailable, orionPositionAvailable, setCam])
 
   return (
-    <div ref={containerRef} className={`glass-panel border-glow h-full flex flex-col relative overflow-hidden ${isFullscreen ? 'p-0 rounded-none bg-space-950' : 'p-2'}`}>
+    <div ref={containerRef} className={`plate relative flex h-full flex-col overflow-hidden border-t-2 border-signal-hot ${isFullscreen ? 'p-0' : 'p-2'}`}>
       {/* Source badge */}
       <div className="absolute top-3 left-3 z-10 max-w-[min(70%,440px)] space-y-1">
-        <div className="bg-space-950/85 backdrop-blur-sm border border-cyan-mid/12 rounded px-2.5 py-1 flex items-center gap-1.5">
-          <div className={`h-1.5 w-1.5 rounded-full ${isCompleted ? 'bg-amber-glow' : simDay !== null ? 'bg-amber-glow' : 'bg-green-glow'} live-pulse`} />
-          <span className="font-mono text-[7.5px] text-slate-500 tracking-wide">
+        <div className="flex w-fit items-center gap-1.5 border border-rule bg-paper/90 px-2.5 py-1">
+          <div className={`h-2 w-2 rounded-full ${isCompleted ? 'bg-signal-hot' : simDay !== null ? 'bg-signal-hot' : 'bg-ok'}`} />
+          <span className="font-mono text-[11px] font-bold tracking-wider text-signal">
             {isCompleted ? (speed > 0 ? `REPLAY ${fmtSpeed(speed)}` : 'REPLAY') : simDay !== null ? (speed > 0 ? `SIM ${fmtSpeed(speed)}` : 'SIMULATION') : 'REALTIME'}
           </span>
         </div>
-        <div className="rounded border border-slate-800/70 bg-space-950/90 px-2 py-1"><DataSourceBadge provenance={provenance} /></div>
+        <div className="border border-rule bg-paper/90 px-2"><DataSourceBadge provenance={provenance} /></div>
       </div>
 
       {/* Phase + fullscreen */}
-      <div className="absolute top-3 right-14 z-10 text-right">
-        <div className="text-[7.5px] text-slate-600 tracking-[2px] uppercase">Phase</div>
-        <div className="font-display text-[13px] text-cyan-glow font-bold tracking-wider glow-cyan mt-0.5">{getMissionPhase(currentDay).toUpperCase()}</div>
+      <div className="absolute right-[4.25rem] top-3 z-10 text-right">
+        <div className="eyebrow">Phase</div>
+        <div className="font-display text-base font-bold uppercase tracking-tight text-ink">{getMissionPhase(currentDay).toUpperCase()}</div>
       </div>
 
       {/* Right controls */}
       <div className="absolute top-3 right-3 z-10 flex flex-col gap-1">
-        <button type="button" aria-label={isFullscreen ? 'Exit full screen' : 'Enter full screen'} onClick={toggleFullscreen} className="min-h-11 min-w-11 rounded bg-space-950/80 border border-slate-700/40 flex items-center justify-center text-slate-300 hover:text-cyan-glow hover:border-cyan-glow/30 transition-colors">
+        <button type="button" aria-label={isFullscreen ? 'Exit full screen' : 'Enter full screen'} onClick={toggleFullscreen} className="btn min-w-11 bg-paper/90 px-0">
           {isFullscreen?<Minimize2 className="h-3.5 w-3.5"/>:<Maximize2 className="h-3.5 w-3.5"/>}
         </button>
       </div>
@@ -465,7 +465,7 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii', initialDay = 
               title={unavailable ? `${label} position is unavailable at the selected mission time` : undefined}
               key={mode}
               onClick={()=>{ if (!unavailable) setCam(mode) }}
-              className={`min-h-11 px-3 rounded text-[10px] font-semibold tracking-wider uppercase flex items-center gap-1.5 transition-all aria-disabled:cursor-not-allowed aria-disabled:opacity-40 ${activeCam===mode?'bg-cyan-glow/10 text-cyan-glow border border-cyan-glow/25':'bg-space-950/80 text-slate-300 border border-slate-700/40 hover:text-cyan-glow'}`}
+              className={`btn justify-start font-mono text-[11px] uppercase tracking-wider ${activeCam===mode?'btn-solid':'bg-paper/90'}`}
             >
               {Icon&&<Icon className="h-3 w-3"/>}{label}
             </button>
@@ -476,7 +476,7 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii', initialDay = 
       <HUDOverlay />
 
       <WebGLBoundary>
-        <div className={`flex-1 ${isFullscreen?'min-h-screen':'min-h-[450px] sm:min-h-[500px]'} rounded overflow-hidden bg-black relative`}>
+        <div className={`flex-1 ${isFullscreen?'min-h-screen':'min-h-[450px] sm:min-h-[560px]'} relative overflow-hidden bg-black`}>
           <div className="absolute inset-0">
             <Canvas key={missionId} camera={{position:[44,100,60],fov:45,near:0.01,far:8000}} gl={{antialias:true,alpha:false,powerPreference:'high-performance'}} dpr={[1,2]}>
               <Scene />
@@ -489,25 +489,25 @@ export function TrajectoryMap({ mission, missionId = 'artemis-ii', initialDay = 
       <div className={`flex flex-wrap items-center gap-2 mt-1 px-1 ${isFullscreen?'px-4 pb-3':''}`}>
         <div className="flex items-center gap-2 flex-1">
           {isCompleted ? (
-            <button type="button" onClick={resetToLive} aria-label="Jump to first covered source epoch" className="min-h-11 px-3 rounded bg-amber-glow/10 border border-amber-glow/25 text-[10px] font-bold text-amber-glow tracking-wider flex items-center gap-1 shrink-0" title="Jump to the first covered NASA source epoch">
+            <button type="button" onClick={resetToLive} aria-label="Jump to first covered source epoch" className="btn shrink-0 font-mono text-[11px] uppercase tracking-wider" title="Jump to the first covered NASA source epoch">
               <RotateCcw className="h-3 w-3"/> FIRST DATA
             </button>
           ) : simDay !== null ? (
-            <button type="button" onClick={resetToLive} className="min-h-11 px-3 rounded bg-red-glow/10 border border-red-glow/25 text-[10px] font-bold text-red-glow tracking-wider flex items-center gap-1 shrink-0">
+            <button type="button" onClick={resetToLive} className="btn shrink-0 font-mono text-[11px] uppercase tracking-wider">
               <RotateCcw className="h-3 w-3"/> LIVE
             </button>
           ) : (
-            <span className="text-[8px] text-green-glow font-mono font-semibold tracking-wider shrink-0 w-[52px]">● LIVE</span>
+            <span className="text-[11px] text-ok font-mono font-semibold tracking-wider shrink-0 w-[52px]">● LIVE</span>
           )}
-          <button type="button" onClick={togglePlay} aria-label={speed > 0 ? 'Pause mission replay' : 'Play mission replay'} className={`min-h-11 min-w-11 rounded flex items-center justify-center shrink-0 transition-all ${speed>0?'bg-cyan-glow/15 text-cyan-glow border border-cyan-glow/25':'bg-space-950/80 text-slate-300 border border-slate-700/40 hover:text-cyan-glow'}`}>
+          <button type="button" onClick={togglePlay} aria-label={speed > 0 ? 'Pause mission replay' : 'Play mission replay'} className="btn btn-solid min-w-11 shrink-0 px-0">
             {speed > 0 ? <Pause className="h-3 w-3"/> : <Play className="h-3 w-3"/>}
           </button>
           <input type="range" min={0} max={md} step={0.001} value={currentDay} onChange={handleScrub} aria-label="Mission elapsed time" aria-valuetext={`${currentDay.toFixed(3)} days after launch`}
-            className="h-11 min-w-24 flex-1 accent-cyan-glow cursor-pointer" />
-          <span className="w-24 shrink-0 font-mono text-[10px] text-slate-300" aria-live="off">
+            className="h-11 min-w-24 flex-1 cursor-pointer" />
+          <span className="w-28 shrink-0 font-mono text-xs text-ink-2" aria-live="off">
             Day {currentDay.toFixed(2)}/{md.toFixed(2)}
           </span>
-          <button type="button" onClick={cycleSpeed} aria-label={`Playback speed ${speed > 0 ? fmtSpeed(speed) : 'paused'}; choose next speed`} className={`min-h-11 px-3 rounded text-[10px] font-semibold tracking-wider flex items-center gap-1 shrink-0 transition-all ${speed>0?'bg-amber-glow/10 text-amber-glow border border-amber-glow/25':'bg-space-950/80 text-slate-300 border border-slate-700/40 hover:text-cyan-glow'}`}>
+          <button type="button" onClick={cycleSpeed} aria-label={`Playback speed ${speed > 0 ? fmtSpeed(speed) : 'paused'}; choose next speed`} className="btn shrink-0 font-mono text-[11px]">
             <FastForward className="h-3 w-3"/> {speed > 0 ? fmtSpeed(speed) : fmtSpeed(lastSpeedRef.current)}
           </button>
         </div>

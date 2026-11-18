@@ -22,7 +22,6 @@
     "fetch:ephemeris": "tsx scripts/fetch-ephemeris-sources.ts"
   },
   "dependencies": {
-    "@fontsource-variable/orbitron": "^5.3.0",
     "@fontsource-variable/space-grotesk": "^5.3.0",
     "@fontsource/space-mono": "^5.3.0",
     "@react-three/drei": "^10.7.9",

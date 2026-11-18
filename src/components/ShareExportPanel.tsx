@@ -85,33 +85,33 @@ export function ShareExportPanel({ mission, missionTime, view, camera, onSeek, e
   }
 
   return (
-    <section className="glass-panel border-glow p-4 sm:p-6" aria-labelledby="share-export-title">
-      <p className="text-xs uppercase tracking-[.2em] text-cyan-glow">Share and reuse</p>
-      <h2 id="share-export-title" className="mt-1 font-display text-xl font-semibold text-slate-100">Keep this mission moment</h2>
-      <p className="mt-2 text-sm leading-relaxed text-slate-400">Moment links preserve the mission, UTC time, and view. Bookmarks stay in this browser and are not synced to an account.</p>
+    <section className="sheet p-4 sm:p-6" aria-labelledby="share-export-title">
+      <p className="eyebrow">Share and reuse</p>
+      <h2 id="share-export-title" className="mt-1 font-display text-2xl font-semibold text-ink">Keep this mission moment</h2>
+      <p className="mt-2 text-sm leading-relaxed text-ink-2">Moment links preserve the mission, UTC time, and view. Bookmarks stay in this browser and are not synced to an account.</p>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" onClick={copyMoment} className="inline-flex min-h-11 items-center gap-2 rounded border border-cyan-mid/30 px-3 text-sm text-cyan-glow hover:bg-cyan-glow/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow"><Copy className="h-4 w-4" />Copy moment link</button>
+        <button type="button" onClick={copyMoment} className="btn btn-solid"><Copy className="h-4 w-4" />Copy moment link</button>
       </div>
       <form className="mt-4 grid gap-2 sm:grid-cols-[minmax(150px,1fr)_auto]" onSubmit={(event) => { event.preventDefault(); saveMoment() }}>
-        <label className="text-sm text-slate-300">Bookmark name<input value={label} onChange={(event) => setLabel(event.target.value)} placeholder="Lunar flyby" className="mt-1 min-h-11 w-full rounded border border-slate-600 bg-space-900 px-3 text-sm text-slate-100" /></label>
-        <button type="submit" className="inline-flex min-h-11 items-center justify-center gap-2 rounded border border-slate-600 px-3 text-sm text-slate-100 hover:border-cyan-glow/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow"><Bookmark className="h-4 w-4" />Save moment here</button>
+        <label className="text-sm text-ink-2">Bookmark name<input value={label} onChange={(event) => setLabel(event.target.value)} placeholder="Lunar flyby" className="mt-1 field w-full " /></label>
+        <button type="submit" className="btn self-end"><Bookmark className="h-4 w-4" />Save moment here</button>
       </form>
-      {bookmarks.length > 0 && <ul className="mt-3 space-y-2">{bookmarks.map((bookmark) => <li key={bookmark.id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-slate-700/60 px-3 py-2"><button type="button" onClick={() => onRestoreBookmark(bookmark.epoch, bookmark.view, bookmark.camera, bookmark.eventId)} className="min-h-11 text-left text-sm text-slate-200 underline underline-offset-4 hover:text-cyan-glow focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">{bookmark.label}<span className="block font-mono text-xs text-slate-500">{bookmark.epoch} · {bookmark.view} · {bookmark.camera}</span></button><button type="button" aria-label={`Delete bookmark ${bookmark.label}`} onClick={() => saveBookmarks(bookmarks.filter((entry) => entry.id !== bookmark.id))} className="min-h-11 min-w-11 text-slate-300 hover:text-red-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow"><Trash2 className="mx-auto h-4 w-4" /></button></li>)}</ul>}
+      {bookmarks.length > 0 && <ul className="mt-3 space-y-2">{bookmarks.map((bookmark) => <li key={bookmark.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xs border border-rule px-3 py-2"><button type="button" onClick={() => onRestoreBookmark(bookmark.epoch, bookmark.view, bookmark.camera, bookmark.eventId)} className="min-h-11 text-left text-sm text-ink underline underline-offset-4 hover:text-blue">{bookmark.label}<span className="block font-mono text-xs text-ink-3">{bookmark.epoch} · {bookmark.view} · {bookmark.camera}</span></button><button type="button" aria-label={`Delete bookmark ${bookmark.label}`} onClick={() => saveBookmarks(bookmarks.filter((entry) => entry.id !== bookmark.id))} className="min-h-11 min-w-11 text-ink-2 hover:text-bad"><Trash2 className="mx-auto h-4 w-4" /></button></li>)}</ul>}
 
-      <div className="mt-6 border-t border-slate-700/60 pt-4">
-        <h3 className="text-sm font-semibold text-slate-100">Export the replay profile</h3>
-        <p className="mt-1 text-xs leading-relaxed text-slate-400">Exports include source epochs, interpolation quality, center distances, sampled velocity-vector acceleration, units, coordinate frame, target ID, checksum, and explicit nulls outside coverage.</p>
+      <div className="mt-6 border-t border-rule pt-4">
+        <h3 className="text-sm font-semibold text-ink">Export the replay profile</h3>
+        <p className="mt-1 text-xs leading-relaxed text-ink-3">Exports include source epochs, interpolation quality, center distances, sampled velocity-vector acceleration, units, coordinate frame, target ID, checksum, and explicit nulls outside coverage.</p>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
-          <label className="text-sm text-slate-300">Start time · UTC<input value={start} onChange={(event) => setStart(event.target.value)} className="mt-1 min-h-11 w-full rounded border border-slate-600 bg-space-900 px-2 font-mono text-xs text-slate-100" /></label>
-          <label className="text-sm text-slate-300">End time · UTC<input value={end} onChange={(event) => setEnd(event.target.value)} className="mt-1 min-h-11 w-full rounded border border-slate-600 bg-space-900 px-2 font-mono text-xs text-slate-100" /></label>
-          <label className="text-sm text-slate-300">Sampling interval<select value={interval} onChange={(event) => setInterval(Number(event.target.value))} className="mt-1 min-h-11 w-full rounded border border-slate-600 bg-space-900 px-2 text-sm text-slate-100">{SAFE_EXPORT_INTERVAL_MINUTES.map((minutes) => <option key={minutes} value={minutes}>{minutes === 0 ? 'Every source epoch' : `At least every ${minutes === 60 ? 'hour' : `${minutes / 60} hours`}`}</option>)}</select></label>
+          <label className="text-sm text-ink-2">Start time · UTC<input value={start} onChange={(event) => setStart(event.target.value)} className="mt-1 field w-full  font-mono text-xs text-ink" /></label>
+          <label className="text-sm text-ink-2">End time · UTC<input value={end} onChange={(event) => setEnd(event.target.value)} className="mt-1 field w-full  font-mono text-xs text-ink" /></label>
+          <label className="text-sm text-ink-2">Sampling interval<select value={interval} onChange={(event) => setInterval(Number(event.target.value))} className="mt-1 field w-full ">{SAFE_EXPORT_INTERVAL_MINUTES.map((minutes) => <option key={minutes} value={minutes}>{minutes === 0 ? 'Every source epoch' : `At least every ${minutes === 60 ? 'hour' : `${minutes / 60} hours`}`}</option>)}</select></label>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
-          <button type="button" onClick={() => exportFile('csv')} className="inline-flex min-h-11 items-center gap-2 rounded border border-slate-600 px-3 text-sm text-slate-100 hover:border-cyan-glow/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow"><Download className="h-4 w-4" />Download CSV</button>
-          <button type="button" onClick={() => exportFile('json')} className="inline-flex min-h-11 items-center gap-2 rounded border border-slate-600 px-3 text-sm text-slate-100 hover:border-cyan-glow/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow"><Download className="h-4 w-4" />Download JSON</button>
+          <button type="button" onClick={() => exportFile('csv')} className="btn"><Download className="h-4 w-4" />Download CSV</button>
+          <button type="button" onClick={() => exportFile('json')} className="btn"><Download className="h-4 w-4" />Download JSON</button>
         </div>
-        {error && <p role="alert" className="mt-2 text-sm text-red-300">{error}</p>}
-        <p role="status" aria-live="polite" className="mt-2 min-h-5 text-sm text-green-300">{status}</p>
+        {error && <p role="alert" className="mt-2 text-sm text-bad">{error}</p>}
+        <p role="status" aria-live="polite" className="mt-2 min-h-5 text-sm text-ok">{status}</p>
       </div>
     </section>
   )

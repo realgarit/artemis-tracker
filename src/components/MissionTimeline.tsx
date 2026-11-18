@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion'
 import type { MissionData, MissionPhase } from '../lib/types'
 
 interface MissionTimelineProps {
@@ -29,8 +28,12 @@ const PHASE_DESC: Record<string, string> = {
   'Re-entry & Splashdown': 'Atmospheric re-entry and Pacific splashdown',
 }
 
-// Fixed height for all nodes so they align perfectly on the track
-const NODE_H = 30
+function elapsedLabel(launchMs: number, time: string): string {
+  const hours = (Date.parse(time) - launchMs) / 3_600_000
+  if (hours < 0) return `T−${Math.abs(hours).toFixed(1)} h`
+  if (hours < 48) return `T+${hours.toFixed(1)} h`
+  return `T+${(hours / 24).toFixed(1)} d`
+}
 
 export function MissionTimeline({ mission, crewed = false, selectedTime, onSeek }: MissionTimelineProps) {
   if (!mission) return null
@@ -40,162 +43,79 @@ export function MissionTimeline({ mission, crewed = false, selectedTime, onSeek 
   const allComplete = mission.phases.every(p => p.status === 'completed')
   const selectedMs = selectedTime ? Date.parse(selectedTime) : Date.now()
   const elapsedH = Math.max(0, Math.min(totalH, Math.floor((selectedMs - launchMs) / 3_600_000)))
-  const n = mission.phases.length
-  // Fill from last completed node toward active node based on phase progress
-  const activeIdx = mission.phases.findIndex(p => p.status === 'active')
-  const nodeCenter = (i: number) => ((2 * i + 1) / (2 * n)) * 100
-  let fillPct = 100
-  if (activeIdx >= 0) {
-    const phase = mission.phases[activeIdx]
-    const ps = new Date(phase.startTime).getTime()
-    const pe = new Date(phase.endTime).getTime()
-    const intra = pe > ps ? Math.max(0, Math.min(1, (selectedMs - ps) / (pe - ps))) : 0
-    const prevCenter = activeIdx > 0 ? nodeCenter(activeIdx - 1) : 0
-    const activeCenter = nodeCenter(activeIdx)
-    fillPct = prevCenter + intra * (activeCenter - prevCenter)
-  }
 
   return (
-    <div className="glass-panel min-w-0 border-glow px-3 py-4 sm:px-5">
-      <div className="mb-4 flex min-w-0 flex-col gap-2 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
-        <span className="text-[10px] text-slate-400 uppercase tracking-[.25em] font-semibold">
-          Mission Timeline
-        </span>
-        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:justify-end sm:gap-3">
-          <a href={mission.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 min-w-0 max-w-full items-center break-words text-[11px] text-slate-300 underline underline-offset-4 hover:text-cyan-glow focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow sm:text-xs">NASA mission source · checked {mission.verifiedAt}</a>
-          <span className="max-w-full break-words font-mono text-[10px] text-slate-300 sm:text-[11px]">
-            Day {mission.missionDay.toFixed(1)}/{mission.totalDays.toFixed(1)}{' '}
-            <span className="text-cyan-glow font-semibold">{mission.progress.toFixed(0)}%</span>
-          </span>
+    <section className="sheet min-w-0 p-3 sm:p-5" aria-labelledby="mission-timeline-title">
+      <div className="mb-3 flex min-w-0 flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 id="mission-timeline-title" className="font-display text-lg font-semibold text-ink">Mission Timeline</h2>
+          <p className="font-mono text-xs text-ink-3">
+            Day {mission.missionDay.toFixed(1)}/{mission.totalDays.toFixed(1)} · <span className="font-bold text-ink">{mission.progress.toFixed(0)}%</span> · T+{elapsedH}h elapsed of {totalH}h
+          </p>
         </div>
+        <a href={mission.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 min-w-0 max-w-full items-center break-words text-xs text-blue underline underline-offset-4 hover:text-signal">NASA mission source · checked {mission.verifiedAt}</a>
       </div>
 
-      {/* Track + nodes */}
-      <div role="region" aria-label="Mission phases. Scroll horizontally to see every phase on small screens." tabIndex={0} className="overflow-x-auto px-1 pb-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow">
-      <div className="relative mb-5 min-w-[680px] px-6">
-        {/* Background track — vertically centered in NODE_H */}
-        <div className="absolute left-6 right-6 h-[2px] bg-slate-800" style={{ top: NODE_H / 2 - 1 }} />
-        {/* Filled track — inside left-6 right-6 so % aligns with node positions */}
-        <div className="absolute left-6 right-6 h-[2px] overflow-hidden" style={{ top: NODE_H / 2 - 1 }}>
-          <motion.div
-            className="h-full bg-gradient-to-r from-green-glow to-cyan-glow"
-            initial={{ width: 0 }}
-            animate={{ width: `${fillPct}%` }}
-            transition={{ duration: 1.2, ease: 'easeOut' }}
-          />
-        </div>
+      {/* One ruled cell per phase, in flight order. Each cell is a seek command. */}
+      <ol aria-label="Mission phases" className="grid grid-cols-2 border-l border-t border-ink sm:grid-cols-4 lg:[grid-template-columns:repeat(var(--phases),minmax(0,1fr))]" style={{ '--phases': mission.phases.length } as React.CSSProperties}>
+        {mission.phases.map((phase, index) => (
+          <li key={phase.name} className="flex border-b border-r border-ink">
+            <PhaseCell phase={phase} index={index} launchMs={launchMs} selectedMs={selectedMs} onSeek={onSeek} />
+          </li>
+        ))}
+      </ol>
 
-        <div className="relative flex justify-between">
-          {mission.phases.map((phase, i) => (
-            <PhaseNode key={phase.name} phase={phase} index={i} total={n} onSeek={onSeek} />
-          ))}
-        </div>
-      </div>
-      </div>
-
-      {/* Time bar */}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-1 font-mono text-[7.5px] text-slate-600">
-        <span className="uppercase tracking-wider">Launch · T-0</span>
-        <span className="text-slate-500">T+{elapsedH}h elapsed of {totalH}h</span>
-        <span className="uppercase tracking-wider">Splashdown · T+{totalH}h</span>
-      </div>
-
-      {/* Phase description */}
-      <div className="flex min-w-0 flex-col items-start justify-between gap-2 border-t border-slate-700/30 px-1 pt-3 text-xs sm:flex-row sm:items-center">
+      <div className="mt-3 flex min-w-0 flex-col items-start justify-between gap-1 text-sm sm:flex-row sm:items-baseline">
         {allComplete ? (
           <>
-            <span className="flex min-w-0 flex-wrap items-center gap-2">
-              <span className="text-green-glow font-bold uppercase tracking-wide text-[11px]">
-                Mission Complete
-              </span>
-              <span className="min-w-0 break-words text-slate-500">
-                {crewed ? 'Crew recovery is recorded in the linked NASA mission record.' : 'Recovery is recorded in the linked NASA mission record.'}
-              </span>
+            <span className="min-w-0 break-words text-ink-2">
+              <strong className="mr-2 font-mono text-xs uppercase tracking-wider text-ok">Mission Complete</strong>
+              {crewed ? 'Crew recovery is recorded in the linked NASA mission record.' : 'Recovery is recorded in the linked NASA mission record.'}
             </span>
-            <span className="max-w-full break-words font-mono text-[11px] text-green-glow sm:ml-4 sm:shrink-0">
-              SUCCESS
-            </span>
+            <span className="font-mono text-xs font-bold tracking-wider text-ok sm:shrink-0">SUCCESS</span>
           </>
         ) : (
           <>
-            <span className="min-w-0 break-words">
-              <span className="text-slate-600 mr-1">&gt;</span>
-              <span className="text-cyan-glow font-bold uppercase tracking-wide text-[11px]">
-                {mission.currentPhase}
-              </span>
-              <span className="ml-2 break-words text-slate-500">
-                {PHASE_DESC[mission.currentPhase] || ''}
-              </span>
+            <span className="min-w-0 break-words text-ink-2">
+              <strong className="mr-2 font-mono text-xs uppercase tracking-wider text-signal">{mission.currentPhase}</strong>
+              {PHASE_DESC[mission.currentPhase] || ''}
             </span>
-            <span className="max-w-full break-words font-mono text-[11px] text-amber-glow sm:ml-4 sm:shrink-0">
-              Next: {mission.nextMilestone.name}
-            </span>
+            <span className="max-w-full break-words font-mono text-xs text-ink-3 sm:shrink-0">Next: {mission.nextMilestone.name}</span>
           </>
         )}
       </div>
-    </div>
+    </section>
   )
 }
 
-function PhaseNode({ phase, index, total, onSeek }: { phase: MissionPhase; index: number; total: number; onSeek?: (time: string) => void }) {
+function PhaseCell({ phase, index, launchMs, selectedMs, onSeek }: { phase: MissionPhase; index: number; launchMs: number; selectedMs: number; onSeek?: (time: string) => void }) {
   const isCompleted = phase.status === 'completed'
   const isActive = phase.status === 'active'
+  const start = Date.parse(phase.startTime)
+  const end = Date.parse(phase.endTime)
+  const within = isCompleted ? 1 : isActive && end > start ? Math.max(0, Math.min(1, (selectedMs - start) / (end - start))) : 0
 
   // This command seeks to a phase; aria-current and its active label mark it without presenting a toggle.
   return (
-    <motion.button
+    <button
       type="button"
       onClick={() => onSeek?.(phase.startTime)}
       aria-label={`Replay ${phase.name}, beginning ${new Date(phase.startTime).toISOString()}${isActive ? ', current phase' : ''}`}
       aria-current={isActive ? 'step' : undefined}
-      className="flex min-h-11 flex-col items-center rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow"
-      style={{ width: `${100 / total}%` }}
-      initial={false}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.06, duration: 0.4 }}
+      className={`group relative flex min-h-[4.5rem] w-full flex-col justify-between gap-1 px-2.5 pb-2.5 pt-2 text-left hover:bg-paper-2 ${isActive ? 'bg-card' : isCompleted ? 'bg-paper' : 'bg-card'}`}
     >
-      {/* Fixed-height container — every circle vertically centered at the same position */}
-      <div className="flex items-center justify-center mb-2" style={{ height: NODE_H }}>
-        {isCompleted && (
-          <div className="h-[28px] w-[28px] rounded-full bg-[#071210] border-[1.5px] border-green-glow flex items-center justify-center">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-              <path d="M3 7.5L5.5 10L11 4" stroke="#22c55e" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-        )}
-        {isActive && (
-          <div className="relative flex items-center justify-center">
-            <div className="h-[30px] w-[30px] rounded-full bg-[#060d14] border-2 border-cyan-glow flex items-center justify-center">
-              <div className="h-3 w-3 rounded-full bg-cyan-glow" />
-            </div>
-            <motion.div
-              className="absolute h-[30px] w-[30px] rounded-full border border-cyan-glow/50"
-              animate={{ scale: [1, 1.6], opacity: [0.5, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }}
-            />
-            <motion.div
-              className="absolute h-[30px] w-[30px] rounded-full border border-cyan-glow/30"
-              animate={{ scale: [1, 2], opacity: [0.3, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeOut', delay: 0.3 }}
-            />
-          </div>
-        )}
-        {!isCompleted && !isActive && (
-          <div className="h-[22px] w-[22px] rounded-full border border-slate-700/50 bg-space-900/60" />
-        )}
-      </div>
-
+      {/* Index and status are drawn as generated content so the button's visible text is just the phase name its label starts from. */}
       <span
-        className={`text-[8px] xl:text-[9px] text-center leading-tight max-w-[80px] ${
-          isCompleted
-            ? 'text-green-glow'
-            : isActive
-              ? 'text-cyan-glow font-semibold'
-              : 'text-slate-600'
-        }`}
-      >
-        {phase.name}
+        aria-hidden="true"
+        data-index={String(index + 1).padStart(2, '0')}
+        data-state={isCompleted ? 'done' : isActive ? 'now' : elapsedLabel(launchMs, phase.startTime)}
+        className="flex items-baseline justify-between gap-2 font-mono text-[11px] text-ink-3 before:content-[attr(data-index)] after:content-[attr(data-state)]"
+      />
+      <span className={`font-display text-sm leading-tight ${isActive ? 'font-bold text-ink' : isCompleted ? 'font-medium text-ink' : 'font-medium text-ink-3'}`}>{phase.name}</span>
+      {/* Progress rule along the bottom edge of the cell. */}
+      <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1 bg-transparent">
+        <span className={`block h-full ${isActive ? 'bg-signal-hot' : 'bg-ink'}`} style={{ width: `${within * 100}%` }} />
       </span>
-    </motion.button>
+    </button>
   )
 }

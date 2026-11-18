@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion'
 import type { SpaceWeatherData } from '../lib/types'
 import { DataSourceBadge } from './DataSourceBadge'
 
@@ -6,44 +5,32 @@ interface SpaceWeatherProps {
   data?: SpaceWeatherData
 }
 
-function getKpColor(kp: number | null): string {
-  if (kp === null) return '#64748b'
-  if (kp < 2) return '#22c55e'
-  if (kp < 4) return '#eab308'
-  if (kp < 6) return '#f59e0b'
-  if (kp < 8) return '#ef4444'
-  return '#dc2626'
+// Kp bands follow the NOAA scale: quiet, unsettled/active, storm.
+function kpTone(kp: number | null): string {
+  if (kp === null) return 'text-ink-3'
+  if (kp < 4) return 'text-ok'
+  if (kp < 5) return 'text-signal'
+  return 'text-bad'
 }
 
 function KpMeter({ kp }: { kp: number | null }) {
   return (
-    <div className="flex gap-0.5">
+    <div className="flex gap-0.5" aria-hidden="true">
       {Array.from({ length: 9 }, (_, i) => {
         const v = i + 1
         const active = kp !== null && kp >= v - 0.5
-        let color: string
-        if (v <= 3) color = '#22c55e'
-        else if (v <= 5) color = '#eab308'
-        else if (v <= 7) color = '#f59e0b'
-        else color = '#ef4444'
-        return (
-          <div
-            key={i}
-            className="h-1.5 flex-1 rounded-sm transition-colors duration-300"
-            style={{ backgroundColor: active ? color : 'rgba(100,116,139,0.12)' }}
-          />
-        )
+        return <div key={i} className={`h-3 flex-1 border border-ink ${active ? (v >= 5 ? 'bg-bad' : v >= 4 ? 'bg-signal-hot' : 'bg-ink') : 'bg-transparent'}`} />
       })}
     </div>
   )
 }
 
-function Stat({ label, value, unit, color, styleColor }: { label: string; value: string | number | null; unit: string; color?: string; styleColor?: string }) {
+function Stat({ label, value, unit }: { label: string; value: string | number | null; unit: string }) {
   return (
-    <div className="text-center">
-      <div className="text-[8px] text-slate-500 uppercase tracking-wider mb-1">{label}</div>
-      <div className={`font-mono text-lg font-semibold ${color || (styleColor ? '' : 'text-white')}`} style={styleColor ? { color: styleColor } : undefined}>{value ?? '—'}</div>
-      <div className="text-[8px] text-slate-600">{unit}</div>
+    <div className="border-l border-rule pl-3">
+      <div className="eyebrow">{label}</div>
+      <div className="mt-1 font-mono text-xl font-bold text-ink">{value ?? '—'}</div>
+      <div className="font-mono text-[11px] text-ink-3">{unit}</div>
     </div>
   )
 }
@@ -51,75 +38,50 @@ function Stat({ label, value, unit, color, styleColor }: { label: string; value:
 export function SpaceWeather({ data }: SpaceWeatherProps) {
   if (!data) {
     return (
-      <div className="glass-panel p-5 animate-pulse">
-        <div className="h-4 bg-slate-700/50 rounded w-32 mb-6" />
-        <div className="flex gap-8 justify-center">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-12 bg-slate-700/50 rounded w-20" />
-          ))}
+      <div className="sheet p-5 animate-pulse" aria-hidden="true">
+        <div className="mb-6 h-4 w-32 bg-paper-2" />
+        <div className="flex gap-8">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-12 w-20 bg-paper-2" />)}
         </div>
       </div>
     )
   }
 
-  const kpColor = getKpColor(data.kpIndex)
-
   return (
-    <motion.div
-      className="glass-panel border-glow min-w-0 p-4 sm:p-5"
-      initial={false}
-      animate={{ opacity: 1 }}
-    >
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-slate-400 uppercase tracking-[.2em] font-semibold">
-            Space Weather
-          </span>
+    <section className="sheet min-w-0 p-3 sm:p-5" aria-labelledby="space-weather-title">
+      <div className="mb-3 flex min-w-0 flex-col items-start gap-1">
+        <div>
+          <p className="eyebrow">Earth context · now, not replay</p>
+          <h2 id="space-weather-title" className="font-display text-lg font-semibold text-ink">Space Weather</h2>
         </div>
-        <div className="text-right">
+        <div className="min-w-0">
           <DataSourceBadge provenance={data.provenance} />
-          {data.timestamp && <time dateTime={data.timestamp} className="block text-[8px] text-slate-500">Oldest displayed observation: {new Date(data.timestamp).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' })} UTC</time>}
+          {data.timestamp && <time dateTime={data.timestamp} className="block font-mono text-[11px] text-ink-3">Oldest displayed observation: {new Date(data.timestamp).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' })} UTC</time>}
         </div>
       </div>
 
-      {/* Horizontal layout: Kp on left, meter, then stats */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5">
-        {/* Kp index — hero stat */}
-        <div className="shrink-0 text-center min-w-[100px]">
-          <div className="font-mono text-4xl font-bold leading-none" style={{ color: kpColor }}>
-            {data.kpIndex?.toFixed(1) ?? '—'}
+      <div className="grid gap-5 border-t border-ink pt-4 sm:grid-cols-[minmax(150px,auto)_1fr] sm:items-center">
+        <div>
+          <div className="eyebrow">Kp Index</div>
+          <div className="flex items-baseline gap-3">
+            <span className="font-mono text-5xl font-bold leading-none text-ink">{data.kpIndex?.toFixed(1) ?? '—'}</span>
+            <span className={`font-mono text-sm font-bold uppercase tracking-wider ${kpTone(data.kpIndex)}`}>{data.kpCategory}</span>
           </div>
-          <div className="text-xs font-medium mt-1" style={{ color: kpColor }}>
-            {data.kpCategory}
-          </div>
-          <div className="text-[8px] text-slate-500 mt-0.5">Kp Index</div>
-        </div>
-
-        {/* Kp meter — vertical separator + bar */}
-        <div className="flex w-full shrink-0 flex-col gap-1.5 sm:w-[140px]">
-          <KpMeter kp={data.kpIndex} />
-          <div className="flex justify-between text-[7px] text-slate-600 font-mono">
-            <span>0</span><span>3</span><span>5</span><span>7</span><span>9</span>
+          <div className="mt-2 w-full max-w-[220px]">
+            <KpMeter kp={data.kpIndex} />
+            <div className="mt-1 flex justify-between font-mono text-[11px] text-ink-3">
+              <span>1</span><span>3</span><span>5</span><span>7</span><span>9</span>
+            </div>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="w-px h-12 bg-slate-700/40 shrink-0" />
-
-        {/* Stat grid */}
-        <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-4">
           <Stat label="Solar Wind" value={data.solarWindSpeed} unit="km/s" />
           <Stat label="Density" value={data.solarWindDensity} unit="p/cm³" />
-          <Stat
-            label="IMF Bz"
-            value={data.imfBz === null ? null : `${data.imfBz > 0 ? '+' : ''}${data.imfBz}`}
-            unit="nT"
-            styleColor={data.imfBz !== null ? (data.imfBz < 0 ? '#ff9e9e' : '#86efac') : undefined}
-          />
+          <Stat label="IMF Bz" value={data.imfBz === null ? null : `${data.imfBz > 0 ? '+' : ''}${data.imfBz}`} unit="nT" />
           <Stat label="IMF Bt" value={data.imfBt} unit="nT" />
         </div>
       </div>
-    </motion.div>
+    </section>
   )
 }
