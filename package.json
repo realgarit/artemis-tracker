@@ -18,8 +18,9 @@
     "test": "node --import tsx --test",
     "test:e2e": "playwright test",
     "pretest:e2e": "npm run build",
-    "check": "npm run validate:catalog && npm run validate:media && npm run prepare:ephemeris && npm run generate:calendar && npm audit --audit-level=high && npx tsc --noEmit && npm test && npm run test:e2e && npm run prepare:pages && npm run verify:pages",
-    "fetch:ephemeris": "tsx scripts/fetch-ephemeris-sources.ts"
+    "check": "npm run validate:catalog && npm run validate:media && npm run prepare:ephemeris && npm run generate:calendar && npm run audit:dependencies && npx tsc --noEmit && npm test && npm run test:e2e && npm run prepare:pages && npm run verify:pages",
+    "fetch:ephemeris": "tsx scripts/fetch-ephemeris-sources.ts",
+    "audit:dependencies": "node scripts/audit-dependencies.mjs"
   },
   "dependencies": {
     "@fontsource-variable/space-grotesk": "^5.3.0",
