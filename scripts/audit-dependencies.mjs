@@ -7,12 +7,8 @@
 // cannot linger.
 import { execSync } from 'node:child_process'
 
-const ACCEPTED = {
-  // picomatch <= 4.0.7 (every published version) via vite > tinyglobby > fdir.
-  // Build-time glob matching only; not shipped in the Pages bundle.
-  // Accepted 2026-11-18: no patched picomatch release exists.
-  'GHSA-fc5q-39xc-vjpf': 'picomatch ReDoS, no patched release (checked 2026-11-18)',
-}
+// Format: 'GHSA-xxxx-xxxx-xxxx': 'package, why it is accepted, date checked'.
+const ACCEPTED = {}
 
 function readAudit() {
   try {
